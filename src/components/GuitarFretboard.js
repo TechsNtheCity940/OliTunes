@@ -18,9 +18,11 @@ const GuitarFretboard = ({ notes, currentTime, analysisData }) => {
     if (fretboardRef.current) {
       const resizeObserver = new ResizeObserver(entries => {
         for (let entry of entries) {
+          const containerWidth = entry.contentRect.width;
+          // Set height based on a ratio of the width, but with a minimum height
           setDimensions({
-            width: entry.contentRect.width,
-            height: Math.min(250, entry.contentRect.width / 3.5)
+            width: containerWidth,
+            height: Math.max(250, containerWidth / 5) // Wider ratio for better visibility
           });
         }
       });
@@ -30,16 +32,20 @@ const GuitarFretboard = ({ notes, currentTime, analysisData }) => {
     }
   }, []);
   
-  // Update active notes based on current playback time with look-ahead
+  // Update active notes based on current playback time with enhanced look-ahead
   useEffect(() => {
     if (!notes) return;
     
-    const lookAheadTime = 0.15; // Look ahead 150ms to prepare animations
+    const lookAheadTime = 0.2; // Look ahead 200ms to prepare animations
+    const fadeOutTime = 0.3; // Keep notes visible for 300ms after they end for better visualization
     
     const active = notes.filter(note => {
-      // Include notes that are currently playing or about to play
+      // Calculate the end time with fade out extension
+      const effectiveEndTime = note.time + note.duration + fadeOutTime;
+      
+      // Include notes that are currently playing, about to play or in fade-out period
       return (currentTime >= note.time - lookAheadTime && 
-              currentTime <= (note.time + note.duration));
+              currentTime <= effectiveEndTime);
     });
     
     setActiveNotes(active);
@@ -120,7 +126,7 @@ const GuitarFretboard = ({ notes, currentTime, analysisData }) => {
       const width = fretboardRef.current.clientWidth;
       setDimensions({
         width: width,
-        height: Math.min(250, width / 3.5)
+        height: Math.max(250, width / 5)
       });
     }
   }, [dimensions.width]);
@@ -131,13 +137,24 @@ const GuitarFretboard = ({ notes, currentTime, analysisData }) => {
   
   return (
     <Paper 
-      elevation={3}
+      ref={fretboardRef}
+      elevation={3} 
       sx={{ 
-        p: 2, 
-        mb: 3,
-        position: 'relative',
+        position: 'relative', 
+        width: '100%', 
+        height: dimensions.height,
         overflow: 'hidden',
-        transition: 'all 0.3s ease-in-out'
+        mb: 2,
+        backgroundColor: '#f5f5f7',
+        borderRadius: '8px',
+        border: '1px solid rgba(103, 58, 183, 0.2)',
+        boxShadow: '0 8px 20px rgba(0, 0, 0, 0.15)',
+        '&:hover': {
+          boxShadow: '0 10px 25px rgba(103, 58, 183, 0.25)'
+        },
+        // Ensure full width on all devices
+        maxWidth: '100%',
+        mx: 'auto'
       }}
     >
       <Typography variant="h6" gutterBottom>
@@ -145,11 +162,10 @@ const GuitarFretboard = ({ notes, currentTime, analysisData }) => {
       </Typography>
       
       <Box 
-        ref={fretboardRef}
         sx={{
           position: 'relative',
           width: '100%',
-          height: dimensions.height || 250,
+          height: dimensions.height,
           mt: 2
         }}
       >
@@ -168,51 +184,45 @@ const GuitarFretboard = ({ notes, currentTime, analysisData }) => {
         />
         
         {/* Frets */}
-        {Array.from({ length: numberOfFrets + 1 }).map((_, i) => (
+        {[...Array(numberOfFrets + 1)].map((_, fretIndex) => (
           <Box
-            key={`fret-${i}`}
+            key={`fret-${fretIndex}`}
             sx={{
               position: 'absolute',
               top: 0,
-              left: `${(i * fretSpacing) / Math.max(1, dimensions.width) * 100}%`,
-              width: i === 0 ? '6px' : '2px',
+              left: fretSpacing * fretIndex,
+              width: fretIndex === 0 ? 3 : 2,
               height: '100%',
-              backgroundColor: i === 0 ? '#444' : '#888', // Nut is darker and wider
-              zIndex: 1
+              backgroundColor: fretIndex === 0 ? '#333' : '#999',
+              zIndex: 2,
+              boxShadow: fretIndex === 0 ? '1px 0 3px rgba(0,0,0,0.5)' : 'none'
             }}
           />
         ))}
         
         {/* Fret markers (inlays) */}
-        {dimensions.width > 0 && [3, 5, 7, 9, 12, 15].map(fret => (
+        {[3, 5, 7, 9, 12, 15].map((markerFret) => (
           <Box
-            key={`marker-${fret}`}
+            key={`marker-${markerFret}`}
             sx={{
               position: 'absolute',
-              top: '50%',
-              left: `${((fret - 0.5) * fretSpacing) / dimensions.width * 100}%`,
-              width: fret === 12 ? '14px' : '10px',
-              height: fret === 12 ? '14px' : '10px',
+              bottom: 5,
+              left: fretSpacing * markerFret - (fretSpacing / 2),
+              width: 20,
+              height: 20,
               borderRadius: '50%',
-              backgroundColor: 'rgba(255, 255, 255, 0.7)',
-              transform: 'translate(-50%, -50%)',
-              zIndex: 1,
-              ...(fret === 12 && {
-                boxShadow: '0 0 5px rgba(255,255,255,0.5)',
-                '&::after': {
-                  content: '""',
-                  position: 'absolute',
-                  top: '200%',
-                  left: '50%',
-                  width: '10px',
-                  height: '10px',
-                  borderRadius: '50%',
-                  backgroundColor: 'rgba(255, 255, 255, 0.7)',
-                  transform: 'translate(-50%, -50%)'
-                }
-              })
+              backgroundColor: markerFret === 12 ? 'rgba(103, 58, 183, 0.8)' : 'rgba(103, 58, 183, 0.5)',
+              color: 'white',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              fontSize: '0.75rem',
+              fontWeight: 'bold',
+              zIndex: 3
             }}
-          />
+          >
+            {markerFret}
+          </Box>
         ))}
         
         {/* Strings */}
@@ -224,8 +234,13 @@ const GuitarFretboard = ({ notes, currentTime, analysisData }) => {
               top: `${(i * stringSpacing) / dimensions.height * 100}%`,
               left: 0,
               width: '100%',
-              height: `${[1, 1, 2, 3, 4, 5][i]}px`, // Varying string thickness
-              backgroundColor: '#DDD',
+              height: i < 3 ? 1 : (i < 5 ? 2 : 3), // Varying thickness
+              backgroundColor: i === 0 ? '#e53935' : // E string (high)
+                             i === 1 ? '#fb8c00' : // B string
+                             i === 2 ? '#fdd835' : // G string
+                             i === 3 ? '#43a047' : // D string
+                             i === 4 ? '#1e88e5' : // A string
+                                       '#8e24aa',   // E string (low)
               boxShadow: '0 0 2px rgba(0,0,0,0.3)',
               zIndex: 2
             }}
@@ -236,6 +251,7 @@ const GuitarFretboard = ({ notes, currentTime, analysisData }) => {
         {dimensions.height > 0 && strings.map((string, i) => (
           <Typography
             key={`label-${i}`}
+            variant="caption"
             sx={{
               position: 'absolute',
               top: `${(i * stringSpacing) / dimensions.height * 100}%`,
@@ -243,7 +259,12 @@ const GuitarFretboard = ({ notes, currentTime, analysisData }) => {
               transform: 'translateY(-50%)',
               fontSize: '12px',
               fontWeight: 'bold',
-              color: '#666',
+              color: i === 0 ? '#e53935' : // E string (high)
+                     i === 1 ? '#fb8c00' : // B string
+                     i === 2 ? '#fdd835' : // G string
+                     i === 3 ? '#43a047' : // D string
+                     i === 4 ? '#1e88e5' : // A string
+                               '#8e24aa',   // E string (low)
               zIndex: 3
             }}
           >
@@ -251,190 +272,102 @@ const GuitarFretboard = ({ notes, currentTime, analysisData }) => {
           </Typography>
         ))}
         
-        {/* Active notes with enhanced animations */}
+        {/* Active notes with enhanced styling and animation */}
         {dimensions.width > 0 && dimensions.height > 0 && activeNotes.map((note, index) => {
           const position = getNotePosition(note.note);
           if (!position) return null;
           
-          // Calculate if note is about to play or currently playing
-          const isPreview = currentTime < note.time;
-          const noteProgress = Math.min(1, Math.max(0, 
-            (currentTime - note.time) / Math.max(0.1, note.duration)
-          ));
+          // Calculate time position for animation timing
+          const notePlaying = currentTime >= note.time && currentTime <= (note.time + note.duration);
+          const noteAboutToPlay = currentTime < note.time && currentTime >= (note.time - 0.2);
+          const noteFadingOut = currentTime > (note.time + note.duration) && currentTime <= (note.time + note.duration + 0.3);
           
-          // Calculate color based on string number
-          const stringColors = [
-            'rgba(255, 89, 94, 1)',  // High E - Red
-            'rgba(255, 202, 58, 1)', // B - Yellow
-            'rgba(138, 201, 38, 1)', // G - Green
-            'rgba(25, 130, 196, 1)', // D - Blue
-            'rgba(106, 76, 147, 1)', // A - Purple
-            'rgba(255, 89, 94, 1)',  // Low E - Red again
-          ];
+          // Calculate opacity based on note timing
+          let opacity = 1;
+          if (noteAboutToPlay) {
+            // Fade in as note approaches
+            opacity = 0.4 + 0.6 * (1 - (note.time - currentTime) / 0.2);
+          } else if (noteFadingOut) {
+            // Fade out after note ends
+            opacity = 0.8 * (1 - (currentTime - (note.time + note.duration)) / 0.3);
+          }
           
-          const baseColor = stringColors[position.string];
+          // Get note color based on note name (C, D, E, etc.)
+          const noteName = note.note.replace(/\d+$/, '');
+          const noteColors = {
+            'C': '#e53935', // Red
+            'C#': '#d81b60', 'Db': '#d81b60', // Pink
+            'D': '#8e24aa', // Purple
+            'D#': '#5e35b1', 'Eb': '#5e35b1', // Deep Purple
+            'E': '#3949ab', // Indigo
+            'F': '#1e88e5', // Blue
+            'F#': '#039be5', 'Gb': '#039be5', // Light Blue
+            'G': '#00acc1', // Cyan
+            'G#': '#00897b', 'Ab': '#00897b', // Teal
+            'A': '#43a047', // Green
+            'A#': '#7cb342', 'Bb': '#7cb342', // Light Green
+            'B': '#c0ca33', // Lime
+          };
+          const noteColor = noteColors[noteName] || '#673ab7';
+          
+          const noteSize = notePlaying ? 20 : 16; // Bigger when actually playing
+          
+          // Add chord information if available
+          const chordDisplay = note.chord ? (
+            <Chip
+              size="small"
+              label={note.chord}
+              sx={{
+                position: 'absolute',
+                top: -25,
+                left: -20,
+                fontSize: '0.65rem',
+                height: 18,
+                backgroundColor: 'rgba(255,255,255,0.85)',
+                border: `1px solid ${noteColor}`,
+                color: noteColor,
+                fontWeight: 'bold',
+                zIndex: 4
+              }}
+            />
+          ) : null;
           
           return (
-            <React.Fragment key={`note-${index}`}>
-              {/* Main note marker */}
-              <Zoom in={true} style={{ transitionDelay: isPreview ? '120ms' : '0ms' }}>
-                <Box
-                  sx={{
-                    position: 'absolute',
-                    top: `${(position.string * stringSpacing) / dimensions.height * 100}%`,
-                    left: `${((position.fret - 0.5) * fretSpacing) / dimensions.width * 100}%`,
-                    width: '32px',
-                    height: '32px',
-                    borderRadius: '50%',
-                    backgroundColor: isPreview ? 
-                      `rgba(${baseColor.slice(5, -1)}, 0.5)` : 
-                      baseColor,
-                    color: 'white',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    fontSize: '14px',
-                    fontWeight: 'bold',
-                    transform: 'translate(-50%, -50%) scale(1.2)',
-                    zIndex: 10,
-                    boxShadow: `0 0 20px ${baseColor.replace('1)', '0.8)')}`,
-                    animation: isPreview ? 'preview 1s infinite' : 'pulse 1s infinite',
-                    '&::before': {
-                      content: '""',
-                      position: 'absolute',
-                      top: 0,
-                      left: 0,
-                      right: 0,
-                      bottom: 0,
-                      borderRadius: '50%',
-                      background: `radial-gradient(circle at 30% 30%, 
-                        ${baseColor.replace('1)', '1)')} 0%,
-                        ${baseColor.replace('1)', '0.5)')} 60%,
-                        transparent 70%
-                      )`,
-                      opacity: 0.9,
-                      zIndex: -1
-                    },
-                    '@keyframes pulse': {
-                      '0%': {
-                        boxShadow: `0 0 0 0 ${baseColor.replace('1)', '0.7)')}`,
-                        transform: 'translate(-50%, -50%) scale(1.2)'
-                      },
-                      '70%': {
-                        boxShadow: `0 0 0 15px ${baseColor.replace('1)', '0)')}`,
-                        transform: 'translate(-50%, -50%) scale(1.45)'
-                      },
-                      '100%': {
-                        boxShadow: `0 0 0 0 ${baseColor.replace('1)', '0)')}`,
-                        transform: 'translate(-50%, -50%) scale(1.2)'
-                      }
-                    },
-                    '@keyframes preview': {
-                      '0%': {
-                        opacity: 0.7,
-                        transform: 'translate(-50%, -50%) scale(1.1)'
-                      },
-                      '50%': {
-                        opacity: 0.9,
-                        transform: 'translate(-50%, -50%) scale(1.3)'
-                      },
-                      '100%': {
-                        opacity: 0.7,
-                        transform: 'translate(-50%, -50%) scale(1.1)'
-                      }
-                    }
-                  }}
-                >
-                  {position.fret}
-                </Box>
-              </Zoom>
-              
-              {/* Enhanced floating note information */}
-              <Fade in={!isPreview && note.confidence > 0.6}>
-                <Box
-                  sx={{
-                    position: 'absolute',
-                    top: `${(position.string * stringSpacing) / dimensions.height * 100 - 15}%`,
-                    left: `${((position.fret - 0.5) * fretSpacing) / dimensions.width * 100 + 8}%`,
-                    padding: '6px 10px',
-                    borderRadius: '8px',
-                    backgroundColor: 'rgba(0, 0, 0, 0.85)',
-                    color: 'white',
-                    fontSize: '12px',
-                    fontWeight: 'bold',
-                    zIndex: 11,
-                    transform: 'translateY(-100%)',
-                    boxShadow: '0 4px 15px rgba(0, 0, 0, 0.4)',
-                    backdropFilter: 'blur(8px)',
-                    border: `1px solid ${baseColor.replace('1)', '0.6)')}`,
-                    animation: 'float 3s ease-in-out infinite',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '4px',
-                    '@keyframes float': {
-                      '0%': { transform: 'translateY(-100%)' },
-                      '50%': { transform: 'translateY(-115%)' },
-                      '100%': { transform: 'translateY(-100%)' }
-                    }
-                  }}
-                >
-                  <MusicNoteIcon sx={{ fontSize: 14 }} />
-                  {note.note}
-                  <Chip 
-                    label={Math.round(note.confidence * 100) + '%'} 
-                    size="small" 
-                    sx={{
-                      height: '16px',
-                      fontSize: '9px',
-                      ml: 0.5,
-                      backgroundColor: `${baseColor.replace('1)', '0.3)')}`,
-                      color: 'white'
-                    }}
-                  />
-                </Box>
-              </Fade>
-              
-              {/* Enhanced progress indicator */}
-              {!isPreview && (
-                <Box
-                  sx={{
-                    position: 'absolute',
-                    top: `${(position.string * stringSpacing) / dimensions.height * 100}%`,
-                    left: `${((position.fret - 0.5) * fretSpacing) / dimensions.width * 100}%`,
-                    width: '40px',
-                    height: '40px',
-                    borderRadius: '50%',
-                    border: `2px solid ${baseColor}`,
-                    opacity: 0.8,
-                    transform: 'translate(-50%, -50%)',
-                    zIndex: 9,
-                    '&::before': {
-                      content: '""',
-                      position: 'absolute',
-                      top: 0,
-                      left: 0,
-                      width: '100%',
-                      height: '100%',
-                      borderRadius: '50%',
-                      background: `conic-gradient(
-                        ${baseColor} ${noteProgress * 360}deg,
-                        transparent ${noteProgress * 360}deg
-                      )`,
-                      opacity: 0.5
-                    },
-                    animation: 'ripple 2s linear infinite',
-                    '@keyframes ripple': {
-                      '0%': {
-                        boxShadow: `0 0 0 0px ${baseColor.replace('1)', '0.3)')}`
-                      },
-                      '100%': {
-                        boxShadow: `0 0 0 20px ${baseColor.replace('1)', '0)')}`
-                      }
-                    }
-                  }}
-                />
-              )}
-            </React.Fragment>
+            <Box
+              key={`note-${index}`}
+              sx={{
+                position: 'absolute',
+                top: `${(position.string * stringSpacing) / dimensions.height * 100}%`,
+                left: `${((position.fret - 0.5) * fretSpacing) / dimensions.width * 100}%`,
+                width: noteSize,
+                height: noteSize,
+                borderRadius: '50%',
+                backgroundColor: noteColor,
+                opacity: opacity,
+                zIndex: 3,
+                boxShadow: notePlaying ? `0 0 10px ${noteColor}` : '0 0 5px rgba(0,0,0,0.3)',
+                transition: 'all 0.15s ease-in-out',
+                transform: notePlaying ? 'scale(1.1)' : 'scale(1)'
+              }}
+            >
+              {chordDisplay}
+              <Typography
+                variant="caption"
+                sx={{
+                  position: 'absolute',
+                  bottom: -18,
+                  left: 0,
+                  width: noteSize,
+                  textAlign: 'center',
+                  color: noteColor,
+                  fontWeight: 'bold',
+                  fontSize: '0.7rem',
+                  textShadow: '0px 0px 3px white',
+                }}
+              >
+                {noteName}
+              </Typography>
+            </Box>
           );
         })}
         

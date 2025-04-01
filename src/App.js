@@ -14,7 +14,8 @@ import {
   CardContent,
   Switch,
   CircularProgress,
-  Alert
+  Alert,
+  CssBaseline
 } from '@mui/material';
 import SongAnalysisViewer from './components/SongAnalysisViewer';
 import LyricsDisplay from './components/LyricsDisplay';
@@ -26,8 +27,12 @@ import {
   PlayArrow, 
   Pause, 
   FastForward, 
-  FastRewind 
+  FastRewind,
+  MusicNote,
+  LibraryMusic,
+  GraphicEq
 } from '@mui/icons-material';
+import './components/custom-theme.css';
 
 // Helper function to format time in MM:SS format
 const formatTime = (time) => {
@@ -39,41 +44,50 @@ const formatTime = (time) => {
 const theme = createTheme({
   palette: {
     primary: {
-      main: '#2196f3',
+      main: '#673ab7',
     },
     secondary: {
-      main: '#f50057',
+      main: '#2196f3', 
     },
     background: {
-      default: '#f5f5f5',
+      default: '#f5f5f7',
       paper: '#ffffff',
     },
   },
   typography: {
-    fontFamily: "'Inter', 'Roboto', 'Helvetica', 'Arial', sans-serif",
-    h2: {
+    fontFamily: '"Roboto", "Segoe UI", sans-serif',
+    h4: {
       fontWeight: 700,
-    }
+    },
+    h5: {
+      fontWeight: 600,
+    },
+    button: {
+      textTransform: 'none',
+      fontWeight: 600,
+    },
   },
   components: {
     MuiPaper: {
       styleOverrides: {
         root: {
-          borderRadius: 12,
-          boxShadow: '0 8px 40px rgba(0,0,0,0.12)'
-        }
-      }
+          borderRadius: 8,
+        },
+      },
     },
     MuiButton: {
       styleOverrides: {
         root: {
           borderRadius: 8,
-          textTransform: 'none',
-          fontWeight: 600
-        }
-      }
-    }
-  }
+          padding: '8px 16px',
+        },
+        containedPrimary: {
+          background: 'linear-gradient(45deg, #673ab7 30%, #3f51b5 90%)',
+          boxShadow: '0 3px 5px 2px rgba(103, 58, 183, .3)',
+        },
+      },
+    },
+  },
 });
 
 const instruments = [
@@ -94,6 +108,12 @@ function App() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
   const [currentTime, setCurrentTime] = useState(0);
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const [animateNotes, setAnimateNotes] = useState(true);
+  const [volume, setVolume] = useState(100);
+  const [selectedFile, setSelectedFile] = useState(null);
+  const [processedFiles, setProcessedFiles] = useState([]);
+  const [duration, setDuration] = useState(0);
   const audioRef = useRef(null);
   const animationRef = useRef(null);
 
@@ -136,10 +156,15 @@ function App() {
         setCurrentTime(audio.currentTime);
       };
       
+      const handleLoadedMetadata = () => {
+        setDuration(audio.duration);
+      };
+      
       audio.addEventListener('play', handlePlay);
       audio.addEventListener('pause', handlePause);
       audio.addEventListener('ended', handleEnded);
       audio.addEventListener('timeupdate', handleTimeUpdate);
+      audio.addEventListener('loadedmetadata', handleLoadedMetadata);
       
       return () => {
         URL.revokeObjectURL(fileURL);
@@ -147,6 +172,7 @@ function App() {
         audio.removeEventListener('pause', handlePause);
         audio.removeEventListener('ended', handleEnded);
         audio.removeEventListener('timeupdate', handleTimeUpdate);
+        audio.removeEventListener('loadedmetadata', handleLoadedMetadata);
         cancelAnimationFrame(animationRef.current);
       };
     }
@@ -309,25 +335,74 @@ function App() {
     setIsPlaying(!isPlaying);
   };
 
+  const handlePlayPause = () => {
+    if (!audioRef.current) return;
+
+    if (isPlaying) {
+      audioRef.current.pause();
+    } else {
+      audioRef.current.play();
+    }
+    setIsPlaying(!isPlaying);
+  };
+
+  const handleStop = () => {
+    if (!audioRef.current) return;
+
+    audioRef.current.pause();
+    audioRef.current.currentTime = 0;
+    setIsPlaying(false);
+  };
+
+  const skipTime = (seconds) => {
+    if (!audioRef.current) return;
+
+    audioRef.current.currentTime += seconds;
+  };
+
+  const handleSliderChange = (e, newValue) => {
+    if (audioRef.current) {
+      audioRef.current.currentTime = newValue;
+      setCurrentTime(newValue);
+    }
+  };
+
+  const handleVolumeChange = (e, newValue) => {
+    setVolume(newValue);
+  };
+
   return (
     <ThemeProvider theme={theme}>
-      <Container maxWidth="lg">
-        {/* Add hidden audio element */}
-        <audio ref={audioRef} style={{ display: 'none' }} />
-        
-        <Box sx={{ my: 4 }}>
-          <Typography variant="h2" component="h1" gutterBottom align="center" sx={{ 
-            fontWeight: 'bold',
-            background: 'linear-gradient(45deg, #2196f3 30%, #21CBF3 90%)',
-            backgroundClip: 'text',
-            textFillColor: 'transparent',
-            mb: 4
-          }}>
-            OliTunes
-          </Typography>
-          
-          <Paper elevation={3} sx={{ p: 4, borderRadius: 3, mb: 4 }}>
-            <Box sx={{ textAlign: 'center', mb: 4 }}>
+      <CssBaseline />
+      <Box className="app-header">
+        <Container maxWidth="lg">
+          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <Box sx={{ display: 'flex', alignItems: 'center' }}>
+              <MusicNote fontSize="large" sx={{ mr: 1 }} />
+              <Typography variant="h4">OliTunes</Typography>
+              <Typography variant="subtitle1" sx={{ ml: 2, opacity: 0.8 }}>
+                Advanced Music Analysis & Visualization
+              </Typography>
+            </Box>
+            <Box>
+              <Button 
+                variant="outlined" 
+                color="inherit" 
+                startIcon={<LibraryMusic />}
+                sx={{ color: 'white', borderColor: 'rgba(255,255,255,0.5)' }}
+              >
+                Audio Library
+              </Button>
+            </Box>
+          </Box>
+        </Container>
+      </Box>
+      
+      <Container maxWidth="lg" sx={{ py: 4 }} className="responsive-container">
+        <Paper elevation={3} sx={{ p: 3, mb: 4 }} className="music-card">
+          <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', position: 'relative' }}>
+            <div className="music-staff-decorator" style={{ top: '30px' }}></div>
+            <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
               <input
                 accept="audio/*"
                 style={{ display: 'none' }}
@@ -340,18 +415,13 @@ function App() {
                   variant="contained"
                   component="span"
                   startIcon={<CloudUpload />}
-                  sx={{ 
-                    mb: 3,
-                    py: 1.5,
-                    background: 'linear-gradient(45deg, #2196f3 30%, #21CBF3 90%)',
-                    boxShadow: '0 3px 5px 2px rgba(33, 203, 243, .3)'
-                  }}
+                  sx={{ mb: 2, minWidth: '200px' }}
+                  className="upload-button"
                 >
                   Upload Audio File
                 </Button>
               </label>
             </Box>
-
             {error && (
               <Box sx={{ mb: 3 }}>
                 <Alert severity="error" onClose={() => setError(null)}>
@@ -359,7 +429,6 @@ function App() {
                 </Alert>
               </Box>
             )}
-
             {isLoading ? (
               <Box sx={{ display: 'flex', justifyContent: 'center', my: 4 }}>
                 <CircularProgress />
@@ -555,8 +624,138 @@ function App() {
                 </Box>
               </>
             )}
+          </Box>
+        </Paper>
+        
+        {selectedFile && (
+          <Card sx={{ width: '100%', mb: 2, bgcolor: 'rgba(103, 58, 183, 0.05)', border: '1px solid rgba(103, 58, 183, 0.2)' }}>
+            <CardContent>
+              <Typography variant="subtitle1" gutterBottom>
+                <strong>Selected File:</strong> {selectedFile.name}
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                Size: {(selectedFile.size / (1024 * 1024)).toFixed(2)} MB
+              </Typography>
+            </CardContent>
+          </Card>
+        )}
+        
+        {/* Add hidden audio element */}
+        <audio ref={audioRef} style={{ display: 'none' }} />
+        
+        {processedFiles.length > 0 && (
+          <Paper 
+            sx={{ 
+              display: 'flex', 
+              flexDirection: 'column', 
+              p: 2, 
+              mb: 2, 
+              width: '100%',
+              background: 'linear-gradient(135deg, #f5f7ff 0%, #f0f2f8 100%)'
+            }}
+            className="custom-audio-player"
+          >
+            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1 }}>
+              <Typography variant="h6" sx={{ color: '#333', textShadow: '1px 1px 3px rgba(255,255,255,0.5)' }}>
+                <GraphicEq sx={{ mr: 1, verticalAlign: 'middle' }} />
+                Audio Playback
+              </Typography>
+              
+              <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                <Typography variant="caption" sx={{ mr: 1, color: '#333' }}>
+                  Animate Notes
+                </Typography>
+                <Switch 
+                  checked={animateNotes} 
+                  onChange={(e) => setAnimateNotes(e.target.checked)}
+                  color="primary"
+                />
+              </Box>
+            </Box>
+            
+            <Box sx={{ display: 'flex', justifyContent: 'center', mb: 2 }}>
+              <Button 
+                variant="contained" 
+                onClick={handlePlayPause}
+                sx={{ mx: 1 }}
+              >
+                {isPlaying ? <Pause /> : <PlayArrow />}
+              </Button>
+              <Button variant="outlined" onClick={handleStop} sx={{ mx: 1 }}>
+                Stop
+              </Button>
+              <Button variant="outlined" onClick={() => skipTime(-10)} sx={{ mx: 1 }}>
+                <FastRewind />
+              </Button>
+              <Button variant="outlined" onClick={() => skipTime(10)} sx={{ mx: 1 }}>
+                <FastForward />
+              </Button>
+            </Box>
+            
+            <Box sx={{ width: '100%', mb: 2 }}>
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 0.5 }}>
+                <Typography variant="caption">{formatTime(currentTime)}</Typography>
+                <Typography variant="caption">{formatTime(duration)}</Typography>
+              </Box>
+              <Slider
+                value={currentTime}
+                max={duration}
+                onChange={handleSliderChange}
+                sx={{ color: '#673ab7' }}
+              />
+            </Box>
+            
+            <Box sx={{ display: 'flex', alignItems: 'center' }}>
+              <Typography variant="caption" sx={{ mr: 1 }}>Volume:</Typography>
+              <Slider
+                value={volume}
+                min={0}
+                max={100}
+                onChange={handleVolumeChange}
+                sx={{ width: 100, ml: 1, color: '#673ab7' }}
+              />
+            </Box>
           </Paper>
-        </Box>
+        )}
+        
+        {processedFiles.length > 0 && (
+          <Box>
+            <Paper sx={{ p: 3, mb: 4 }} className="music-card">
+              <Tabs
+                value={currentTab}
+                onChange={(e, newValue) => setCurrentTab(newValue)}
+                variant="fullWidth"
+                className="music-tabs"
+              >
+                <Tab label="Analysis" value="analysis" />
+                <Tab label="Tablature" value="tablature" />
+                <Tab label="Lyrics" value="lyrics" />
+              </Tabs>
+
+              <Box sx={{ mt: 3 }}>
+                {currentTab === 'analysis' && (
+                  <SongAnalysisViewer 
+                    currentFile={processedFiles[0]} 
+                    currentTime={currentTime}
+                    animateNotes={animateNotes}
+                  />
+                )}
+                {currentTab === 'tablature' && (
+                  <TablatureDisplay 
+                    currentFile={processedFiles[0]} 
+                    currentTime={currentTime}
+                  />
+                )}
+                {currentTab === 'lyrics' && (
+                  <LyricsDisplay 
+                    currentFile={processedFiles[0]} 
+                    currentTime={currentTime}
+                  />
+                )}
+              </Box>
+            </Paper>
+          </Box>
+        )}
       </Container>
     </ThemeProvider>
   );

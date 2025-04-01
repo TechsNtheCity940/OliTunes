@@ -14,11 +14,18 @@ import {
   Tabs,
   Tab,
   CircularProgress,
-  Alert
+  Alert,
+  useTheme
 } from '@mui/material';
+import MusicNoteIcon from '@mui/icons-material/MusicNote';
+import AudiotrackIcon from '@mui/icons-material/Audiotrack';
+import PianoIcon from '@mui/icons-material/Piano';
+import LibraryMusicIcon from '@mui/icons-material/LibraryMusic';
+import PianoKeyboard from './PianoKeyboard';
 import apiService from '../apiService';
 
 const SongAnalysisViewer = ({ filename, currentTime }) => {
+  const theme = useTheme();
   const [analysis, setAnalysis] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -98,15 +105,18 @@ const SongAnalysisViewer = ({ filename, currentTime }) => {
 
   if (loading) {
     return (
-      <Box display="flex" justifyContent="center" my={4}>
-        <CircularProgress />
+      <Box sx={{ display: 'flex', justifyContent: 'center', p: 4 }}>
+        <CircularProgress color="secondary" />
+        <Typography sx={{ ml: 2, color: '#555' }}>
+          Analyzing audio and extracting musical information...
+        </Typography>
       </Box>
     );
   }
 
   if (error) {
     return (
-      <Alert severity="error">{error}</Alert>
+      <Alert severity="error" variant="filled">{error}</Alert>
     );
   }
 
@@ -119,12 +129,40 @@ const SongAnalysisViewer = ({ filename, currentTime }) => {
   }
 
   return (
-    <Paper elevation={3} sx={{ p: 3 }}>
-      <Box sx={{ mb: 4 }}>
-        <Typography variant="h4" gutterBottom>
-          Song Analysis
-        </Typography>
-        <Divider sx={{ mb: 2 }} />
+    <Paper 
+      elevation={3} 
+      sx={{ 
+        p: 2, 
+        height: '100%', 
+        overflow: 'auto',
+        position: 'relative',
+        background: 'linear-gradient(to bottom, #f9f9f9, #ffffff)',
+        backgroundImage: 'url(https://www.transparenttextures.com/patterns/music-pattern.png)',
+        backgroundBlendMode: 'overlay',
+        border: '1px solid #e0e0e0',
+        borderRadius: '8px',
+        boxShadow: '0 4px 20px rgba(0,0,0,0.08)'
+      }}
+    >
+      <Box sx={{ mt: 2 }}>
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+          <Typography variant="h5" sx={{ 
+            fontWeight: 'bold', 
+            color: theme.palette.primary.main,
+            display: 'flex',
+            alignItems: 'center'
+          }}>
+            <LibraryMusicIcon sx={{ mr: 1 }} />
+            Music Analysis Results
+          </Typography>
+          
+          <Chip 
+            icon={<AudiotrackIcon />} 
+            label={filename ? filename.replace(/_/g, ' ').replace(/\.[^/.]+$/, '') : ''}
+            variant="outlined"
+            color="secondary"
+          />
+        </Box>
         
         <Grid container spacing={3}>
           <Grid item xs={12} md={6}>
@@ -231,12 +269,27 @@ const SongAnalysisViewer = ({ filename, currentTime }) => {
       <Box sx={{ mt: 4 }}>
         <Tabs 
           value={activeTab} 
-          onChange={handleTabChange} 
+          onChange={(e, newValue) => setActiveTab(newValue)}
           variant="fullWidth"
-          sx={{ borderBottom: 1, borderColor: 'divider', mb: 2 }}
+          textColor="secondary"
+          indicatorColor="secondary"
+          sx={{ 
+            mb: 2, 
+            borderBottom: 1, 
+            borderColor: 'divider',
+            '& .MuiTab-root': {
+              fontWeight: 'bold',
+              borderRadius: '4px 4px 0 0',
+              transition: 'all 0.2s',
+              '&:hover': {
+                backgroundColor: 'rgba(103, 58, 183, 0.04)',
+              },
+            }
+          }}
         >
-          <Tab label="Tablature" />
-          <Tab label="Notes" />
+          <Tab icon={<MusicNoteIcon />} label="Tablature" />
+          <Tab icon={<AudiotrackIcon />} label="Notes" />
+          <Tab icon={<PianoIcon />} label="Piano Keyboard" />
         </Tabs>
         
         <TabPanel value={activeTab} index={0}>
@@ -328,6 +381,16 @@ const SongAnalysisViewer = ({ filename, currentTime }) => {
                 </ListItem>
               ))}
             </List>
+          </Box>
+        </TabPanel>
+        
+        <TabPanel value={activeTab} index={2}>
+          <Box sx={{ maxHeight: '400px', overflowY: 'auto' }}>
+            <PianoKeyboard 
+              notes={analysis?.notes || []}
+              currentTime={currentTime}
+              octaveRange={{ min: 2, max: 6 }}
+            />
           </Box>
         </TabPanel>
       </Box>

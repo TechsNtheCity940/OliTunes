@@ -373,51 +373,122 @@ def analyze_structure(filename):
                 
                 # Simple fallback to ensure we always return something useful
                 tempo, beats = librosa.beat.beat_track(y=analyzer.y, sr=analyzer.sr)
+                beats_per_minute = tempo if tempo > 0 else 120  # Default to 120 BPM if detection fails
                 time_sig = (4, 4)  # Default to 4/4 time
-                chords = analyzer.detect_chords()  # Basic chord detection usually works
                 
-                # Generate simplified tablature
+                # Get chord detection - this often works even when note detection fails
+                chords = analyzer.detect_chords()
+                
+                # Create more sophisticated guitar patterns based on detected chords
                 guitar_notes = []
-                pattern_notes = [('E3', 0, 2), ('A3', 2, 0), ('D3', 2, 0), ('G3', 0, 2), ('B3', 0, 3), ('E4', 0, 0)]
+                chord_patterns = {
+                    # Major chords - format: (note, string, fret)
+                    'C': [('C3', 5, 3), ('E3', 4, 2), ('G3', 3, 0), ('C4', 2, 1), ('E4', 1, 0)],
+                    'G': [('G2', 5, 3), ('B3', 4, 0), ('D3', 3, 0), ('G3', 2, 0), ('B3', 1, 0), ('G4', 0, 3)],
+                    'D': [('D3', 4, 0), ('A3', 3, 2), ('D4', 2, 3), ('F#3', 1, 2)],
+                    'A': [('A2', 5, 0), ('E3', 4, 2), ('A3', 3, 2), ('C#4', 2, 2), ('E4', 1, 0)],
+                    'E': [('E2', 5, 0), ('B2', 4, 2), ('E3', 3, 2), ('G#3', 2, 1), ('B3', 1, 0), ('E4', 0, 0)],
+                    'F': [('F2', 5, 1), ('C3', 4, 3), ('F3', 3, 3), ('A3', 2, 2), ('C4', 1, 1), ('F4', 0, 1)],
+                    # Minor chords
+                    'Cm': [('C3', 5, 3), ('Eb3', 4, 1), ('G3', 3, 0), ('C4', 2, 1), ('Eb4', 1, 1)],
+                    'Gm': [('G2', 5, 3), ('Bb3', 4, 1), ('D3', 3, 0), ('G3', 2, 0), ('Bb3', 1, 1)],
+                    'Dm': [('D3', 4, 0), ('A3', 3, 2), ('D4', 2, 3), ('F3', 1, 1)],
+                    'Am': [('A2', 5, 0), ('E3', 4, 2), ('A3', 3, 2), ('C4', 2, 1), ('E4', 1, 0)],
+                    'Em': [('E2', 5, 0), ('B2', 4, 2), ('E3', 3, 2), ('G3', 2, 0), ('B3', 1, 0), ('E4', 0, 0)],
+                }
                 
-                # Create some basic guitar patterns that are commonly used
-                duration = librosa.get_duration(y=analyzer.y, sr=analyzer.sr)
-                spacing = 0.5  # Half-second spacing between notes
-                
-                for i in range(min(20, int(duration / spacing))):
-                    time = i * spacing
-                    pattern_idx = i % len(pattern_notes)
-                    note_name, string, fret = pattern_notes[pattern_idx]
+                # Add default pattern if no chords detected
+                if not chords or len(chords) < 2:
+                    # Create a progression of common chords
+                    chords = [
+                        {'chord': 'G', 'start_time': 0.0, 'end_time': 2.0},
+                        {'chord': 'Em', 'start_time': 2.0, 'end_time': 4.0},
+                        {'chord': 'C', 'start_time': 4.0, 'end_time': 6.0},
+                        {'chord': 'D', 'start_time': 6.0, 'end_time': 8.0}
+                    ]
+                    # Repeat the progression for the duration of the audio
+                    duration = librosa.get_duration(y=analyzer.y, sr=analyzer.sr)
+                    progression_length = chords[-1]['end_time']
+                    repetitions = int(duration / progression_length) + 1
                     
-                    guitar_notes.append({
-                        'note': note_name,
-                        'time': float(time),
-                        'duration': float(spacing * 0.8),  # 80% of spacing
-                        'confidence': 0.9,
-                        'string': string,
-                        'fret': fret
-                    })
+                    extended_chords = []
+                    for i in range(repetitions):
+                        for chord in chords:
+                            new_chord = chord.copy()
+                            new_chord['start_time'] += i * progression_length
+                            new_chord['end_time'] += i * progression_length
+                            if new_chord['start_time'] < duration:
+                                extended_chords.append(new_chord)
+                    
+                    chords = extended_chords
+                
+                # Generate notes based on the chord progression
+                for chord_data in chords:
+                    chord_name = chord_data['chord']
+                    start_time = chord_data['start_time']
+                    end_time = chord_data['end_time']
+                    duration = end_time - start_time
+                    
+                    # Get pattern for this chord, default to C if not found
+                    pattern = chord_patterns.get(chord_name, chord_patterns['C'])
+                    
+                    # Add chord tones (block chord at start)
+                    for note_name, string, fret in pattern:
+                        guitar_notes.append({
+                            'note': note_name,
+                            'time': float(start_time),
+                            'duration': float(min(0.5, duration * 0.25)),  # Short chord strum
+                            'confidence': 0.95,
+                            'string': string,
+                            'fret': fret,
+                            'chord': chord_name  # Add chord information
+                        })
+                    
+                    # Add arpeggiated pattern
+                    notes_per_beat = 2
+                    beat_duration = 60.0 / beats_per_minute
+                    num_beats = duration / beat_duration
+                    
+                    for beat in range(int(num_beats)):
+                        beat_time = start_time + beat * beat_duration
+                        
+                        for sub_beat in range(notes_per_beat):
+                            sub_time = beat_time + (sub_beat / notes_per_beat) * beat_duration
+                            if sub_time < end_time:
+                                # Choose a note from the pattern
+                                pattern_idx = (beat * notes_per_beat + sub_beat) % len(pattern)
+                                note_name, string, fret = pattern[pattern_idx]
+                                
+                                guitar_notes.append({
+                                    'note': note_name,
+                                    'time': float(sub_time),
+                                    'duration': float(beat_duration / notes_per_beat * 0.8),
+                                    'confidence': 0.9,
+                                    'string': string,
+                                    'fret': fret,
+                                    'chord': chord_name  # Add chord information
+                                })
                 
                 # Create tablature from the pattern
                 logger.info("Generating tablature display from patterns...")
                 tab_data = {
                     'tablature': ['Guitar Tablature (AI-generated pattern):'],
                     'bars': [],
-                    'totalDuration': float(duration),
+                    'totalDuration': float(librosa.get_duration(y=analyzer.y, sr=analyzer.sr)),
                     'gridResolution': 0.125,
                     'notePositions': []
                 }
                 
                 # Create measures and bars (simplified structure)
                 measure_duration = 2.0
-                num_measures = max(1, int(duration / measure_duration))
+                num_measures = max(1, int(librosa.get_duration(y=analyzer.y, sr=analyzer.sr) / measure_duration))
                 measures_per_bar = 4
                 
                 for bar_idx in range((num_measures + measures_per_bar - 1) // measures_per_bar):
                     bar = {
                         'barNumber': bar_idx + 1,
                         'startTime': float(bar_idx * measures_per_bar * measure_duration),
-                        'endTime': float(min(duration, (bar_idx + 1) * measures_per_bar * measure_duration)),
+                        'endTime': float(min(librosa.get_duration(y=analyzer.y, sr=analyzer.sr), (bar_idx + 1) * measures_per_bar * measure_duration)),
                         'measures': [],
                         'timeSignature': '4/4'
                     }
@@ -428,28 +499,62 @@ def analyze_structure(filename):
                             break
                             
                         m_start = measure_idx * measure_duration
-                        m_end = min(duration, (measure_idx + 1) * measure_duration)
+                        m_end = min(librosa.get_duration(y=analyzer.y, sr=analyzer.sr), (measure_idx + 1) * measure_duration)
                         
                         # Find notes in this measure
                         measure_notes = [n for n in guitar_notes 
                                         if n['time'] >= m_start and n['time'] < m_end]
                         
-                        # Create basic tab lines for this measure
-                        tab_lines = ['e|--------------------|', 
-                                    'B|--------------------|',
-                                    'G|--------------------|', 
-                                    'D|--------------------|',
-                                    'A|--------------------|',
-                                    'E|--------------------|']
+                        # Create basic tab lines for this measure with space for chord names
+                        tab_width = 20  # Width of tab content
+                        tab_lines = [
+                            'e|--------------------|', 
+                            'B|--------------------|',
+                            'G|--------------------|', 
+                            'D|--------------------|',
+                            'A|--------------------|',
+                            'E|--------------------|'
+                        ]
+                        
+                        # Add chord names above the tab
+                        chord_line = ' ' * (tab_width + 2)  # Initialize with spaces
+                        
+                        # Find unique chords in this measure and their positions
+                        measure_chords = {}
+                        for note in measure_notes:
+                            if 'chord' in note:
+                                chord_time = note['time']
+                                relative_pos = (chord_time - m_start) / (m_end - m_start)
+                                position = int(relative_pos * tab_width)
+                                if 0 <= position < tab_width:
+                                    measure_chords[position] = note['chord']
+                        
+                        # Add chords to the chord line
+                        for pos, chord in measure_chords.items():
+                            # Make sure we don't overwrite existing chords too close together
+                            if pos < len(chord_line) - len(chord):
+                                can_place = True
+                                for i in range(max(0, pos-2), min(len(chord_line), pos+len(chord)+1)):
+                                    if chord_line[i] != ' ':
+                                        can_place = False
+                                        break
+                                
+                                if can_place:
+                                    for i, char in enumerate(chord):
+                                        if pos + i < len(chord_line):
+                                            chord_line = chord_line[:pos+i] + char + chord_line[pos+i+1:]
+                        
+                        # Insert chord line at the beginning of tab_lines
+                        tab_lines.insert(0, chord_line)
                         
                         # Add notes to tab lines
                         for note in measure_notes:
                             string_idx = note['string']
                             position = int((note['time'] - m_start) / (m_end - m_start) * 20)
                             if 0 <= position < 20:
-                                tab_line = list(tab_lines[string_idx])
+                                tab_line = list(tab_lines[string_idx + 1])  # +1 because chord line is at index 0
                                 tab_line[position + 1] = str(note['fret'])
-                                tab_lines[string_idx] = ''.join(tab_line)
+                                tab_lines[string_idx + 1] = ''.join(tab_line)
                         
                         measure = {
                             'measureNumber': m + 1,
@@ -466,14 +571,20 @@ def analyze_structure(filename):
                 # Add note positions for UI display
                 tab_data['notePositions'] = []
                 for note in guitar_notes:
-                    tab_data['notePositions'].append({
+                    note_position = {
                         'note': note['note'],
-                        'time': float(note['time']),
-                        'duration': float(note['duration']),
+                        'time': note['time'],
+                        'duration': note['duration'],
                         'string': note['string'],
                         'fret': note['fret'],
-                        'confidence': 0.9
-                    })
+                        'confidence': note.get('confidence', 0.8)
+                    }
+                    
+                    # Add chord information if present
+                    if 'chord' in note:
+                        note_position['chord'] = note['chord']
+                        
+                    tab_data['notePositions'].append(note_position)
             
             tempo, beats = librosa.beat.beat_track(y=analyzer.y, sr=analyzer.sr)
             

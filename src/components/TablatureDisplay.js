@@ -232,7 +232,7 @@ const AnimatedString = ({ stringName, tabLine, currentBeatPosition, activeFrets 
                     left: `${leftPos}%`,
                     top: '-100%',
                     transform: 'translate(-50%, -50%)',
-                    backgroundColor: 'rgba(0,0,0,0.8)',
+                    backgroundColor: 'rgba(0, 0, 0, 0.8)',
                     color: 'white',
                     padding: '2px 5px',
                     borderRadius: '4px',
@@ -354,17 +354,182 @@ const TablatureDisplay = ({ tablature, currentTime, notePositions }) => {
     return (currentTime / tablature.totalDuration) * 100;
   };
   
+  const renderMeasuresInRows = (bars) => {
+    const allMeasures = [];
+    
+    // Flatten all measures with their bar information
+    bars.forEach((bar, barIndex) => {
+      bar.measures.forEach((measure, measureIndex) => {
+        allMeasures.push({
+          bar: barIndex,
+          measure: measureIndex,
+          data: measure,
+          barData: bar
+        });
+      });
+    });
+    
+    // Calculate how many rows we need
+    const totalRows = Math.ceil(allMeasures.length / 4);
+    
+    return Array.from({ length: totalRows }).map((_, rowIndex) => {
+      const startIndex = rowIndex * 4;
+      const rowMeasures = allMeasures.slice(startIndex, startIndex + 4);
+      
+      return (
+        <Box 
+          key={`row-${rowIndex}`}
+          sx={{ 
+            display: 'flex', 
+            width: '100%', 
+            mb: 3,
+            justifyContent: 'flex-start',
+            gap: 1
+          }}
+        >
+          {rowMeasures.map((item) => (
+            <Box 
+              key={`measure-${item.bar}-${item.measure}`}
+              ref={el => {
+                if (item.bar === currentBar && item.measure === currentMeasure) {
+                  currentMeasureRef.current = el;
+                }
+              }}
+              sx={{
+                width: `calc(${100 / 4}% - ${(4 - 1) * 8 / 4}px)`,
+                minHeight: 130,
+                position: 'relative',
+                border: '1px solid #ddd',
+                borderRadius: '4px',
+                p: 1,
+                backgroundColor: (item.bar === currentBar && item.measure === currentMeasure) 
+                  ? 'rgba(103, 58, 183, 0.05)' 
+                  : '#fff',
+                boxShadow: (item.bar === currentBar && item.measure === currentMeasure)
+                  ? '0 0 5px rgba(103, 58, 183, 0.3)'
+                  : 'none',
+                '&:hover': {
+                  boxShadow: '0 2px 5px rgba(0,0,0,0.1)'
+                },
+                display: 'flex',
+                flexDirection: 'column'
+              }}
+            >
+              {/* Bar and Chord Information */}
+              <Box sx={{ 
+                mb: 1, 
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between'
+              }}>
+                <Typography 
+                  variant="caption" 
+                  sx={{ 
+                    fontWeight: 'bold',
+                    color: '#666'
+                  }}
+                >
+                  Bar {item.bar + 1}.{item.measure + 1}
+                </Typography>
+                
+                {item.barData.chord && (
+                  <Chip 
+                    label={item.barData.chord} 
+                    size="small" 
+                    color="primary" 
+                    sx={{ fontWeight: 'bold', height: 22, fontSize: '0.7rem' }} 
+                  />
+                )}
+              </Box>
+              
+              {/* Guitar strings */}
+              <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+                {['E', 'B', 'G', 'D', 'A', 'E'].map((string, stringIndex) => (
+                  <Box 
+                    key={`string-${item.bar}-${item.measure}-${stringIndex}`}
+                    sx={{ 
+                      position: 'relative', 
+                      height: '18px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      borderBottom: '1px solid #ddd'
+                    }}
+                  >
+                    {/* String label */}
+                    <Typography variant="caption" sx={{ 
+                      position: 'absolute', 
+                      left: -18, 
+                      fontSize: '10px', 
+                      color: '#666',
+                      fontWeight: 'bold'
+                    }}>
+                      {string}
+                    </Typography>
+                    
+                    {/* Notes on this string */}
+                    {item.data.notes.filter(note => note.string === stringIndex).map((note, noteIndex) => (
+                      <Box
+                        key={`note-${item.bar}-${item.measure}-${stringIndex}-${noteIndex}`}
+                        sx={{
+                          position: 'absolute',
+                          left: `${note.position * 100}%`,
+                          transform: 'translateX(-50%)',
+                          fontSize: '14px',
+                          fontWeight: 'bold',
+                          color: '#333',
+                          backgroundColor: note.isHighlighted ? 'rgba(103, 58, 183, 0.2)' : 'transparent',
+                          borderRadius: '50%',
+                          width: '20px',
+                          height: '20px',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          zIndex: 5
+                        }}
+                      >
+                        {note.fret}
+                      </Box>
+                    ))}
+                  </Box>
+                ))}
+              </Box>
+              
+              {/* Playback indicator */}
+              {(item.bar === currentBar && item.measure === currentMeasure) && (
+                <Box
+                  sx={{
+                    position: 'absolute',
+                    height: '100%',
+                    width: '2px',
+                    backgroundColor: 'rgba(103, 58, 183, 0.7)',
+                    top: 0,
+                    left: `${getCurrentBeatPosition() * 100}%`,
+                    transform: 'translateX(-50%)',
+                    zIndex: 10,
+                    boxShadow: '0 0 5px rgba(103, 58, 183, 0.5)'
+                  }}
+                />
+              )}
+            </Box>
+          ))}
+        </Box>
+      );
+    });
+  };
+
   return (
     <Paper 
       elevation={3} 
       sx={{ 
-        p: 3, 
-        my: 2,
+        p: 2, 
+        my: 2, 
+        overflow: 'auto',
         position: 'relative',
-        overflow: 'hidden',
-        background: 'linear-gradient(145deg, #ffffff, #f5f5f5)',
-        borderRadius: '12px',
-        boxShadow: '0 6px 20px rgba(0,0,0,0.08)'
+        maxHeight: 800,
+        width: '100%',
+        backgroundColor: '#f8f8f8',
+        boxShadow: '0 3px 10px rgba(0, 0, 0, 0.1)',
+        mx: 'auto'
       }}
     >
       <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
@@ -459,214 +624,27 @@ const TablatureDisplay = ({ tablature, currentTime, notePositions }) => {
       <Box 
         ref={containerRef}
         sx={{ 
-          width: '100%',
-          overflowX: 'auto',
-          overflowY: 'hidden',
-          pt: 1,
-          pb: 3,
-          px: 1,
-          whiteSpace: 'nowrap',
+          maxHeight: 800, 
+          overflowY: 'auto',
+          mt: 2,
+          pb: 2,
           '&::-webkit-scrollbar': {
-            height: '8px',
-            borderRadius: '4px'
+            width: '10px',
           },
           '&::-webkit-scrollbar-track': {
-            background: 'rgba(0,0,0,0.05)',
-            borderRadius: '4px'
+            background: 'rgba(103, 58, 183, 0.05)',
+            borderRadius: '10px',
           },
           '&::-webkit-scrollbar-thumb': {
-            background: 'rgba(0,0,0,0.2)',
-            borderRadius: '4px',
+            background: 'rgba(103, 58, 183, 0.3)',
+            borderRadius: '10px',
             '&:hover': {
-              background: 'rgba(0,0,0,0.3)'
+              background: 'rgba(103, 58, 183, 0.5)'
             }
           }
         }}
       >
-        {tablature.bars.map((bar, barIndex) => (
-          <Card 
-            key={`bar-${barIndex}`}
-            elevation={currentBar === barIndex ? 3 : 1}
-            sx={{
-              mb: 3,
-              opacity: currentBar === barIndex ? 1 : 0.8,
-              transition: 'all 0.3s ease',
-              transform: currentBar === barIndex ? 'scale(1.01)' : 'scale(1)',
-              borderRadius: '8px',
-              overflow: 'hidden'
-            }}
-          >
-            <Box sx={{
-              display: 'flex',
-              alignItems: 'center',
-              p: 1.5,
-              borderBottom: '1px solid rgba(0,0,0,0.08)',
-              backgroundColor: currentBar === barIndex ? 'rgba(25, 118, 210, 0.05)' : 'transparent'
-            }}>
-              <Box sx={{ 
-                backgroundColor: currentBar === barIndex ? '#1976d2' : '#999',
-                color: 'white',
-                fontWeight: 'bold',
-                borderRadius: '50%',
-                width: '24px',
-                height: '24px',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                mr: 1.5,
-                fontSize: '13px',
-                transition: 'background-color 0.3s ease',
-                boxShadow: currentBar === barIndex ? '0 0 10px rgba(25, 118, 210, 0.4)' : 'none'
-              }}>
-                {bar.barNumber}
-              </Box>
-              <Chip 
-                label={bar.timeSignature} 
-                size="small" 
-                sx={{ 
-                  height: '20px', 
-                  fontSize: '11px',
-                  backgroundColor: currentBar === barIndex ? 'rgba(25, 118, 210, 0.1)' : 'rgba(0,0,0,0.05)',
-                  border: '1px solid',
-                  borderColor: currentBar === barIndex ? 'rgba(25, 118, 210, 0.3)' : 'transparent',
-                  transition: 'all 0.3s ease'
-                }}
-              />
-              <Typography variant="caption" sx={{ ml: 'auto', color: 'text.secondary' }}>
-                {Math.floor(bar.startTime / 60)}:{Math.floor(bar.startTime % 60).toString().padStart(2, '0')} - 
-                {Math.floor(bar.endTime / 60)}:{Math.floor(bar.endTime % 60).toString().padStart(2, '0')}
-              </Typography>
-            </Box>
-            
-            <Box sx={{ p: 1.5 }}>
-              {bar.measures.map((measure, measureIndex) => (
-                <Box 
-                  key={`measure-${measureIndex}`}
-                  id={`measure-${barIndex}-${measureIndex}`}
-                  sx={{
-                    mb: 2,
-                    p: 2,
-                    borderRadius: '8px',
-                    backgroundColor: currentBar === barIndex && currentMeasure === measureIndex 
-                      ? 'rgba(25, 118, 210, 0.08)'
-                      : 'rgba(0,0,0,0.02)',
-                    border: '1px solid',
-                    borderColor: currentBar === barIndex && currentMeasure === measureIndex 
-                      ? 'rgba(25, 118, 210, 0.3)'
-                      : 'rgba(0, 0, 0, 0.05)',
-                    boxShadow: currentBar === barIndex && currentMeasure === measureIndex 
-                      ? '0 4px 15px rgba(25, 118, 210, 0.15)'
-                      : 'none',
-                    transition: 'all 0.3s ease',
-                    position: 'relative',
-                    overflow: 'hidden'
-                  }}
-                >
-                  <Box sx={{ display: 'flex', alignItems: 'center', mb: 1.5 }}>
-                    <Typography 
-                      variant="body2" 
-                      sx={{ 
-                        fontWeight: 'bold',
-                        color: currentBar === barIndex && currentMeasure === measureIndex 
-                          ? '#1976d2' 
-                          : 'text.secondary'
-                      }}
-                    >
-                      Measure {measure.measureNumber}
-                    </Typography>
-                    
-                    {/* Current measure indicator */}
-                    {currentBar === barIndex && currentMeasure === measureIndex && (
-                      <Chip 
-                        label="CURRENT" 
-                        size="small"
-                        color="primary"
-                        sx={{ 
-                          ml: 1.5, 
-                          height: '18px', 
-                          fontSize: '9px',
-                          animation: 'pulse-subtle 2s infinite',
-                          '@keyframes pulse-subtle': {
-                            '0%': { opacity: 0.7 },
-                            '50%': { opacity: 1 },
-                            '100%': { opacity: 0.7 }
-                          }
-                        }}
-                      />
-                    )}
-                  </Box>
-                  
-                  {measure.tabLines.map((line, lineIndex) => {
-                    // Parse the line to extract string name and content
-                    const stringName = line[0];
-                    const tabContent = line.substring(1);
-                    
-                    return (
-                      <AnimatedString
-                        key={`string-${lineIndex}`}
-                        stringName={stringName}
-                        tabLine={tabContent}
-                        currentBeatPosition={currentBar === barIndex && currentMeasure === measureIndex ? 
-                          getCurrentBeatPosition() : -1}
-                        activeFrets={activeFrets}
-                      />
-                    );
-                  })}
-                  
-                  {/* Beat position markers at the bottom */}
-                  <Box sx={{
-                    height: '10px',
-                    width: '100%',
-                    mt: 1.5,
-                    position: 'relative',
-                    display: 'flex',
-                    backgroundColor: 'rgba(0,0,0,0.03)',
-                    borderRadius: '5px',
-                    overflow: 'hidden'
-                  }}>
-                    {/* Progress bar for current measure */}
-                    {currentBar === barIndex && currentMeasure === measureIndex && (
-                      <Box sx={{
-                        position: 'absolute',
-                        left: 0,
-                        top: 0,
-                        height: '100%',
-                        width: `${getCurrentBeatPosition() * 100}%`,
-                        backgroundImage: 'linear-gradient(to right, rgba(25,118,210,0.2), rgba(245,0,87,0.2))',
-                        borderRight: '2px solid #f50057',
-                        transition: 'width 0.1s linear'
-                      }} />
-                    )}
-                    
-                    {measure.beatPositions && measure.beatPositions.map((beatTime, i) => {
-                      const leftPos = ((beatTime - measure.startTime) / (measure.endTime - measure.startTime)) * 100;
-                      const isCurrent = currentTime >= beatTime && 
-                        (i === measure.beatPositions.length - 1 || currentTime < measure.beatPositions[i + 1]);
-                      
-                      return (
-                        <Box
-                          key={`beat-${i}`}
-                          sx={{
-                            position: 'absolute',
-                            left: `${leftPos}%`,
-                            top: '50%',
-                            width: isCurrent ? '6px' : '4px',
-                            height: isCurrent ? '6px' : '4px',
-                            backgroundColor: isCurrent ? '#f50057' : 'rgba(0, 0, 0, 0.2)',
-                            borderRadius: '50%',
-                            transform: 'translate(-50%, -50%)',
-                            boxShadow: isCurrent ? '0 0 8px #f50057' : 'none',
-                            transition: 'all 0.2s ease'
-                          }}
-                        />
-                      );
-                    })}
-                  </Box>
-                </Box>
-              ))}
-            </Box>
-          </Card>
-        ))}
+        {renderMeasuresInRows(tablature.bars)}
       </Box>
       
       {/* Enhanced help box with icon */}

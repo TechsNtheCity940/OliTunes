@@ -401,99 +401,97 @@ class AdvancedAudioAnalyzer:
         return notes
     
     def _map_notes_to_fretboard(self, notes: List[Dict]) -> List[Dict]:
-        """Intelligent algorithm to map notes with fallback defaults"""
-        mapped = []
+        """Intelligent algorithm to map notes with improved musical positioning"""
+        if not notes:
+            return []
+            
+        # Filter out notes without MIDI information
+        valid_notes = []
         for note in notes:
-            note = note.copy()
-            if 'midi' not in note:
-                continue
-            
-            # Add default values first
-            note.setdefault('string', 0)
-            note.setdefault('fret', 0)
-            if not notes:
-                return []
-            
-        # Sort notes by time
-        notes = sorted(notes, key=lambda x: x['time'])
+            if 'midi' in note:
+                # Create a deep copy of the note to prevent modifying the original
+                valid_notes.append(note.copy())
         
-        # Ensure all notes have string and fret information
-        if not all('string' in note and 'fret' in note for note in notes):
-            notes = self._map_notes_to_fretboard(notes)
-        
-        # Create a deep copy to avoid modifying original
-        result = []
-        for note in notes:
-            # Create a deep copy of each note
-            new_note = dict(note)
-            result.append(new_note)
+        if not valid_notes:
+            return []
             
-        # Current hand position tracker
-        current_position = 0  # Initial position is open strings
+        # Sort by time for sequential processing
+        valid_notes.sort(key=lambda x: x['time'])
         
-        # For each note, find optimal string/fret position
-        for i, note in enumerate(result):
-            midi_note = note.get('midi')
-            if midi_note is None:
-                continue
-                
+        # Track the current hand position and string usage over time
+        current_position = 0  # Starting fret position (open strings)
+        string_end_times = [-1.0] * 6  # When each string becomes free again
+        
+        for note in valid_notes:
+            midi_note = note['midi']
+            note_time = note['time']
+            
             # Find all possible positions for this note on the fretboard
             positions = []
-            for string_idx, open_string in enumerate(self.GUITAR_STRINGS):
-                # Calculate which fret on this string produces the target note
-                fret = midi_note - open_string
-                if 0 <= fret <= self.MAX_FRET:
-                    # Score this position based on several factors
-                    # 1. Distance from current position
-                    position_change = abs(fret - current_position)
-                    position_score = max(0, 1 - position_change / 12)
+            for string, base_note in enumerate(self.GUITAR_STRINGS):
+                # Check if note is playable on this string (within fret range)
+                if midi_note >= base_note and midi_note - base_note <= self.MAX_FRET:
+                    fret = midi_note - base_note
                     
-                    # 2. Preference for lower positions (more common)
-                    fret_score = max(0, 1 - fret / self.MAX_FRET)
+                    # Calculate position quality score based on multiple factors:
+                    # 1. Distance from current hand position (lower is better)
+                    # 2. String availability (is the string already being played?)
+                    # 3. Prefer lower frets when possible
+                    # 4. Prefer logical string choice for the note's range
                     
-                    # 3. String preference (middle strings often preferable)
-                    string_score = 1 - abs(string_idx - 2.5) / 5
+                    # Distance from current position (0-5 points, lower is better)
+                    position_score = min(5, abs(fret - current_position))
                     
-                    # 4. Context from adjacent notes
-                    context_score = 0
-                    if i > 0 and 'string' in result[i-1] and 'fret' in result[i-1]:
-                        # Prefer same string for sequential notes (typical for melodies)
-                        if string_idx == result[i-1]['string']:
-                            context_score += 0.5
-                        
-                        # Penalty for large jumps
-                        fret_jump = abs(fret - result[i-1].get('fret', 0))
-                        if fret_jump > self.MAX_REACH and string_idx == result[i-1]['string']:
-                            context_score -= 0.5
-                            
-                    # Calculate total score (weighted sum)
-                    total_score = (
-                        0.3 * position_score +
-                        0.3 * fret_score +
-                        0.2 * string_score +
-                        0.2 * context_score
-                    )
+                    # String availability (0-3 points, lower is better)
+                    availability_score = 3 if note_time <= string_end_times[string] else 0
                     
+                    # Prefer lower frets (0-2 points, lower is better)
+                    fret_score = min(2, fret / 5)
+                    
+                    # Prefer logical string choice - lower strings for lower notes, higher strings for higher notes
+                    # This creates more natural patterns (0-3 points, lower is better)
+                    logical_choice_score = abs((midi_note % 12) / 12 - (string / 5)) * 3
+                    
+                    # Total score (lower is better)
+                    total_score = position_score + availability_score + fret_score + logical_choice_score
+                    
+                    # Store position with its score
                     positions.append({
-                        'string': string_idx,
+                        'string': string,
                         'fret': fret,
                         'score': total_score
                     })
             
-            # Choose best position based on score
+            # If we found valid positions, choose the best one
             if positions:
-                best_pos = max(positions, key=lambda p: p['score'])
+                # Sort by score (lower is better)
+                positions.sort(key=lambda p: p['score'])
+                best_pos = positions[0]
+                
+                # Assign position to the note
                 note['string'] = best_pos['string']
                 note['fret'] = best_pos['fret']
                 
-                # Update current position
+                # Update current hand position
                 current_position = best_pos['fret']
+                
+                # Update string end time (when it becomes available again)
+                # Add a small buffer to note duration to prevent unrealistic fast changes
+                buffer_time = min(0.1, note.get('duration', 0) * 0.5)
+                string_end_times[best_pos['string']] = note_time + note.get('duration', 0.25) + buffer_time
+            else:
+                # Fallback for unmappable notes - use highest string with reasonable fret
+                best_guess_string = 0  # E string (highest pitch)
+                best_guess_fret = min(12, max(0, midi_note - self.GUITAR_STRINGS[0]))
+                
+                note['string'] = best_guess_string
+                note['fret'] = best_guess_fret
         
-        return mapped
-        
+        return valid_notes
+    
     def generate_tablature(self, notes: List[Dict[str, Any]]) -> Dict[str, Any]:
         """
-        Generate guitar tablature from detected notes.
+        Generate guitar tablature from detected notes with improved accuracy.
         Returns formatted tablature data for display.
         """
         if not notes:
@@ -507,9 +505,48 @@ class AdvancedAudioAnalyzer:
         # Sort notes by time
         notes = sorted(notes, key=lambda x: x['time'])
         
-        # Ensure all notes have string and fret information
+        # Ensure all notes have string and fret information using the improved mapping algorithm
         if not all('string' in note and 'fret' in note for note in notes):
             notes = self._map_notes_to_fretboard(notes)
+            
+        # Apply musical cleanup - remove overlapping notes on same string that would be unplayable
+        cleaned_notes = []
+        string_end_times = [-1.0] * 6  # Track when each string is free
+        
+        for note in notes:
+            string_idx = note.get('string')
+            if string_idx is None or 'time' not in note:
+                continue
+                
+            note_time = note['time']
+            
+            # Check if string is available (not being played)
+            if note_time < string_end_times[string_idx]:
+                # String is already being played, try to reassign to another string
+                original_midi = note.get('midi')
+                if original_midi:
+                    # Find an available string that can play this note
+                    for alt_string, base_note in enumerate(self.GUITAR_STRINGS):
+                        if (note_time >= string_end_times[alt_string] and 
+                            original_midi >= base_note and 
+                            original_midi - base_note <= self.MAX_FRET):
+                            # Found an available string - reassign the note
+                            note = note.copy()  # Create a copy to avoid modifying original
+                            note['string'] = alt_string
+                            note['fret'] = original_midi - base_note
+                            string_idx = alt_string
+                            break
+                    else:
+                        # No available string found, skip this note 
+                        # to avoid unplayable overlaps
+                        continue
+            
+            # Add the note and update string end time
+            cleaned_notes.append(note)
+            string_end_times[string_idx] = note_time + note.get('duration', 0.25)
+            
+        # Use cleaned notes for tablature generation
+        notes = cleaned_notes
         
         # Detect tempo and time signature
         tempo = self._detect_tempo()
@@ -566,7 +603,10 @@ class AdvancedAudioAnalyzer:
                     f"E|{'-' * tab_width}|"
                 ]
                 
-                # Add notes to tab lines
+                # Add notes to tab lines with collision detection
+                measure_notes_by_position = {}
+                
+                # First, group notes by their position in the tab to detect collisions
                 for note in measure_notes:
                     string_idx = note.get('string')
                     fret = note.get('fret')
@@ -582,23 +622,70 @@ class AdvancedAudioAnalyzer:
                     # Ensure position is within bounds
                     position = max(0, min(position, tab_width - 1))
                     
-                    # Add fret number to tab
-                    line = list(tab_lines[string_idx])
-                    fret_str = str(fret)
+                    # Group by position
+                    if position not in measure_notes_by_position:
+                        measure_notes_by_position[position] = []
                     
-                    # Position in the tab line (adding 1 to account for the | character)
-                    pos = position + 1
+                    measure_notes_by_position[position].append({
+                        'string': string_idx,
+                        'fret': fret
+                    })
+                
+                # Now iterate through positions and handle collisions
+                for position, notes_at_pos in measure_notes_by_position.items():
+                    # Sort by string to ensure consistent rendering
+                    notes_at_pos.sort(key=lambda n: n['string'])
                     
-                    # Place the fret number, handling multi-digit frets
-                    if len(fret_str) == 1:
-                        line[pos] = fret_str
-                    else:
-                        # For multi-digit frets, ensure we have space
-                        for i, digit in enumerate(fret_str):
-                            if pos + i < len(line) - 1:  # Ensure we don't overwrite the ending |
-                                line[pos + i] = digit
-                    
-                    tab_lines[string_idx] = ''.join(line)
+                    # Add each note to the tab, adjusting position if needed to avoid collisions
+                    for note_data in notes_at_pos:
+                        string_idx = note_data['string']
+                        fret = note_data['fret']
+                        fret_str = str(fret)
+                        
+                        # Add fret number to tab
+                        line = list(tab_lines[string_idx])
+                        
+                        # Position in the tab line (adding 1 to account for the | character)
+                        pos = position + 1
+                        
+                        # Check for collision - look a few positions ahead for multi-digit frets
+                        need_shift = False
+                        pos_offset = 0
+                        
+                        # Try positions to the right first (up to 2 positions)
+                        for test_offset in range(3):
+                            if pos + test_offset < len(line) - 1 and line[pos + test_offset] != '-':
+                                need_shift = True
+                                continue
+                            
+                            # Found a clean spot
+                            if need_shift:
+                                pos_offset = test_offset
+                                break
+                        
+                        # If we still have a collision, try to the left
+                        if need_shift and pos_offset == 0:
+                            for test_offset in range(-1, -3, -1):
+                                if pos + test_offset > 0 and line[pos + test_offset] != '-':
+                                    continue
+                                
+                                # Found a clean spot
+                                pos_offset = test_offset
+                                break
+                        
+                        # Place the fret number with adjusted position
+                        adjusted_pos = pos + pos_offset
+                        
+                        # Place the fret number, handling multi-digit frets
+                        if len(fret_str) == 1 and 0 < adjusted_pos < len(line) - 1:
+                            line[adjusted_pos] = fret_str
+                        else:
+                            # For multi-digit frets, ensure we have space
+                            for i, digit in enumerate(fret_str):
+                                if 0 < adjusted_pos + i < len(line) - 1:  # Ensure we don't overwrite the borders
+                                    line[adjusted_pos + i] = digit
+                        
+                        tab_lines[string_idx] = ''.join(line)
                 
                 # Create measure object
                 beat_positions = [float(m_start + b * beat_duration) for b in range(beats_per_measure + 1)]

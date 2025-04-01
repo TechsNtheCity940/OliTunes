@@ -124,19 +124,39 @@ class AudioAnalyzer:
             if len(y_filtered) < 2048:
                 raise ValueError("Audio too short for harmonic separation")
                 
+            # Add additional validation to catch NaN values
+            if not np.all(np.isfinite(y_filtered)):
+                y_filtered = np.nan_to_num(y_filtered)
+            
             # Split long audio into chunks for processing
             chunk_size = min(len(y_filtered), 343980)  # Demucs training length
             y_harmonic_chunks = []
+            
+            # Process each chunk with robust error handling
             for i in range(0, len(y_filtered), chunk_size):
                 chunk = y_filtered[i:i+chunk_size]
                 if len(chunk) < 2048:
+                    # Skip chunks that are too short but keep them in the output
+                    y_harmonic_chunks.append(chunk)
                     continue
+                
                 try:
-                    y_harmonic = librosa.effects.harmonic(chunk, margin=4.0)
-                    y_harmonic_chunks.append(y_harmonic)
+                    # Process with lower margin for better stability
+                    y_harmonic = librosa.effects.harmonic(chunk, margin=3.0)
+                    
+                    # Validate output
+                    if not np.all(np.isfinite(y_harmonic)) or len(y_harmonic) != len(chunk):
+                        logger.warning(f"Harmonic separation produced invalid output for chunk {i}")
+                        y_harmonic_chunks.append(chunk)  # Use original chunk as fallback
+                    else:
+                        y_harmonic_chunks.append(y_harmonic)
                 except Exception as e:
                     logger.warning(f"Error processing chunk {i}: {e}")
-                    y_harmonic_chunks.append(chunk)
+                    y_harmonic_chunks.append(chunk)  # Use original chunk as fallback
+            
+            # Validate before concatenating
+            if not y_harmonic_chunks:
+                raise ValueError("No valid chunks to process")
             
             # Recombine processed chunks
             y_harmonic = np.concatenate(y_harmonic_chunks)
