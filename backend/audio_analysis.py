@@ -103,14 +103,27 @@ class AudioAnalyzer:
     
     def _preprocess_audio_for_guitar(self) -> np.ndarray:
         """Preprocess audio to enhance guitar signal components"""
+        # Validate input audio
+        if len(self.y) == 0:
+            logger.warning("Empty audio data, returning original")
+            return self.y
+            
         # Make a copy of the original audio
         y_processed = self.y.copy()
+        
+        # Validate sample rate
+        if self.sr < 8000:
+            logger.warning(f"Low sample rate {self.sr}Hz may affect quality")
         
         # Apply a bandpass filter focusing on guitar frequency range (80Hz-1.2kHz)
         sos = signal.butter(10, [80, 1200], 'bandpass', fs=self.sr, output='sos')
         y_filtered = signal.sosfilt(sos, y_processed)
         
         try:
+            # Ensure audio is valid for harmonic separation
+            if len(y_filtered) < 2048:
+                raise ValueError("Audio too short for harmonic separation")
+                
             # Harmonic-percussive source separation to isolate harmonic content
             y_harmonic = librosa.effects.harmonic(y_filtered, margin=4.0)
             
@@ -119,6 +132,7 @@ class AudioAnalyzer:
             y_processed = 0.7 * y_harmonic + 0.3 * y_filtered
         except Exception as e:
             logger.warning(f"Error in harmonic separation: {e}. Using filtered audio.")
+            logger.debug(f"Audio shape: {y_filtered.shape}, Sample rate: {self.sr}")
             y_processed = y_filtered
         
         # Normalize
