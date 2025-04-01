@@ -124,11 +124,24 @@ class AudioAnalyzer:
             if len(y_filtered) < 2048:
                 raise ValueError("Audio too short for harmonic separation")
                 
-            # Harmonic-percussive source separation to isolate harmonic content
-            y_harmonic = librosa.effects.harmonic(y_filtered, margin=4.0)
+            # Split long audio into chunks for processing
+            chunk_size = min(len(y_filtered), 343980)  # Demucs training length
+            y_harmonic_chunks = []
+            for i in range(0, len(y_filtered), chunk_size):
+                chunk = y_filtered[i:i+chunk_size]
+                if len(chunk) < 2048:
+                    continue
+                try:
+                    y_harmonic = librosa.effects.harmonic(chunk, margin=4.0)
+                    y_harmonic_chunks.append(y_harmonic)
+                except Exception as e:
+                    logger.warning(f"Error processing chunk {i}: {e}")
+                    y_harmonic_chunks.append(chunk)
+            
+            # Recombine processed chunks
+            y_harmonic = np.concatenate(y_harmonic_chunks)
             
             # Mix original and processed signals for better quality
-            # (70% processed + 30% original for better transients)
             y_processed = 0.7 * y_harmonic + 0.3 * y_filtered
         except Exception as e:
             logger.warning(f"Error in harmonic separation: {e}. Using filtered audio.")

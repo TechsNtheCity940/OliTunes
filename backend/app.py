@@ -320,9 +320,9 @@ def analyze_structure(filename):
                         
                         audio_tensor = torch.from_numpy(y_resampled).float().unsqueeze(0)  # [1, 2, samples]
                         
-                        # Apply model without splitting
+                        # Apply model with splitting enabled for long files
                         with torch.no_grad():
-                            sources = apply_model(model, audio_tensor, device='cpu', split=False)
+                            sources = apply_model(model, audio_tensor, device='cpu', split=True)
                         
                         # Extract 'other' stem (index 2) and convert to mono
                         guitar_track = sources[0, 2].mean(dim=0).numpy()  # [samples]
@@ -664,9 +664,9 @@ def analyze_fretboard(filename):
                     
                     audio_tensor = torch.from_numpy(y_resampled).float().unsqueeze(0)  # [1, 2, samples]
                     
-                    # Apply model without splitting
+                    # Apply model with splitting enabled for long files
                     with torch.no_grad():
-                        sources = apply_model(model, audio_tensor, device='cpu', split=False)
+                        sources = apply_model(model, audio_tensor, device='cpu', split=True)
                     
                     # Extract 'other' stem (index 2) and convert to mono
                     guitar_track = sources[0, 2].mean(dim=0).numpy()  # [samples]

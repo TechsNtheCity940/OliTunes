@@ -98,13 +98,42 @@ class AdvancedAudioAnalyzer:
             
             # Try to apply harmonic-percussive separation if it works with this version of librosa
             try:
-                # Using smaller window sizes for better performance
-                y_harmonic, _ = librosa.decompose.hpss(
-                    y_eq,
-                    kernel_size=31,  # Smaller kernel size
-                    power=2.0,
-                    mask=False
-                )
+                # Validate audio length for HPSS
+                if len(y_eq) < 2048:
+                    raise ValueError("Audio segment too short for HPSS")
+                
+                # Ensure audio is valid for HPSS (non-empty, finite values)
+                if not np.all(np.isfinite(y_eq)):
+                    y_eq = np.nan_to_num(y_eq)
+                    
+                # Process in chunks for long audio files
+                # This helps prevent array bounds issues with very long files
+                max_length = 2000000  # ~45 sec at 44.1kHz
+                if len(y_eq) > max_length:
+                    # Process in chunks and concatenate
+                    chunks = []
+                    for i in range(0, len(y_eq), max_length):
+                        chunk = y_eq[i:i+max_length]
+                        if len(chunk) >= 2048:  # Minimum viable chunk size
+                            chunk_harmonic, _ = librosa.decompose.hpss(
+                                chunk,
+                                kernel_size=31,
+                                power=2.0,
+                                mask=False
+                            )
+                            chunks.append(chunk_harmonic)
+                        else:
+                            chunks.append(chunk)
+                    y_harmonic = np.concatenate(chunks)
+                else:
+                    # Standard HPSS for normal length audio
+                    y_harmonic, _ = librosa.decompose.hpss(
+                        y_eq,
+                        kernel_size=31,  # Smaller kernel size
+                        power=2.0,
+                        mask=False
+                    )
+                
                 # Mix with the filtered content for better results
                 y_enhanced = 0.7 * y_harmonic + 0.3 * y_eq
             except Exception as e:
@@ -387,6 +416,10 @@ class AdvancedAudioAnalyzer:
             
         # Sort notes by time
         notes = sorted(notes, key=lambda x: x['time'])
+        
+        # Ensure all notes have string and fret information
+        if not all('string' in note and 'fret' in note for note in notes):
+            notes = self._map_notes_to_fretboard(notes)
         
         # Create a deep copy to avoid modifying original
         result = []
