@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef, useMemo } from 'react';
-import { Box, Typography, Paper, Zoom, Fade, Tooltip } from '@mui/material';
+import { Box, Typography, Paper, Zoom, Tooltip } from '@mui/material';
 import { styled } from '@mui/material/styles';
 
 // Styled components for piano keys
@@ -77,7 +77,7 @@ const NoteLabel = styled(Typography)(({ active }) => ({
 
 const PianoKeyboard = ({ notes, currentTime, octaveRange = { min: 2, max: 6 } }) => {
   const keyboardRef = useRef(null);
-  const [dimensions, setDimensions] = useState({ width: 0 });
+  const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
   const [activeNotes, setActiveNotes] = useState([]);
   
   // Piano structure
@@ -114,7 +114,8 @@ const PianoKeyboard = ({ notes, currentTime, octaveRange = { min: 2, max: 6 } })
       const resizeObserver = new ResizeObserver(entries => {
         for (let entry of entries) {
           setDimensions({
-            width: entry.contentRect.width
+            width: entry.contentRect.width,
+            height: entry.contentRect.height
           });
         }
       });
@@ -293,7 +294,7 @@ const PianoKeyboard = ({ notes, currentTime, octaveRange = { min: 2, max: 6 } })
           </Box>
         )}
       </Box>
-      <Box sx={{ overflow: 'auto', position: 'relative' }}>
+      <Box sx={{ overflow: 'auto', position: 'relative', height: dimensions.height }}>
         {renderKeys()}
       </Box>
       <Typography variant="caption" sx={{ display: 'block', mt: 1, textAlign: 'center', color: '#666' }}>

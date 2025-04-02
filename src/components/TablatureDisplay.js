@@ -1,270 +1,17 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { Box, Paper, Typography, Fade, Zoom, Chip, LinearProgress, Card } from '@mui/material';
-import MusicNoteIcon from '@mui/icons-material/MusicNote';
-import TuneIcon from '@mui/icons-material/Tune';
-import InfoIcon from '@mui/icons-material/Info';
-import FiberManualRecordIcon from '@mui/icons-material/FiberManualRecord';
-
-const AnimatedString = ({ stringName, tabLine, currentBeatPosition, activeFrets }) => {
-  // Find which positions have frets played
-  const fretPositions = [];
-  
-  for (let i = 0; i < tabLine.length; i++) {
-    const char = tabLine[i];
-    if (char !== '-' && char !== '|' && char !== '*') {
-      let fretNum = '';
-      // Handle multi-digit frets
-      while (i < tabLine.length && tabLine[i] !== '-' && tabLine[i] !== '|' && tabLine[i] !== '*') {
-        fretNum += tabLine[i];
-        i++;
-      }
-      i--; // Adjust for the extra increment
-      
-      fretPositions.push({
-        pos: i - fretNum.length + 1,
-        fret: fretNum.trim()
-      });
-    }
-  }
-
-  // Determine if a position is a beat marker
-  const isBeatMarker = (idx) => {
-    return tabLine[idx] === '|' || tabLine[idx] === '*';
-  };
-
-  // Calculate if this string is actively being played
-  const isStringActive = activeFrets.some(fret => 
-    fret.string.toLowerCase() === stringName.toLowerCase()
-  );
-
-  // String color mapping
-  const stringColors = {
-    'e': '#FF595E', // High E - Red
-    'B': '#FFCA3A', // B - Yellow
-    'G': '#8AC926', // G - Green
-    'D': '#1982C4', // D - Blue
-    'A': '#6A4C93', // A - Purple
-    'E': '#FF595E', // Low E - Red again
-  };
-  
-  const stringColor = stringColors[stringName] || '#888';
-
-  return (
-    <Box sx={{ 
-      position: 'relative', 
-      my: 0.7,
-      height: '24px',
-      display: 'flex',
-      alignItems: 'center',
-      opacity: isStringActive ? 1 : 0.8,
-      transition: 'all 0.3s ease',
-      transform: isStringActive ? 'scale(1.02)' : 'scale(1)'
-    }}>
-      {/* String name with colored circle */}
-      <Box sx={{
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'flex-end',
-        width: '30px',
-        mr: 1
-      }}>
-        <FiberManualRecordIcon 
-          sx={{ 
-            fontSize: 14, 
-            mr: 0.5,
-            color: stringColor,
-            opacity: isStringActive ? 1 : 0.5,
-            filter: isStringActive ? 'drop-shadow(0 0 2px rgba(255,255,255,0.7))' : 'none',
-            animation: isStringActive ? 'pulse 1s infinite' : 'none',
-            '@keyframes pulse': {
-              '0%': { opacity: 0.7 },
-              '50%': { opacity: 1 },
-              '100%': { opacity: 0.7 }
-            }
-          }} 
-        />
-        <Typography 
-          variant="body2" 
-          sx={{ 
-            fontWeight: 'bold',
-            color: isStringActive ? stringColor : 'text.secondary',
-            transition: 'color 0.3s ease',
-            textShadow: isStringActive ? '0 0 8px rgba(0,0,0,0.1)' : 'none'
-          }}
-        >
-          {stringName}
-        </Typography>
-      </Box>
-      
-      {/* Tablature line with enhanced styling */}
-      <Box sx={{ 
-        position: 'relative',
-        flexGrow: 1, 
-        height: '100%',
-        backgroundColor: 'rgba(0,0,0,0.03)',
-        borderRadius: '6px',
-        overflow: 'hidden',
-        fontFamily: 'monospace',
-        border: '1px solid',
-        borderColor: isStringActive ? `${stringColor}33` : 'rgba(0,0,0,0.08)',
-        boxShadow: isStringActive ? `0 0 10px ${stringColor}22` : 'none',
-        transition: 'all 0.3s ease'
-      }}>
-        {/* Current position indicator */}
-        <Box sx={{
-          position: 'absolute',
-          left: `${currentBeatPosition * 100}%`,
-          top: 0,
-          height: '100%',
-          width: '2px',
-          backgroundColor: '#f50057',
-          boxShadow: '0 0 12px #f50057',
-          transform: 'translateX(-50%)',
-          zIndex: 10
-        }} />
-        
-        {/* Beat markers as vertical lines */}
-        {Array.from({ length: tabLine.length }).map((_, idx) => (
-          isBeatMarker(idx) && (
-            <Box
-              key={`marker-${idx}`}
-              sx={{
-                position: 'absolute',
-                left: `${(idx / tabLine.length) * 100}%`,
-                top: 0,
-                height: '100%',
-                width: '1px',
-                backgroundColor: tabLine[idx] === '|' ? 'rgba(0,0,0,0.25)' : 'rgba(0,0,0,0.1)',
-                zIndex: 1
-              }}
-            />
-          )
-        ))}
-        
-        {/* Fret numbers with enhanced animations */}
-        {fretPositions.map((pos, idx) => {
-          const isActive = activeFrets.some(fret => 
-            fret.string.toLowerCase() === stringName.toLowerCase() && 
-            fret.fret === pos.fret
-          );
-          
-          // Calculate the left position as a percentage
-          const leftPos = (pos.pos / tabLine.length) * 100;
-          
-          // Get note display from active frets
-          const activeNote = activeFrets.find(fret => 
-            fret.string.toLowerCase() === stringName.toLowerCase() && 
-            fret.fret === pos.fret
-          );
-          
-          return (
-            <React.Fragment key={`fret-${idx}`}>
-              {/* Base fret marker */}
-              <Box sx={{
-                position: 'absolute',
-                left: `${leftPos}%`,
-                top: '50%',
-                transform: 'translate(-50%, -50%)',
-                fontFamily: 'monospace',
-                fontWeight: 'bold',
-                fontSize: '14px',
-                color: isActive ? 'white' : 'text.primary',
-                zIndex: 3,
-                textShadow: isActive ? '0 0 4px rgba(0,0,0,0.5)' : 'none'
-              }}>
-                {pos.fret}
-              </Box>
-              
-              {/* Active fret highlight with pulse animation */}
-              {isActive && (
-                <Zoom in={true} timeout={300}>
-                  <Box sx={{
-                    position: 'absolute',
-                    left: `${leftPos}%`,
-                    top: '50%',
-                    width: '22px',
-                    height: '22px',
-                    borderRadius: '50%',
-                    backgroundColor: stringColor,
-                    transform: 'translate(-50%, -50%)',
-                    boxShadow: `0 0 10px ${stringColor}aa`,
-                    animation: 'pulse 1.5s infinite',
-                    zIndex: 2,
-                    '&::before': {
-                      content: '""',
-                      position: 'absolute',
-                      top: 0,
-                      left: 0,
-                      right: 0,
-                      bottom: 0,
-                      borderRadius: '50%',
-                      background: `radial-gradient(circle at 30% 30%, 
-                        ${stringColor} 0%, 
-                        ${stringColor}88 60%, 
-                        transparent 70%
-                      )`,
-                      opacity: 0.9,
-                      zIndex: -1
-                    },
-                    '@keyframes pulse': {
-                      '0%': {
-                        boxShadow: `0 0 0 0 ${stringColor}aa`,
-                        transform: 'translate(-50%, -50%) scale(1)'
-                      },
-                      '70%': {
-                        boxShadow: `0 0 0 8px ${stringColor}00`,
-                        transform: 'translate(-50%, -50%) scale(1.1)'
-                      },
-                      '100%': {
-                        boxShadow: `0 0 0 0 ${stringColor}00`,
-                        transform: 'translate(-50%, -50%) scale(1)'
-                      }
-                    }
-                  }}/>
-                </Zoom>
-              )}
-              
-              {/* Floating note indicator above active fret */}
-              {isActive && activeNote && (
-                <Fade in={true}>
-                  <Box sx={{
-                    position: 'absolute',
-                    left: `${leftPos}%`,
-                    top: '-100%',
-                    transform: 'translate(-50%, -50%)',
-                    backgroundColor: 'rgba(0, 0, 0, 0.8)',
-                    color: 'white',
-                    padding: '2px 5px',
-                    borderRadius: '4px',
-                    fontSize: '10px',
-                    fontWeight: 'bold',
-                    zIndex: 5,
-                    boxShadow: '0 2px 5px rgba(0,0,0,0.3)',
-                    border: `1px solid ${stringColor}88`,
-                    animation: 'float 3s ease-in-out infinite',
-                    '@keyframes float': {
-                      '0%': { transform: 'translate(-50%, -50%)' },
-                      '50%': { transform: 'translate(-50%, -60%)' },
-                      '100%': { transform: 'translate(-50%, -50%)' }
-                    }
-                  }}>
-                    {activeNote.note}
-                  </Box>
-                </Fade>
-              )}
-            </React.Fragment>
-          );
-        })}
-      </Box>
-    </Box>
-  );
-};
+import React, { useEffect, useState, useRef } from 'react';
+import { Box, Typography, Paper, Chip, Button, Divider, Stack, LinearProgress } from '@mui/material';
+import PlayArrowIcon from '@mui/icons-material/PlayArrow';
+import PauseIcon from '@mui/icons-material/Pause';
+import SkipNextIcon from '@mui/icons-material/SkipNext';
+import SkipPreviousIcon from '@mui/icons-material/SkipPrevious';
+import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
 
 const TablatureDisplay = ({ tablature, currentTime, notePositions }) => {
   const [currentBar, setCurrentBar] = useState(0);
   const [currentMeasure, setCurrentMeasure] = useState(0);
   const [activeFrets, setActiveFrets] = useState([]);
   const containerRef = useRef(null);
+  const currentMeasureRef = useRef(null);
   
   // Find the current bar and measure based on currentTime
   useEffect(() => {
@@ -328,7 +75,7 @@ const TablatureDisplay = ({ tablature, currentTime, notePositions }) => {
         }}
       >
         <Box sx={{ textAlign: 'center' }}>
-          <TuneIcon sx={{ fontSize: 40, color: '#bbb', mb: 2 }} />
+          <HelpOutlineIcon sx={{ fontSize: 40, color: '#bbb', mb: 2 }} />
           <Typography variant="h6" sx={{ color: '#666' }}>Tablature not available</Typography>
           <Typography variant="body2" sx={{ color: '#888', mt: 1 }}>
             Click "Analyze and Generate Tablature" to start
@@ -533,7 +280,7 @@ const TablatureDisplay = ({ tablature, currentTime, notePositions }) => {
       }}
     >
       <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-        <MusicNoteIcon sx={{ mr: 1, color: '#1976d2' }} />
+        <HelpOutlineIcon sx={{ mr: 1, color: '#1976d2' }} />
         <Typography variant="h6" sx={{ fontWeight: 500 }}>
           Interactive Tablature
         </Typography>
@@ -577,7 +324,7 @@ const TablatureDisplay = ({ tablature, currentTime, notePositions }) => {
             '100%': { transform: 'translateY(0px)' }
           }
         }}>
-          <FiberManualRecordIcon 
+          <HelpOutlineIcon 
             sx={{ 
               fontSize: 12, 
               mr: 1, 
@@ -672,7 +419,7 @@ const TablatureDisplay = ({ tablature, currentTime, notePositions }) => {
             '100%': { transform: 'translateY(0px)' }
           }
         }}>
-          <InfoIcon sx={{ fontSize: 16, color: '#2196f3', mt: 0.3 }} />
+          <HelpOutlineIcon sx={{ fontSize: 16, color: '#2196f3', mt: 0.3 }} />
           <Box>
             <Typography variant="caption" sx={{ fontWeight: 'bold', display: 'block', mb: 0.5 }}>
               How to read tablature:

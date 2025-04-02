@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useRef, useMemo } from 'react';
-import { Box, Typography, Paper, Zoom, Fade, Chip } from '@mui/material';
+import { Box, Typography, Paper, Tooltip, Chip, Fade } from '@mui/material';
+import { styled } from '@mui/material/styles';
 import InfoIcon from '@mui/icons-material/Info';
-import MusicNoteIcon from '@mui/icons-material/MusicNote';
 
 const GuitarFretboard = ({ notes, currentTime, analysisData }) => {
   // Enhanced interactive fretboard visualization
