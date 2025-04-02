@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { Box, Typography, Paper, Chip, Button, Divider, Stack, LinearProgress } from '@mui/material';
+import { Box, Typography, Paper, Chip, Button, Divider, Stack, LinearProgress, Fade } from '@mui/material';
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import PauseIcon from '@mui/icons-material/Pause';
 import SkipNextIcon from '@mui/icons-material/SkipNext';
@@ -214,7 +214,7 @@ const TablatureDisplay = ({ tablature, currentTime, notePositions }) => {
                     </Typography>
                     
                     {/* Notes on this string */}
-                    {item.data.notes.filter(note => note.string === stringIndex).map((note, noteIndex) => (
+                    {item.data.notes && item.data.notes.filter(note => note.string === stringIndex).map((note, noteIndex) => (
                       <Box
                         key={`note-${item.bar}-${item.measure}-${stringIndex}-${noteIndex}`}
                         sx={{
