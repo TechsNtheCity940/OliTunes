@@ -108,11 +108,8 @@ function App() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
   const [currentTime, setCurrentTime] = useState(0);
-  const [uploadProgress, setUploadProgress] = useState(0);
   const [animateNotes, setAnimateNotes] = useState(true);
   const [volume, setVolume] = useState(100);
-  const [selectedFile, setSelectedFile] = useState(null);
-  const [processedFiles, setProcessedFiles] = useState([]);
   const [duration, setDuration] = useState(0);
   const audioRef = useRef(null);
   const animationRef = useRef(null);
@@ -627,135 +624,8 @@ function App() {
           </Box>
         </Paper>
         
-        {selectedFile && (
-          <Card sx={{ width: '100%', mb: 2, bgcolor: 'rgba(103, 58, 183, 0.05)', border: '1px solid rgba(103, 58, 183, 0.2)' }}>
-            <CardContent>
-              <Typography variant="subtitle1" gutterBottom>
-                <strong>Selected File:</strong> {selectedFile.name}
-              </Typography>
-              <Typography variant="body2" color="text.secondary">
-                Size: {(selectedFile.size / (1024 * 1024)).toFixed(2)} MB
-              </Typography>
-            </CardContent>
-          </Card>
-        )}
-        
         {/* Add hidden audio element */}
         <audio ref={audioRef} style={{ display: 'none' }} />
-        
-        {processedFiles.length > 0 && (
-          <Paper 
-            sx={{ 
-              display: 'flex', 
-              flexDirection: 'column', 
-              p: 2, 
-              mb: 2, 
-              width: '100%',
-              background: 'linear-gradient(135deg, #f5f7ff 0%, #f0f2f8 100%)'
-            }}
-            className="custom-audio-player"
-          >
-            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1 }}>
-              <Typography variant="h6" sx={{ color: '#333', textShadow: '1px 1px 3px rgba(255,255,255,0.5)' }}>
-                <GraphicEq sx={{ mr: 1, verticalAlign: 'middle' }} />
-                Audio Playback
-              </Typography>
-              
-              <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                <Typography variant="caption" sx={{ mr: 1, color: '#333' }}>
-                  Animate Notes
-                </Typography>
-                <Switch 
-                  checked={animateNotes} 
-                  onChange={(e) => setAnimateNotes(e.target.checked)}
-                  color="primary"
-                />
-              </Box>
-            </Box>
-            
-            <Box sx={{ display: 'flex', justifyContent: 'center', mb: 2 }}>
-              <Button 
-                variant="contained" 
-                onClick={handlePlayPause}
-                sx={{ mx: 1 }}
-              >
-                {isPlaying ? <Pause /> : <PlayArrow />}
-              </Button>
-              <Button variant="outlined" onClick={handleStop} sx={{ mx: 1 }}>
-                Stop
-              </Button>
-              <Button variant="outlined" onClick={() => skipTime(-10)} sx={{ mx: 1 }}>
-                <FastRewind />
-              </Button>
-              <Button variant="outlined" onClick={() => skipTime(10)} sx={{ mx: 1 }}>
-                <FastForward />
-              </Button>
-            </Box>
-            
-            <Box sx={{ width: '100%', mb: 2 }}>
-              <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 0.5 }}>
-                <Typography variant="caption">{formatTime(currentTime)}</Typography>
-                <Typography variant="caption">{formatTime(duration)}</Typography>
-              </Box>
-              <Slider
-                value={currentTime}
-                max={duration}
-                onChange={handleSliderChange}
-                sx={{ color: '#673ab7' }}
-              />
-            </Box>
-            
-            <Box sx={{ display: 'flex', alignItems: 'center' }}>
-              <Typography variant="caption" sx={{ mr: 1 }}>Volume:</Typography>
-              <Slider
-                value={volume}
-                min={0}
-                max={100}
-                onChange={handleVolumeChange}
-                sx={{ width: 100, ml: 1, color: '#673ab7' }}
-              />
-            </Box>
-          </Paper>
-        )}
-        
-        {processedFiles.length > 0 && (
-          <Box>
-            <Paper sx={{ p: 3, mb: 4 }} className="music-card">
-              <Tabs
-                value={currentTab}
-                onChange={(e, newValue) => setCurrentTab(newValue)}
-                variant="fullWidth"
-                className="music-tabs"
-              >
-                <Tab label="Analysis" value="analysis" />
-                <Tab label="Tablature" value="tablature" />
-                <Tab label="Lyrics" value="lyrics" />
-              </Tabs>
-
-              <Box sx={{ mt: 3 }}>
-                {currentTab === 'analysis' && (
-                  <SongAnalysisViewer 
-                    currentFile={processedFiles[0]} 
-                    currentTime={currentTime}
-                    animateNotes={animateNotes}
-                  />
-                )}
-                {currentTab === 'tablature' && (
-                  <TablatureDisplay 
-                    currentFile={processedFiles[0]} 
-                    currentTime={currentTime}
-                  />
-                )}
-                {currentTab === 'lyrics' && (
-                  <LyricsDisplay 
-                    currentFile={processedFiles[0]} 
-                    currentTime={currentTime}
-                  />
-                )}
-              </Box>
-            </Paper>
-          </Box>
-        )}
       </Container>
     </ThemeProvider>
   );

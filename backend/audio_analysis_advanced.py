@@ -134,8 +134,42 @@ class AdvancedAudioAnalyzer:
                         mask=False
                     )
                 
-                # Mix with the filtered content for better results
-                y_enhanced = 0.7 * y_harmonic + 0.3 * y_eq
+                # First check if audio has proper shape and values
+                if not np.all(np.isfinite(y_eq)):
+                    # Fix NaN values before processing
+                    y_eq = np.nan_to_num(y_eq)
+                
+                # Ensure minimum length for processing
+                if len(y_eq) < 2048:
+                    raise ValueError("Audio segment too short for harmonic separation")
+                
+                # Apply HPSS with gentler parameters
+                y_harmonic = librosa.effects.harmonic(
+                    y_eq,
+                    kernel_size=31,  # Smaller kernel size
+                    power=2.0,
+                    mask=False
+                )
+                
+                # Validate harmonic output before mixing
+                if len(y_harmonic) != len(y_eq):
+                    logger.warning(f"Harmonic separation produced mismatched array dimensions. Expected {len(y_eq)}, got {len(y_harmonic)}")
+                    # Resize to match (duplicate ending or truncate)
+                    if len(y_harmonic) < len(y_eq):
+                        # Pad the harmonic array to match the original size
+                        padding = len(y_eq) - len(y_harmonic)
+                        y_harmonic = np.pad(y_harmonic, (0, padding), mode='edge')
+                    else:
+                        # Truncate the harmonic array to the original size
+                        y_harmonic = y_harmonic[:len(y_eq)]
+                
+                # Check for NaN values in the harmonic output
+                if not np.all(np.isfinite(y_harmonic)):
+                    logger.warning("Harmonic separation produced NaN values, using filtered signal")
+                    y_enhanced = y_eq
+                else:
+                    # Mix with the filtered content for better results
+                    y_enhanced = 0.7 * y_harmonic + 0.3 * y_eq
             except Exception as e:
                 # Fall back to just using the equalized signal if HPSS fails
                 logger.warning(f"Harmonic separation failed, using filtered signal: {str(e)}")

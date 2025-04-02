@@ -4,7 +4,6 @@ import {
   Typography, 
   Paper, 
   Grid, 
-  Divider, 
   Chip,
   List,
   ListItem,
@@ -74,10 +73,6 @@ const SongAnalysisViewer = ({ filename, currentTime }) => {
       }
     }
   }, [currentTime, analysis]);
-
-  const handleTabChange = (event, newValue) => {
-    setActiveTab(newValue);
-  };
 
   // Format time (seconds) to MM:SS format
   const formatTime = (time) => {
