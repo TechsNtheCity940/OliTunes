@@ -42,6 +42,7 @@ from web_tab_integration import register_blueprint as register_tab_extractor
 from user_feedback import FeedbackCollector
 from tab_data_processor import TabDataProcessor
 from model_performance import ModelPerformanceTracker
+from music_theory import MusicTheoryAnalyzer
 
 # Import TabCNN and Demucs integration modules
 try:
@@ -1881,23 +1882,54 @@ def process_audio():
     """Main audio processing endpoint"""
     try:
         audio_file = request.files['audio']
-        style = request.form.get('style', 'metal')
+        style = request.form.get('style', '')
         
         temp_path = save_temp_file(audio_file)
         
         try:
-            processor = UnifiedTabProcessor()
-            tabs = processor.process_audio(temp_path, style)
+            # Load audio for analysis
+            y, sr = librosa.load(temp_path, sr=None)
             
-            return jsonify({
-                'status': 'success',
-                'lead_tab': tabs.get('guitar', {}),
-                'rhythm_tab': tabs.get('rhythm', {}),
-                'visualization': True
-            })
+            # Perform music theory analysis
+            analyzer = MusicTheoryAnalyzer()
+            analysis = {
+                'key': analyzer.detect_key(y, sr)['key'],
+                'tempo': librosa.beat.tempo(y=y, sr=sr)[0],
+                'style': request.form.get('style', 'rock'),
+                'chords': analyzer.analyze_chord_progression(y, sr)
+            }
+            
+            logger.info(f"Audio analysis complete: Key={analysis['key']}, Tempo={analysis['tempo']}")
         except Exception as e:
-            return jsonify({'status': 'error', 'message': str(e)})
+            logger.error(f"Error during music theory analysis: {str(e)}")
+            # Fallback to defaults if analysis fails
+            analysis = {
+                'key': 'C',
+                'tempo': 120.0,
+                'style': request.form.get('style', 'rock'),
+                'chords': []
+            }
+        
+        # 2. Process through full pipeline
+        from unified_tab_processor import UnifiedTabProcessor
+        processor = UnifiedTabProcessor()
+        tabs = processor.process_audio(temp_path, analysis['style'], key=analysis['key'])
+        
+        # 3. Format output
+        return jsonify({
+            'status': 'success',
+            'analysis': {
+                'key': analysis['key'],
+                'tempo': float(analysis['tempo']),
+                'style': analysis['style'],
+                'chords': analysis['chords']
+            },
+            'tabs': tabs,
+            'visualization': tabs.get('guitar', {}).get('fretboard_data', {})
+        })
     except Exception as e:
+        logger.error(f"Error processing audio: {str(e)}")
+        logger.error(traceback.format_exc())
         return jsonify({'status': 'error', 'message': str(e)})
 
 @app.route('/generate_tab', methods=['POST'])
@@ -1909,20 +1941,46 @@ def generate_tab():
         audio_file.save(temp_path)
         
         # 1. Audio analysis using music theory
-        from music_theory import analyze_audio_structure
-        analysis = analyze_audio_structure(temp_path)
+        try:
+            # Load audio for analysis
+            y, sr = librosa.load(temp_path, sr=None)
+            
+            # Perform music theory analysis
+            analyzer = MusicTheoryAnalyzer()
+            analysis = {
+                'key': analyzer.detect_key(y, sr)['key'],
+                'tempo': librosa.beat.tempo(y=y, sr=sr)[0],
+                'style': request.form.get('style', 'rock'),
+                'chords': analyzer.analyze_chord_progression(y, sr)
+            }
+            
+            logger.info(f"Audio analysis complete: Key={analysis['key']}, Tempo={analysis['tempo']}")
+        except Exception as e:
+            logger.error(f"Error during music theory analysis: {str(e)}")
+            # Fallback to defaults if analysis fails
+            analysis = {
+                'key': 'C',
+                'tempo': 120.0,
+                'style': request.form.get('style', 'rock'),
+                'chords': []
+            }
         
         # 2. Process through full pipeline
         from unified_tab_processor import UnifiedTabProcessor
         processor = UnifiedTabProcessor()
-        tabs = processor.process_audio(temp_path, analysis['style'])
+        tabs = processor.process_audio(temp_path, analysis['style'], key=analysis['key'])
         
         # 3. Format output
         return jsonify({
             'status': 'success',
-            'analysis': analysis,
+            'analysis': {
+                'key': analysis['key'],
+                'tempo': float(analysis['tempo']),
+                'style': analysis['style'],
+                'chords': analysis['chords']
+            },
             'tabs': tabs,
-            'visualization': processor._create_fretboard_data(tabs['guitar']['predictions'])
+            'visualization': tabs.get('guitar', {}).get('fretboard_data', {})
         })
     except Exception as e:
         return jsonify({'status': 'error', 'message': str(e)})

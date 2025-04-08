@@ -369,22 +369,12 @@ class TabCNNProcessor:
     def initialize_model(self):
         """Initialize the TabCNN model"""
         try:
-            # Create TabCNN model
-            self.model = TabCNN(
-                batch_size=1,  # For inference, batch size of 1
-                epochs=1,      # Not used for inference
-                con_win_size=9,
-                spec_repr="c", # Using CQT representation
-                data_path=os.path.join(backend_dir, "models", "tab-cnn", "data", "spec_repr", "c"),
-                save_path=self.model_path
-            )
+            # Load the model using the build_model method
+            self.model = self.build_model()
             
-            # Build the model architecture
-            self.model.build_model()
-            
-            # Load weights directly from the specified path
+            # Load weights if available
             if os.path.exists(self.model_path):
-                self.model.model.load_weights(self.model_path)
+                self.model.load_weights(self.model_path)
                 logger.info(f"Loaded TabCNN weights from {self.model_path}")
                 self.initialized = True
             else:
@@ -393,6 +383,29 @@ class TabCNNProcessor:
         except Exception as e:
             logger.error(f"Error initializing TabCNN model: {e}")
             raise
+    
+    def build_model(self):
+        """Build the enhanced TabCNN model with residual connections"""
+        from tensorflow.keras.models import Model
+        from tensorflow.keras.layers import Input, Conv2D, MaxPooling2D, Dense, Dropout, Flatten, Add
+        
+        inputs = Input(shape=(128, 9, 1))  # Mel-spectrogram input
+        x = Conv2D(32, (3, 3), activation='relu', padding='same')(inputs)
+        x = Conv2D(64, (3, 3), activation='relu', padding='same')(x)
+        residual = x
+        x = Conv2D(64, (3, 3), activation='relu', padding='same')(x)
+        x = Add()([x, residual])  # Residual connection
+        x = MaxPooling2D((2, 2))(x)
+        x = Dropout(0.25)(x)
+        x = Flatten()(x)
+        x = Dense(128, activation='relu')(x)
+        x = Dropout(0.5)(x)
+        note_output = Dense(6 * 21, activation='sigmoid')(x)  # Note presence
+        fret_output = Dense(6 * 21, activation='softmax')(x)  # Fret positions
+        model = Model(inputs, [note_output, fret_output])
+        model.compile(loss=['binary_crossentropy', 'categorical_crossentropy'],
+                    optimizer='adam', metrics=['accuracy'])
+        return model
     
     def preprocess_audio(self, audio_file, temp_dir=None):
         """Preprocess audio for TabCNN model
@@ -408,37 +421,55 @@ class TabCNNProcessor:
             temp_dir = tempfile.mkdtemp()
         
         try:
-            # Create preprocessor
-            preprocessor = TabDataReprGen(mode="c")  # Use CQT representation
-            
             # Load audio and convert to the right format
             y, sr = librosa.load(audio_file, sr=22050, mono=True)
             
             # Normalize audio
             y = librosa.util.normalize(y)
             
-            # Generate CQT representation
-            repr_data = np.abs(librosa.cqt(
-                y,
-                hop_length=preprocessor.hop_length, 
+            # Generate mel-spectrogram
+            spec = librosa.feature.melspectrogram(
+                y=y, 
                 sr=sr, 
-                n_bins=preprocessor.cqt_n_bins, 
-                bins_per_octave=preprocessor.cqt_bins_per_octave
-            ))
+                n_mels=128,
+                fmin=80,
+                fmax=4000,
+                hop_length=512
+            )
             
-            # Ensure shape is compatible with model
-            repr_data = np.swapaxes(repr_data, 0, 1)
+            # Convert to log scale
+            spec = librosa.power_to_db(spec, ref=np.max)
             
-            return repr_data
+            # Normalize
+            spec = (spec - spec.mean()) / (spec.std() + 1e-8)
+            
+            # Create context windows
+            frames_with_context = []
+            for i in range(4, spec.shape[1] - 4):
+                window = spec[:, i-4:i+5]  # 9-frame context window
+                frames_with_context.append(window)
+            
+            if not frames_with_context:
+                # Handle short audio files
+                window = np.pad(spec, ((0, 0), (4, 4)), mode='constant')
+                frames_with_context.append(window[:, :9])
+            
+            # Stack frames
+            spec_data = np.stack(frames_with_context)
+            
+            # Add channel dimension for CNN
+            spec_data = np.expand_dims(spec_data, axis=-1)
+            
+            return spec_data
         except Exception as e:
             logger.error(f"Error preprocessing audio: {e}")
             raise
     
-    def predict_tablature(self, audio_representation):
+    def predict_tablature(self, spec: np.ndarray) -> np.ndarray:
         """Run inference with TabCNN model
         
         Args:
-            audio_representation: Preprocessed audio representation
+            spec: Preprocessed audio representation (mel-spectrogram)
             
         Returns:
             Predicted tablature
@@ -448,25 +479,26 @@ class TabCNNProcessor:
             return None
         
         try:
-            # Prepare batch data with context window
-            con_win_size = self.model.con_win_size
-            half_win = con_win_size // 2
-            padded_repr = np.pad(audio_representation, ((half_win, half_win), (0, 0)), mode='constant')
-            
-            frames_with_context = []
-            for i in range(half_win, padded_repr.shape[0] - half_win):
-                window = padded_repr[i - half_win:i + half_win + 1]
-                frames_with_context.append(window)
-            
-            frames_with_context = np.array(frames_with_context)
-            
-            # Reshape for CNN input: (batch, height, width, channels)
-            X = np.expand_dims(frames_with_context, axis=3)
+            # Ensure input has the right shape
+            if len(spec.shape) == 3:  # (frames, mels, context)
+                spec = np.expand_dims(spec, axis=-1)  # Add channel dimension
             
             # Run prediction
-            predictions = self.model.model.predict(X)
+            note_preds, fret_preds = self.model.predict(spec)
             
-            return predictions
+            # Process predictions
+            note_preds = note_preds.reshape(-1, 6, 21) > 0.5  # Binarize note presence
+            fret_preds = fret_preds.reshape(-1, 6, 21)
+            
+            # Combine predictions
+            combined = np.zeros_like(fret_preds)
+            for t in range(combined.shape[0]):
+                for s in range(6):
+                    if np.any(note_preds[t, s]):
+                        # If a note is detected, use the fret prediction
+                        combined[t, s] = fret_preds[t, s]
+            
+            return combined
         except Exception as e:
             logger.error(f"Error predicting tablature: {e}")
             return None
@@ -747,7 +779,7 @@ def preprocess_guitarset_data():
         import subprocess
         
         # Path to the parallel preprocessing script
-        script_path = os.path.join(backend_dir, 'data', 'Parallel_TabDataReprGen.py')
+        script_path = os.path.join(backend_dir, 'preprocess_dataset.py')
         
         # Run the script
         subprocess.run([sys.executable, script_path], check=True)
@@ -763,7 +795,7 @@ def train_tabcnn_model():
     """Train the TabCNN model"""
     try:
         # Path to the TabCNN script
-        script_path = os.path.join(backend_dir, 'models', 'tab-cnn', 'TabCNN.py')
+        script_path = os.path.join(backend_dir, 'models', 'tab-cnn', 'TAB_trainer.py')
         
         # Run the script
         subprocess.run([sys.executable, script_path], check=True)
