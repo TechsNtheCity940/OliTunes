@@ -1,0 +1,126 @@
+[Intro]
+(all 6/8 except for the one short bar which is 3/8)
+| [ch]Em[/ch]    |   %   |   %   |   %   |
+| [ch]Em[/ch]    |   %   | [ch]Em[/ch] |
+
+| [ch]Am[/ch]    |   %   | [ch]C[/ch]     | [ch]D[/ch]     |
+| [ch]Em[/ch]    |   %   |   %   |   %   |
+
+| [ch]Em[/ch]    | [ch]D[/ch]  [ch]C[/ch]  |
+| [ch]Em[/ch]    | [ch]D[/ch]  [ch]C[/ch]  |
+| [ch]Em[/ch]    | [ch]D[/ch]  [ch]C[/ch]  | [ch]G[/ch]  [ch]B7[/ch] |
+| [ch]Em[/ch]    |   %   |
+
+[Verse]
+[tab][ch]Em[/ch]                    [ch]D[/ch]     [ch]C[/ch]
+   So close no matter how far[/tab]
+[tab][ch]Em[/ch]                       [ch]D[/ch]          [ch]C[/ch]
+   Couldn't be much more from the heart[/tab]
+[tab][ch]Em[/ch]                  [ch]D[/ch]       [ch]C[/ch]
+   Forever trusting who we are[/tab]
+[tab][ch]G[/ch]      [ch]B7[/ch]           [ch]Em[/ch]
+   and nothing else matters[/tab]
+
+[tab][ch]Em[/ch]                [ch]D[/ch]          [ch]C[/ch]
+   Never opened myself this way[/tab]
+[tab][ch]Em[/ch]                          [ch]D[/ch]     [ch]C[/ch]
+   Life is ours, we live it our way[/tab]
+[tab][ch]Em[/ch]                         [ch]D[/ch]      [ch]C[/ch]
+   All these words I don't just say[/tab]
+[tab][ch]G[/ch]      [ch]B7[/ch]           [ch]Em[/ch]
+   and nothing else matters[/tab]
+
+[tab][ch]Em[/ch]                    [ch]D[/ch]         [ch]C[/ch]
+   Trust I seek and I find in you[/tab]
+[tab][ch]Em[/ch]                  [ch]D[/ch]           [ch]C[/ch]
+   Every day for us something new[/tab]
+[tab][ch]Em[/ch]                 [ch]D[/ch]           [ch]C[/ch]
+   Open mind for a different view[/tab]
+[tab][ch]G[/ch]      [ch]B7[/ch]           [ch]Em[/ch]      [ch]C[/ch]  [ch]A[/ch]
+   and nothing else matters[/tab]
+
+[Chorus]
+[tab][ch]D[/ch]                           [ch]C[/ch]  [ch]A[/ch]
+  Never cared for what they do[/tab]
+[tab][ch]D[/ch]                           [ch]C[/ch]  [ch]A[/ch]
+  Never cared for what they know[/tab]
+[tab][ch]D[/ch]       [ch]Em[/ch]
+  But I know[/tab]
+
+[Verse]
+[tab][ch]Em[/ch]                    [ch]D[/ch]     [ch]C[/ch]
+   So close no matter how far[/tab]
+[tab][ch]Em[/ch]                       [ch]D[/ch]          [ch]C[/ch]
+   Couldn't be much more from the heart[/tab]
+[tab][ch]Em[/ch]                  [ch]D[/ch]       [ch]C[/ch]
+   Forever trusting who we are[/tab]
+[tab][ch]G[/ch]      [ch]B7[/ch]           [ch]Em[/ch]      [ch]C[/ch]  [ch]A[/ch]
+   and nothing else matters[/tab]
+
+[Chorus]
+[tab][ch]D[/ch]                           [ch]C[/ch]  [ch]A[/ch]
+  Never cared for what they do[/tab]
+[tab][ch]D[/ch]                           [ch]C[/ch]  [ch]A[/ch]
+  Never cared for what they know[/tab]
+[tab][ch]D[/ch]       [ch]Em[/ch]
+  But I know[/tab]
+
+[Instrumental]
+| [ch]Em[/ch]    |   %   | [ch]Am[/ch]    |   %   |
+| [ch]C[/ch]     | [ch]D[/ch]     | [ch]Em[/ch]    |   %   |
+
+| [ch]Em[/ch]    |   %   | [ch]Am[/ch]    |   %   |
+| [ch]C[/ch]     | [ch]D[/ch]     | [ch]Em[/ch]    |   %   |
+
+[Verse]
+[tab][ch]Em[/ch]                [ch]D[/ch]          [ch]C[/ch]
+   Never opened myself this way[/tab]
+[tab][ch]Em[/ch]                          [ch]D[/ch]     [ch]C[/ch]
+   Life is ours, we live it our way[/tab]
+[tab][ch]Em[/ch]                         [ch]D[/ch]      [ch]C[/ch]
+   All these words I don't just say[/tab]
+[tab][ch]G[/ch]      [ch]B7[/ch]           [ch]Em[/ch]
+   and nothing else matters[/tab]
+
+[tab][ch]Em[/ch]                    [ch]D[/ch]         [ch]C[/ch]
+   Trust I seek and I find in you[/tab]
+[tab][ch]Em[/ch]                  [ch]D[/ch]           [ch]C[/ch]
+   Every day for us something new[/tab]
+[tab][ch]Em[/ch]                 [ch]D[/ch]           [ch]C[/ch]
+   Open mind for a different view[/tab]
+[tab][ch]G[/ch]      [ch]B7[/ch]           [ch]Em[/ch]     [ch]C[/ch]   [ch]A[/ch]
+   and nothing else matter-ers[/tab]
+
+[Chorus]
+[tab][ch]D[/ch]                           [ch]C[/ch]  [ch]A[/ch]
+  Never cared for what they say[/tab]
+[tab][ch]D[/ch]                            [ch]C[/ch]  [ch]A[/ch]
+  Never cared for games they play[/tab]
+[tab][ch]D[/ch]                           [ch]C[/ch]  [ch]A[/ch]
+  Never cared for what they do[/tab]
+[tab][ch]D[/ch]                           [ch]C[/ch]  [ch]A[/ch]
+  Never cared for what they know[/tab]
+[tab][ch]D[/ch]       [ch]Em[/ch]
+  And I know[/tab]
+
+[Solo]
+| [ch]Em[/ch]    | [ch]D[/ch]  [ch]C[/ch]  |
+| [ch]Em[/ch]    | [ch]D[/ch]  [ch]C[/ch]  |
+| [ch]Em[/ch]    | [ch]D[/ch]  [ch]C[/ch]  | [ch]G[/ch]  [ch]B7[/ch] |
+| [ch]Em[/ch]    |   %   |   %   |   %   |
+
+[Verse]
+[tab][ch]Em[/ch]                    [ch]D[/ch]     [ch]C[/ch]
+   So close no matter how far[/tab]
+[tab][ch]Em[/ch]                       [ch]D[/ch]          [ch]C[/ch]
+   Couldn't be much more from the heart[/tab]
+[tab][ch]Em[/ch]                  [ch]D[/ch]       [ch]C[/ch]
+   Forever trusting who we are[/tab]
+[tab][ch]G[/ch]      [ch]B7[/ch]           [ch]Em[/ch]
+   No, nothing else matters[/tab]
+
+[Outro]
+(6/8 except short 3/8 bar)
+| [ch]Em[/ch]    |   %   | [ch]Em[/ch] | [ch]Em[/ch]    |   %   | x3
+[tab]| [ch]Em[/ch]    |   %   | [ch]Em[/ch] |
+(fade out)[/tab]

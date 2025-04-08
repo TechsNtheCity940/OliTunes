@@ -1,0 +1,326 @@
+Change the first string to D#
+
+
+
+*The way that Taylor plays the B chord in the solo, bridge and outro is different.
+
+*At the end of verse 2, bridge and outro the way that Taylor plays the EM7 chord is different.
+
+
+
+In the verses:
+
+
+
+
+D#|--0----0----0--|
+
+ B|--0----10---9--|
+
+ G|--8----11---9--|
+
+ D|--9----11---9--|
+
+ A|--9----9----7--|
+
+ E|--7----x----x--|[/tab]
+
+     [ch]B[/ch]  [ch]F#m6[/ch]  [ch]EM7[/ch]
+
+
+
+In the solo and bridge:
+
+
+
+
+D#|--0----0----0---0----|
+
+ B|--5----4----0---0----|
+
+ G|--6----4----3---1----|
+
+ D|--6----4----4-- 2----|
+
+ A|--4----2----4---2----|
+
+ E|--x----x----2---0----|[/tab]
+
+    [ch]C#m9[/ch]  [ch]B[/ch]  [ch]F#6[/ch]  [ch]EM7[/ch]
+
+
+
+In the outro:
+
+
+
+
+D#|--0---0----0--|
+
+ B|--0---0----4--|
+
+ G|--6---1----4--|
+
+ D|--7---2----4--|
+
+ A|--7---2----2--|
+
+ E|--5---0----x--|[/tab]
+
+    [ch]A9[/ch]  [ch]EM7[/ch]   [ch]B[/ch]
+
+
+
+
+
+[Intro]
+
+[ch]B[/ch]  [ch]F#m6[/ch]  [ch]EM7[/ch]  x2
+
+
+
+[Verse 1]
+
+
+[ch]B[/ch]                                [ch]F#m6[/ch]
+
+When I was younger I saw my daddy cry[/tab]
+
+
+                 [ch]EM7[/ch]
+
+And curse at the wind[/tab]
+
+
+[ch]B[/ch]
+
+He broke his own heart and I watched[/tab]
+
+
+               [ch]F#m6[/ch]       [ch]EM7[/ch]
+
+As he tried to reassemble it[/tab]
+
+
+
+
+[ch]B[/ch]
+
+And my momma swore[/tab]
+
+
+                         [ch]F#m6[/ch]    [ch]EM7[/ch]
+
+That she would never let herself forget[/tab]
+
+
+[ch]B[/ch]
+
+And that was the day that I promised[/tab]
+
+
+                  [ch]F#m6[/ch]                [ch]EM7[/ch]
+
+I'd never sing of love if it does not exist[/tab]
+
+
+
+[Chorus 1]
+
+
+
+But darling,
+
+
+[ch]B[/ch]
+
+You are the only exception[/tab]
+
+
+[ch]F#m6[/ch]        [ch]EM7[/ch]
+
+You are the only exception[/tab]
+
+
+[ch]B[/ch]
+
+You are the only exception[/tab]
+
+
+[ch]F#m6[/ch]        [ch]EM7[/ch]
+
+You are the only exception[/tab]
+
+
+
+[Verse 2]
+
+
+[ch]B[/ch]
+
+Maybe I know somewhere[/tab]
+
+
+           [ch]F#m6[/ch]
+
+Deep in my soul[/tab]
+
+
+                [ch]EM7[/ch]
+
+That love never lasts[/tab]
+
+
+[ch]B[/ch]
+
+And we've got to find other ways[/tab]
+
+
+           [ch]F#m6[/ch]
+
+To make it alone[/tab]
+
+
+                   [ch]EM7[/ch]
+
+Or keep a straight face[/tab]
+
+
+[ch]B[/ch]
+
+And I've always lived like this[/tab]
+
+
+          [ch]F#m6[/ch]        [ch]EM7[/ch]
+
+Keeping a comfortable distance[/tab]
+
+
+[ch]B[/ch]
+
+And up until now I've sworn to myself[/tab]
+
+
+         [ch]F#m6[/ch]               [ch]EM7[/ch]
+
+That I'm content with loneliness[/tab]
+
+        (Six strums down)
+
+Because none of it was ever worth the risk
+
+
+
+[Chorus 2]
+
+
+      [ch]B[/ch]
+
+Well, you are the only exception[/tab]
+
+
+[ch]F#m6[/ch]        [ch]EM7[/ch]
+
+You are the only exception[/tab]
+
+
+[ch]B[/ch]
+
+You are the only exception[/tab]
+
+
+[ch]F#m6[/ch]        [ch]EM7[/ch]
+
+You are the only exception[/tab]
+
+
+
+[Solo]
+
+[ch]C#m9[/ch]  [ch]B[/ch]  [ch]F#6[/ch]
+
+
+
+[Bridge]
+
+
+[ch]C#m9[/ch]
+
+I've got a tight grip on reality[/tab]
+
+
+                [ch]B[/ch]                           [ch]F#6[/ch]
+
+But I can't let go of what's in front of me here[/tab]
+
+
+              [ch]C#m9[/ch]
+
+I know you're leaving in the morning when you wake up[/tab]
+
+
+         [ch]B[/ch]                                  [ch]F#6[/ch]   [ch]EM7[/ch]
+
+Leave me with some kind of proof it's not a dream.[/tab]
+
+
+
+[Chorus 3]
+
+
+[ch]B[/ch]
+
+You are the only exception[/tab]
+
+
+[ch]F#m6[/ch]        [ch]EM7[/ch]
+
+You are the only exception[/tab]
+
+
+[ch]B[/ch]
+
+You are the only exception[/tab]
+
+
+[ch]F#m6[/ch]        [ch]EM7[/ch]
+
+You are the only exception[/tab]
+
+
+
+[Chorus 4]
+
+
+[ch]B[/ch]
+
+You are the only exception[/tab]
+
+
+[ch]F#m6[/ch]        [ch]EM7[/ch]
+
+You are the only exception[/tab]
+
+
+[ch]B[/ch]
+
+You are the only exception[/tab]
+
+
+[ch]F#m6[/ch]        [ch]EM7[/ch]
+
+You are the only exception[/tab]
+
+
+
+[Outro]
+
+
+    [ch]A9[/ch]        [ch]EM7[/ch]         [ch]B[/ch]
+
+And I'm on my way to believing[/tab]
+
+
+        [ch]A9[/ch]        [ch]EM7[/ch]             [ch]B[/ch]
+
+Oh, and I'm on my way to believing[/tab]

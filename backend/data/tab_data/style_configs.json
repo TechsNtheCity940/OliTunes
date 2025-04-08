@@ -1,0 +1,196 @@
+{
+  "blues": {
+    "description": "Blues style emphasizes emotional expression with frequent bends and vibrato",
+    "scales": [
+      "blues",
+      "pentatonic_minor",
+      "pentatonic_major"
+    ],
+    "position_bias": [
+      0.5,
+      0.4,
+      0.1,
+      0.0,
+      0.0
+    ],
+    "common_keys": [
+      "A",
+      "E",
+      "G",
+      "D",
+      "C"
+    ],
+    "patterns": {
+      "bends": 0.3,
+      "vibrato": 0.4,
+      "slides": 0.2,
+      "hammer_ons": 0.1,
+      "pull_offs": 0.1,
+      "open_strings": 0.2
+    },
+    "chord_bias": {
+      "dominant7": 0.5,
+      "minor": 0.3,
+      "major": 0.2
+    },
+    "box_patterns": true,
+    "hand_stretch": 3
+  },
+  "rock": {
+    "description": "Rock style balances rhythm and lead playing across the fretboard",
+    "scales": [
+      "pentatonic_minor",
+      "pentatonic_major",
+      "major",
+      "natural_minor"
+    ],
+    "position_bias": [
+      0.3,
+      0.4,
+      0.2,
+      0.1,
+      0.0
+    ],
+    "common_keys": [
+      "E",
+      "A",
+      "D",
+      "G",
+      "C"
+    ],
+    "patterns": {
+      "bends": 0.2,
+      "vibrato": 0.2,
+      "slides": 0.1,
+      "hammer_ons": 0.2,
+      "pull_offs": 0.2,
+      "open_strings": 0.3
+    },
+    "chord_bias": {
+      "power": 0.4,
+      "major": 0.3,
+      "minor": 0.2,
+      "dominant7": 0.1
+    },
+    "box_patterns": false,
+    "hand_stretch": 4
+  },
+  "jazz": {
+    "description": "Jazz utilizes complex chords and scales across the entire fretboard",
+    "scales": [
+      "major",
+      "dorian",
+      "mixolydian",
+      "altered",
+      "diminished"
+    ],
+    "position_bias": [
+      0.1,
+      0.2,
+      0.4,
+      0.2,
+      0.1
+    ],
+    "common_keys": [
+      "C",
+      "F",
+      "Bb",
+      "Eb",
+      "G"
+    ],
+    "patterns": {
+      "bends": 0.05,
+      "vibrato": 0.1,
+      "slides": 0.3,
+      "hammer_ons": 0.2,
+      "pull_offs": 0.2,
+      "open_strings": 0.05
+    },
+    "chord_bias": {
+      "maj7": 0.3,
+      "min7": 0.3,
+      "dom7": 0.2,
+      "dim7": 0.1,
+      "aug": 0.05,
+      "altered": 0.05
+    },
+    "box_patterns": false,
+    "hand_stretch": 5
+  },
+  "folk": {
+    "description": "Folk emphasizes open chords and fingerpicking patterns",
+    "scales": [
+      "major",
+      "pentatonic_major",
+      "mixolydian"
+    ],
+    "position_bias": [
+      0.7,
+      0.2,
+      0.1,
+      0.0,
+      0.0
+    ],
+    "common_keys": [
+      "G",
+      "C",
+      "D",
+      "E",
+      "A"
+    ],
+    "patterns": {
+      "bends": 0.05,
+      "vibrato": 0.1,
+      "slides": 0.1,
+      "hammer_ons": 0.2,
+      "pull_offs": 0.2,
+      "open_strings": 0.7
+    },
+    "chord_bias": {
+      "major": 0.5,
+      "minor": 0.3,
+      "sus": 0.1,
+      "7": 0.1
+    },
+    "box_patterns": false,
+    "hand_stretch": 3
+  },
+  "metal": {
+    "description": "Metal features fast alternate picking, palm muting, and power chords",
+    "scales": [
+      "pentatonic_minor",
+      "natural_minor",
+      "phrygian",
+      "harmonic_minor"
+    ],
+    "position_bias": [
+      0.2,
+      0.3,
+      0.3,
+      0.2,
+      0.0
+    ],
+    "common_keys": [
+      "E",
+      "A",
+      "D",
+      "C",
+      "G"
+    ],
+    "patterns": {
+      "bends": 0.1,
+      "vibrato": 0.2,
+      "slides": 0.1,
+      "hammer_ons": 0.3,
+      "pull_offs": 0.3,
+      "open_strings": 0.3
+    },
+    "chord_bias": {
+      "power": 0.7,
+      "minor": 0.2,
+      "diminished": 0.1
+    },
+    "box_patterns": true,
+    "hand_stretch": 4
+  }
+}

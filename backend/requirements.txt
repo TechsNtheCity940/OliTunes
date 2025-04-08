@@ -1,0 +1,22 @@
+Flask==3.0.0
+Flask-Cors==4.0.0
+librosa==0.10.1
+numpy==1.26.2
+scipy==1.11.4
+soundfile==0.12.1
+pydub==0.25.1
+music21==9.1.0
+mir-eval==0.7
+tensorflow==2.16.1
+setuptools==68.2.2
+# Additional music libraries
+pyaudio==0.2.13
+essentia==2.1b6.dev1234
+madmom==0.16.1
+aubio==0.4.9
+mido==1.2.10
+pretty_midi==0.2.10
+pedalboard==0.8.1
+# Optional dependencies - install manually if needed
+# spleeter==2.1.0 (requires numpy<1.19.0)
+# crepe==0.0.14 (for neural pitch detection)
