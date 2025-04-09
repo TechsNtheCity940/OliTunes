@@ -9,6 +9,25 @@ backend_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__
 sys.path.append(backend_dir)
 from interpreter import TabCNNProcessor
 
+# GPU configuration function
+def configure_gpu():
+    """Configure TensorFlow to use GPU if available, with memory growth enabled."""
+    gpus = tf.config.list_physical_devices('GPU')
+    if gpus:
+        try:
+            # Enable memory growth for all GPUs
+            for gpu in gpus:
+                tf.config.experimental.set_memory_growth(gpu, True)
+            print(f"GPU acceleration enabled. Found {len(gpus)} GPU(s).")
+            return True
+        except RuntimeError as e:
+            print(f"Error configuring GPU: {e}")
+    print("No GPU found. Using CPU for training (this will be slower).")
+    return False
+
+# Configure GPU at module import time
+has_gpu = configure_gpu()
+
 # Synthetic data generation (simplified)
 def generate_synthetic_data(num_samples: int, frames: int = 9):
     """Generate synthetic data for training when real data is not available"""
@@ -101,8 +120,13 @@ def train_tabcnn(data_path: str = None, epochs: int = 50, batch_size: int = 32):
     
     # Initialize model
     print("Initializing TabCNN model...")
-    tabcnn = TabCNNProcessor()
+    tabcnn = TabCNNProcessor
     model = tabcnn.build_model()
+    
+    # Set up TensorFlow mixed precision if GPU is available
+    if has_gpu:
+        print("Enabling mixed precision training for better GPU performance")
+        tf.keras.mixed_precision.set_global_policy('mixed_float16')
     
     # Create save directory
     save_dir = os.path.join(backend_dir, "models", "tab-cnn", "model", "saved")

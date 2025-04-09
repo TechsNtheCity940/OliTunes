@@ -1,0 +1,7 @@
+
+batch_size: 128
+epochs: 8
+spec_repr: c
+data_path: f:/newrepos/olitunes/backend/models/tab-cnn/data/spec_repr/
+con_win_size: 9
+id_file: f:/newrepos/olitunes/backend/models/tab-cnn/data/id.csv

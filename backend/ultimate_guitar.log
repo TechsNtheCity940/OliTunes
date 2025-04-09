@@ -1,0 +1,79 @@
+2025-04-03 13:04:50,111 - batch_downloader - INFO - Starting batch tab download
+2025-04-03 13:04:50,111 - batch_downloader - INFO - Downloading tabs for genre: blues
+2025-04-03 13:04:50,112 - batch_downloader - INFO - Searching for: B.B. King The Thrill Is Gone
+2025-04-03 13:04:50,605 - ug_extractor - ERROR - Search request failed: 406
+2025-04-03 13:04:50,605 - batch_downloader - WARNING - No results found for B.B. King The Thrill Is Gone
+2025-04-03 13:04:50,605 - batch_downloader - INFO - Searching for: Stevie Ray Vaughan Pride And Joy
+2025-04-03 13:04:53,334 - ug_extractor - ERROR - Search request failed: 406
+2025-04-03 13:04:53,334 - batch_downloader - WARNING - No results found for Stevie Ray Vaughan Pride And Joy
+2025-04-03 13:04:53,372 - batch_downloader - INFO - Searching for: Muddy Waters Hoochie Coochie Man
+2025-04-03 13:04:56,278 - ug_extractor - ERROR - Search request failed: 406
+2025-04-03 13:04:56,280 - batch_downloader - WARNING - No results found for Muddy Waters Hoochie Coochie Man
+2025-04-03 13:04:56,280 - batch_downloader - INFO - Downloaded 0 tabs for blues
+2025-04-03 13:04:56,280 - batch_downloader - INFO - Downloading tabs for genre: rock
+2025-04-03 13:04:56,292 - batch_downloader - INFO - Searching for: AC/DC Back In Black
+2025-04-03 13:04:59,272 - ug_extractor - ERROR - Search request failed: 406
+2025-04-03 13:04:59,272 - batch_downloader - WARNING - No results found for AC/DC Back In Black
+2025-04-03 13:04:59,274 - batch_downloader - INFO - Searching for: Led Zeppelin Stairway To Heaven
+2025-04-03 13:05:02,270 - ug_extractor - ERROR - Search request failed: 406
+2025-04-03 13:05:02,270 - batch_downloader - WARNING - No results found for Led Zeppelin Stairway To Heaven
+2025-04-03 13:05:02,270 - batch_downloader - INFO - Searching for: Queen Bohemian Rhapsody
+2025-04-03 13:05:05,265 - ug_extractor - ERROR - Search request failed: 406
+2025-04-03 13:05:05,265 - batch_downloader - WARNING - No results found for Queen Bohemian Rhapsody
+2025-04-03 13:05:05,265 - batch_downloader - INFO - Downloaded 0 tabs for rock
+2025-04-03 13:05:05,265 - batch_downloader - INFO - Downloading tabs for genre: jazz
+2025-04-03 13:05:05,267 - batch_downloader - INFO - Searching for: Django Reinhardt Minor Swing
+2025-04-03 13:05:08,282 - ug_extractor - ERROR - Search request failed: 406
+2025-04-03 13:05:08,282 - batch_downloader - WARNING - No results found for Django Reinhardt Minor Swing
+2025-04-03 13:05:08,282 - batch_downloader - INFO - Searching for: Wes Montgomery Round Midnight
+2025-04-03 13:05:11,271 - ug_extractor - ERROR - Search request failed: 406
+2025-04-03 13:05:11,271 - batch_downloader - WARNING - No results found for Wes Montgomery Round Midnight
+2025-04-03 13:05:11,271 - batch_downloader - INFO - Searching for: Charlie Parker Donna Lee
+2025-04-03 13:05:14,284 - ug_extractor - ERROR - Search request failed: 406
+2025-04-03 13:05:14,284 - batch_downloader - WARNING - No results found for Charlie Parker Donna Lee
+2025-04-03 13:05:14,284 - batch_downloader - INFO - Downloaded 0 tabs for jazz
+2025-04-03 13:05:14,284 - batch_downloader - INFO - Downloading tabs for genre: folk
+2025-04-03 13:05:14,284 - batch_downloader - INFO - Searching for: Bob Dylan Blowin In The Wind
+2025-04-03 13:05:17,278 - ug_extractor - ERROR - Search request failed: 406
+2025-04-03 13:05:17,278 - batch_downloader - WARNING - No results found for Bob Dylan Blowin In The Wind
+2025-04-03 13:05:17,278 - batch_downloader - INFO - Searching for: Simon and Garfunkel Scarborough Fair
+2025-04-03 13:05:20,277 - ug_extractor - ERROR - Search request failed: 406
+2025-04-03 13:05:20,277 - batch_downloader - WARNING - No results found for Simon and Garfunkel Scarborough Fair
+2025-04-03 13:05:20,277 - batch_downloader - INFO - Searching for: John Denver Country Roads
+2025-04-03 13:05:23,282 - ug_extractor - ERROR - Search request failed: 406
+2025-04-03 13:05:23,282 - batch_downloader - WARNING - No results found for John Denver Country Roads
+2025-04-03 13:05:23,282 - batch_downloader - INFO - Downloaded 0 tabs for folk
+2025-04-03 13:05:23,282 - batch_downloader - INFO - Downloading tabs for genre: metal
+2025-04-03 13:05:23,284 - batch_downloader - INFO - Searching for: Metallica Enter Sandman
+2025-04-03 13:05:26,292 - ug_extractor - ERROR - Search request failed: 406
+2025-04-03 13:05:26,292 - batch_downloader - WARNING - No results found for Metallica Enter Sandman
+2025-04-03 13:05:26,294 - batch_downloader - INFO - Searching for: Iron Maiden The Trooper
+2025-04-03 13:05:29,278 - ug_extractor - ERROR - Search request failed: 406
+2025-04-03 13:05:29,278 - batch_downloader - WARNING - No results found for Iron Maiden The Trooper
+2025-04-03 13:05:29,278 - batch_downloader - INFO - Searching for: Black Sabbath Paranoid
+2025-04-03 13:05:32,282 - ug_extractor - ERROR - Search request failed: 406
+2025-04-03 13:05:32,282 - batch_downloader - WARNING - No results found for Black Sabbath Paranoid
+2025-04-03 13:05:32,282 - batch_downloader - INFO - Downloaded 0 tabs for metal
+2025-04-03 13:17:15,174 - ug_extractor - INFO - Searching for 'Metallica' (Rock)
+2025-04-03 13:17:15,653 - ug_extractor - ERROR - Search request failed: 406
+2025-04-03 13:17:15,654 - ug_extractor - INFO - Searching for 'Metallica' (Rock)
+2025-04-03 13:17:18,327 - ug_extractor - ERROR - Search request failed: 406
+2025-04-03 13:17:18,329 - ug_extractor - INFO - Searching for 'Stevie Ray Vaughn' (Blues)
+2025-04-03 13:17:21,328 - ug_extractor - ERROR - Search request failed: 406
+2025-04-03 13:17:21,328 - ug_extractor - INFO - Searching for 'Jimi Hendrix' (Rock)
+2025-04-03 13:17:24,328 - ug_extractor - ERROR - Search request failed: 406
+2025-04-03 13:17:24,330 - ug_extractor - INFO - Searching for 'Paramore' (Pop Punk)
+2025-04-03 13:17:27,332 - ug_extractor - ERROR - Search request failed: 406
+2025-04-03 13:17:27,332 - ug_extractor - INFO - Searching for 'Incubus' (Alternative)
+2025-04-03 13:17:30,334 - ug_extractor - ERROR - Search request failed: 406
+2025-04-03 13:17:30,334 - ug_extractor - INFO - Downloaded 0 tabs
+2025-04-03 13:44:18,105 - ug_extractor - INFO - Searching for 'Incubus' ()
+2025-04-03 13:44:18,561 - ug_extractor - ERROR - Search request failed: 406
+2025-04-03 13:44:18,563 - ug_extractor - INFO - Searching for 'Paramore' ()
+2025-04-03 13:44:21,253 - ug_extractor - ERROR - Search request failed: 406
+2025-04-03 13:44:21,253 - ug_extractor - INFO - Searching for 'Metallica' ()
+2025-04-03 13:44:24,260 - ug_extractor - ERROR - Search request failed: 406
+2025-04-03 13:44:24,261 - ug_extractor - INFO - Downloaded 0 tabs
+2025-04-03 13:47:01,255 - ug_extractor - ERROR - Search request failed: 406
+2025-04-03 13:50:42,992 - ug_extractor - WARNING - Could not extract tab ID from URL, fetching page content: https://tabs.ultimate-guitar.com/tab/paramore/still-into-you-tabs-1230568
+2025-04-03 13:50:43,366 - ug_extractor - ERROR - Could not find tab data in page

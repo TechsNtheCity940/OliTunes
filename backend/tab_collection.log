@@ -1,0 +1,13 @@
+2025-04-03 10:57:36,092 - test_collector - INFO - Testing tab data collection with a small sample
+2025-04-03 10:57:36,094 - test_collector - INFO - Collecting data for genre: blues
+2025-04-03 10:57:36,094 - tab_collector - INFO - Collecting data for genre: blues
+2025-04-03 10:57:36,499 - tab_collector - INFO - Found 0 results for query 'blues songs'
+2025-04-03 10:57:36,507 - tab_collector - INFO - Collected 0 positions for blues
+2025-04-03 10:57:36,507 - test_collector - INFO - Collected 0 positions for blues
+2025-04-03 10:57:36,507 - test_collector - INFO - Collecting data for genre: rock
+2025-04-03 10:57:36,507 - tab_collector - INFO - Collecting data for genre: rock
+2025-04-03 10:57:39,453 - tab_collector - INFO - Found 0 results for query 'rock songs'
+2025-04-03 10:57:39,465 - tab_collector - INFO - Collected 0 positions for rock
+2025-04-03 10:57:39,465 - test_collector - INFO - Collected 0 positions for rock
+2025-04-03 10:57:39,465 - tab_collector - WARNING - No position data to save
+2025-04-03 10:57:39,465 - test_collector - INFO - Test complete: collected 0 positions

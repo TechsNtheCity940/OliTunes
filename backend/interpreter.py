@@ -11,6 +11,7 @@ import pandas as pd
 import matplotlib
 matplotlib.use('TkAgg')  # Set the backend before importing pyplot
 
+
 def save_small_wav(out_path, y, fs):
     try:
         sf.write(out_path, y, fs, subtype='PCM_16')
@@ -323,8 +324,7 @@ sys.path.append(os.path.join(backend_dir, 'data'))
 
 # Import required modules with error handling
 try:
-    from TabCNN import TabCNN
-    from TabDataReprGen import TabDataReprGen
+    from TabCNN import TabCNNProcessor
     tab_cnn_available = True
     logger.info("TabCNN model loaded successfully")
 except ImportError as e:

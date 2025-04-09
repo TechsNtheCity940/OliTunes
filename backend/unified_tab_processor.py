@@ -12,19 +12,28 @@ from typing import Dict, Optional, List
 import numpy as np
 import json
 import soundfile as sf
+import librosa
 
 # Import existing modules
 from interpreter import DemucsProcessor, TabCNNProcessor
-from librosa import load as load_audio_file
-from librosa import effects, util
+from models.lstm_model.predictor import LSTMPredictor
+from tab_text_generator import TabTextGenerator
+
+# New imports for enhanced functionality
+from music_theory import MusicTheoryAnalyzer
+from midi_conversion import MidiConverter
+from audio_analyzer_connector import EnhancedAudioAnalyzer
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 def preprocess_audio(audio_path: str) -> np.ndarray:
     """Basic audio preprocessing"""
-    y, sr = load_audio_file(audio_path)
+    y, sr = librosa.load(audio_path)
     
     # Apply basic preprocessing
-    y = effects.preemphasis(y)
-    y = util.normalize(y)
+    y = librosa.effects.preemphasis(y)
+    y = librosa.util.normalize(y)
     
     return y
 
@@ -140,150 +149,408 @@ def enhance_guitar_audio(audio_path: str, output_path: str = None) -> str:
         logger.warning(f"Using original audio file as fallback: {audio_path}")
         return audio_path
 
-from tab_text_generator import TabTextGenerator
-from models.lstm_model.predictor import LSTMPredictor  # We'll need to create this
+class ConfidenceEvaluator:
+    """Evaluates prediction confidence and determines when to use rule-based approaches."""
+    
+    def __init__(self, threshold=0.7, min_threshold=0.4, fallback_threshold=0.2):
+        self.threshold = threshold
+        self.min_threshold = min_threshold
+        self.fallback_threshold = fallback_threshold
+    
+    def should_use_prediction(self, predictions, prediction_type='tablature'):
+        """Determine if ML prediction should be used or fallback to rules."""
+        if predictions is None:
+            return False, 0.0, 'use_rules'
+        
+        # Calculate confidence based on prediction type
+        if prediction_type == 'tablature':
+            # For tablature, confidence is based on the max value in each frame
+            confidence = np.mean([np.max(frame) for frame in predictions if np.any(frame)])
+        else:
+            # Generic confidence calculation
+            confidence = np.mean(predictions)
+        
+        # Decision logic
+        if confidence >= self.threshold:
+            return True, confidence, 'use_prediction'
+        elif confidence >= self.min_threshold:
+            return True, confidence, 'hybrid'
+        elif confidence >= self.fallback_threshold:
+            return False, confidence, 'hybrid'
+        else:
+            return False, confidence, 'use_rules'
+    
+    def blend_predictions(self, ml_pred, rule_pred, confidence):
+        """Blend ML and rule-based predictions based on confidence."""
+        # Linear interpolation based on confidence
+        weight = (confidence - self.fallback_threshold) / (self.threshold - self.fallback_threshold)
+        weight = max(0.0, min(1.0, weight))  # Clamp to [0, 1]
+        
+        return ml_pred * weight + rule_pred * (1 - weight)
+    
+    def calibrate_with_dataset(self, model, X_val, y_val):
+        """Calibrate thresholds using validation data."""
+        # Placeholder for actual calibration logic
+        results = {'thresholds': {}, 'results': {}}
+        
+        # Try different thresholds
+        for threshold in [0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9]:
+            self.threshold = threshold
+            self.min_threshold = threshold * 0.6
+            self.fallback_threshold = threshold * 0.3
+            
+            # Evaluate with current thresholds
+            correct = 0
+            total = 0
+            used = 0
+            
+            for x, y in zip(X_val, y_val):
+                pred = model.predict(np.expand_dims(x, axis=0))[0]
+                use_pred, conf, _ = self.should_use_prediction(pred)
+                
+                if use_pred:
+                    used += 1
+                    # Check if prediction is correct (simplified)
+                    pred_classes = np.argmax(pred, axis=-1)
+                    true_classes = np.argmax(y, axis=-1)
+                    if np.array_equal(pred_classes, true_classes):
+                        correct += 1
+                
+                total += 1
+            
+            # Calculate metrics
+            accuracy = correct / used if used > 0 else 0
+            coverage = used / total if total > 0 else 0
+            
+            results['results'][threshold] = {
+                'accuracy': accuracy,
+                'coverage': coverage,
+                'count': used
+            }
+        
+        # Find optimal threshold (80% accuracy target)
+        best_threshold = 0.7  # Default
+        for threshold, metrics in results['results'].items():
+            if metrics['accuracy'] >= 0.8 and metrics['coverage'] > results['results'].get(best_threshold, {}).get('coverage', 0):
+                best_threshold = threshold
+        
+        # Update thresholds
+        self.threshold = best_threshold
+        self.min_threshold = best_threshold * 0.6
+        self.fallback_threshold = best_threshold * 0.3
+        
+        results['thresholds'] = {
+            'main': self.threshold,
+            'min': self.min_threshold,
+            'fallback': self.fallback_threshold
+        }
+        
+        return results
 
 class UnifiedTabProcessor:
-    """Handles complete audio-to-tab pipeline"""
+    """Enhanced processor for generating guitar tablature from audio."""
     
     def __init__(self):
         self.demucs = DemucsProcessor()
         self.tabcnn = TabCNNProcessor()
         self.lstm = LSTMPredictor()
         self.text_gen = TabTextGenerator()
+        self.confidence_evaluator = ConfidenceEvaluator(threshold=0.7, min_threshold=0.4, fallback_threshold=0.2)
+        self.midi_converter = MidiConverter()
+        self.theory_analyzer = MusicTheoryAnalyzer()
+        self.audio_analyzer = EnhancedAudioAnalyzer()
+        
+        # Load fretboard position model
+        try:
+            from models.fretboard_position_model.position_predictor import FretboardPositionPredictor
+            self.fretboard_model = FretboardPositionPredictor()
+            self.use_fretboard_model = self.fretboard_model.model is not None
+            logger.info("Fretboard position model loaded successfully")
+        except Exception as e:
+            logger.warning(f"Failed to load fretboard position model: {str(e)}")
+            self.use_fretboard_model = False
+            self.fretboard_model = None
         
         # Load style configurations
         with open('backend/data/tab_data/style_configs.json') as f:
             self.style_configs = json.load(f)
-    
-    def process_audio(self, audio_path: str, style: str = 'metal') -> Dict[str, Dict]:
-        """Full processing pipeline"""
+
+    def preprocess_audio(self, audio_path: str) -> tuple:
+        """Enhanced audio preprocessing with onset detection and tempo."""
+        y, sr = librosa.load(audio_path, sr=22050, mono=True)
+        
+        # Noise reduction
         try:
-            # Create a dedicated directory for stems and processed files
-            base_dir = os.path.dirname(os.path.abspath(audio_path))
+            import noisereduce as nr
+            y = nr.reduce_noise(y=y, sr=sr)
+        except ImportError:
+            logger.warning("Noisereduce unavailable, skipping noise reduction.")
+        
+        # Harmonic separation
+        y = librosa.effects.hpss(y)[0]
+        
+        # Mel-spectrogram with guitar-tuned bins
+        spec = librosa.feature.melspectrogram(y=y, sr=sr, n_mels=128, fmin=80, fmax=4000, hop_length=512)
+        
+        # Onset detection
+        onsets = librosa.onset.onset_detect(y=y, sr=sr, hop_length=512)
+        
+        # Tempo detection
+        tempo = librosa.beat.tempo(y, sr=sr)[0]
+        
+        return spec, onsets, tempo
+
+    def enhance_guitar_audio(self, audio_path: str, output_path: str) -> str:
+        """Enhanced guitar audio processing."""
+        y, sr = librosa.load(audio_path, sr=22050, mono=True)
+        y = librosa.effects.preemphasis(y)
+        y = librosa.util.normalize(y)
+        sf.write(output_path, y, sr)
+        return output_path
+
+    def midi_to_note(self, fret: int, string: int) -> str:
+        """Convert fret and string to note name."""
+        midi_base = self.audio_analyzer.string_midi_values[string]
+        midi_note = midi_base + fret
+        return librosa.midi_to_note(midi_note)
+
+    def optimize_fretboard(self, predictions: np.ndarray, key: str = 'C') -> np.ndarray:
+        """
+        Optimize fretboard positions using the trained fretboard position model when available,
+        falling back to EnhancedAudioAnalyzer when the model is not available.
+        
+        Args:
+            predictions: Raw tablature predictions
+            key: Musical key of the piece
+            
+        Returns:
+            Optimized tablature with improved fretboard positions
+        """
+        # Extract notes from predictions
+        notes = [
+            {
+                'note': self.midi_to_note(np.argmax(pred[string]), string),
+                'midi_note': self.audio_analyzer.string_midi_values[string] + np.argmax(pred[string]),
+                'time': t * 0.0232,  # 512/22050 ≈ 0.0232s
+                'duration': 0.1,  # Default duration
+                'string': string,
+                'fret': np.argmax(pred[string])
+            }
+            for t, pred in enumerate(predictions) for string in range(6) if np.max(pred[string]) > 0
+        ]
+        
+        # Use fretboard position model if available
+        if self.use_fretboard_model:
+            logger.info("Using fretboard position model for position optimization")
+            optimized = np.zeros_like(predictions)
+            
+            # Process notes sequentially to maintain context
+            prev_string, prev_fret = 0, 0
+            key_context = self.theory_analyzer.key_to_index(key) if key else 0
+            style_context = 0  # Default style
+            
+            for note in notes:
+                # Get optimized position from the model
+                midi_note = note['midi_note']
+                t = int(note['time'] / 0.0232)
+                
+                if t < optimized.shape[0]:
+                    # Use model to predict optimal string/fret
+                    string, fret = self.fretboard_model.predict_position(
+                        midi_note, 
+                        previous_position=prev_fret,
+                        string=prev_string,
+                        key_context=key_context,
+                        style=style_context
+                    )
+                    
+                    # Update the optimized tab
+                    optimized[t, string, fret] = 1.0  # One-hot encoding
+                    
+                    # Update context for next note
+                    prev_string, prev_fret = string, fret
+            
+            return optimized
+        else:
+            # Fallback to original method using EnhancedAudioAnalyzer
+            logger.info("Fretboard position model not available, using fallback method")
+            mapped = self.audio_analyzer.map_notes_to_fretboard(notes)
+            
+            optimized = np.zeros_like(predictions)
+            for note in mapped:
+                t = int(note['time'] / 0.0232)
+                if t < optimized.shape[0]:
+                    string = note['string']
+                    fret = note['fret']
+                    optimized[t, string, fret] = 1.0  # One-hot encoding
+            
+            return optimized
+
+    def process_audio(self, audio_path: str, style: str = 'rock', key: Optional[str] = None) -> Dict[str, Dict]:
+        """Full audio-to-tab pipeline with enhancements."""
+        try:
+            base_dir = os.path.dirname(audio_path)
             song_name = os.path.splitext(os.path.basename(audio_path))[0]
             stems_dir = os.path.join(base_dir, "olitunes_stems", song_name)
             os.makedirs(stems_dir, exist_ok=True)
-            
-            # 1. Separate guitar tracks
+
+            # 1. Separate audio
             stems = self.demucs.separate_audio(audio_path, output_dir=stems_dir)
+            guitar_track = stems.get('guitar', stems.get('other', audio_path))
+            enhanced_path = os.path.join(stems_dir, "enhanced_guitar.wav")
+            guitar_track = self.enhance_guitar_audio(guitar_track, enhanced_path)
+
+            # 2. Preprocess audio
+            y, sr = librosa.load(guitar_track, sr=22050, mono=True)
+            spec, onsets, tempo = self.preprocess_audio(guitar_track)
             
-            if not stems:
-                logging.error("Failed to separate stems")
-                return {}
-            
-            # Save the paths to a file for reference
-            stems_file = os.path.join(stems_dir, "separated_stems.txt")
-            with open(stems_file, 'w') as f:
-                for instrument, path in stems.items():
-                    f.write(f"{instrument}: {path}\n")
-            logging.info(f"Stem paths saved to: {stems_file}")
-            
-            # 2. Process the guitar stem (which is labeled as "other" in Demucs)
-            guitar_track = None
-            if 'other' in stems:
-                logging.info("Found guitar stem (labeled as 'other')")
-                guitar_track = stems['other']
-                
-                # Apply audio enhancement to the guitar stem
-                enhanced_guitar_path = os.path.join(stems_dir, "enhanced_guitar.wav")
-                enhanced_guitar_track = enhance_guitar_audio(guitar_track, enhanced_guitar_path)
-                
-                # Update the stems dictionary with the enhanced guitar track
-                stems['guitar'] = enhanced_guitar_track
-            elif 'guitar' in stems:
-                logging.info("Found guitar stem")
-                guitar_track = stems['guitar']
-                
-                # Apply audio enhancement to the guitar stem
-                enhanced_guitar_path = os.path.join(stems_dir, "enhanced_guitar.wav")
-                enhanced_guitar_track = enhance_guitar_audio(guitar_track, enhanced_guitar_path)
-                
-                # Update the stems dictionary
-                stems['guitar'] = enhanced_guitar_track
+            # 3. Music theory analysis
+            if not key:
+                key_info = self.theory_analyzer.detect_key(y, sr)
+                key = key_info['key']
+                chords = self.theory_analyzer.analyze_chord_progression(y, sr)
             else:
-                logging.warning("No guitar stem found, using full audio")
-                guitar_track = audio_path
-                
-                # Process the full audio as a fallback
-                enhanced_guitar_path = os.path.join(stems_dir, "enhanced_full_audio.wav")
-                enhanced_guitar_track = enhance_guitar_audio(guitar_track, enhanced_guitar_path)
-                stems['guitar'] = enhanced_guitar_track
+                chords = self.theory_analyzer.analyze_chord_progression(y, sr)
+
+            # 4. Predict raw tablature
+            raw_tab = self.tabcnn.predict_tablature(spec)
             
-            results = {}
-            for track_type in ['guitar', 'rhythm']:
-                if track_type in stems:
-                    # Preprocess the audio for TabCNN
-                    audio_representation = self.tabcnn.preprocess_audio(stems[track_type])
-                    
-                    # 3. Predict raw tablature
-                    raw_tab = self.tabcnn.predict_tablature(audio_representation)
-                    
-                    if raw_tab is not None:
-                        # 4. Refine with LSTM
-                        refined_tab = self.lstm.predict(raw_tab)
-                        
-                        # Get style-specific formatting
-                        config = self.style_configs.get(style, {})
-                        
-                        results[track_type] = {
-                            'text_tab': self.text_gen.generate(refined_tab, config.get('bpm', 120)),
-                            'fretboard_data': self._create_fretboard_data(refined_tab),
-                            'stem_path': stems[track_type]  # Include the path to the stem
-                        }
-                    else:
-                        logging.error(f"Failed to predict tablature for {track_type}")
-            
-            # Save the results to a file for reference
-            results_file = os.path.join(stems_dir, "tab_results.json")
-            with open(results_file, 'w') as f:
-                # Convert numpy arrays to lists for JSON serialization
-                serializable_results = {}
-                for track_type, data in results.items():
-                    serializable_results[track_type] = {
-                        'text_tab': data['text_tab'],
-                        'stem_path': data['stem_path'],
-                        'fretboard_data': data['fretboard_data']
-                    }
-                json.dump(serializable_results, f, indent=2)
-            
-            return results
-            
-        except Exception as e:
-            logging.error(f"Processing failed: {str(e)}")
-            raise
-    
-    def _create_fretboard_data(self, predictions: np.ndarray) -> List[Dict]:
-        """Generate data for interactive fretboard visualization"""
-        # Load fretboard position mappings
-        positions = np.load('backend/data/tab_data/X_tab_positions.npy')
-        
-        frames = []
-        for frame_idx in range(predictions.shape[0]):
-            frame_data = {
-                'time': frame_idx * 0.1,  # 100ms per frame
-                'notes': []
+            # 5. Evaluate confidence and refine
+            use_pred, conf, rec = self.confidence_evaluator.should_use_prediction(raw_tab, 'tablature')
+            if not use_pred and rec == 'use_rules':
+                # Fallback to chord-based tab
+                text_tab = self.text_gen.generate_text_tab(
+                    self._chords_to_notes(chords, tempo), 
+                    {'tempo': tempo, 'key': key, 'chords': chords}
+                )
+                refined_tab = raw_tab  # Keep raw for MIDI/fretboard data
+            else:
+                # Refine with LSTM
+                refined_tab = self.lstm.predict(raw_tab)
+                if rec == 'hybrid':
+                    rule_notes = self._chords_to_notes(chords, tempo)
+                    rule_tab = self._notes_to_predictions(rule_notes, refined_tab.shape)
+                    refined_tab = self.confidence_evaluator.blend_predictions(refined_tab, rule_tab, conf)
+
+            # 6. Optimize fretboard positions
+            optimized_tab = self.optimize_fretboard(refined_tab, key)
+
+            # 7. Generate text tab
+            config = self.style_configs.get(style, {})
+            note_data = self._predictions_to_notes(optimized_tab)
+            text_tab = self.text_gen.generate_text_tab(
+                note_data,
+                {'tempo': tempo, 'key': key, 'chords': chords}
+            )
+
+            # 8. Generate MIDI
+            midi_notes = [
+                {'time': note['time'], 'note': note['note'], 'duration': note['duration'], 'velocity': 100}
+                for note in note_data
+            ]
+            midi_path = os.path.join(stems_dir, "guitar_tab.mid")
+            midi_result = self.midi_converter.notes_to_midi(midi_notes, midi_path, bpm=tempo)
+
+            # 9. Prepare results
+            results = {
+                'guitar': {
+                    'text_tab': text_tab,
+                    'fretboard_data': self._create_fretboard_data(optimized_tab),
+                    'stem_path': guitar_track,
+                    'onsets': onsets.tolist(),
+                    'midi_path': midi_path if midi_result == midi_path else None,
+                    'confidence': conf,
+                    'key': key,
+                    'chords': chords,
+                    'tempo': float(tempo)
+                }
             }
             
-            for string in range(6):
-                fret = np.argmax(predictions[frame_idx, string])
-                if fret > 0:
-                    frame_data['notes'].append({
-                        'string': string,
-                        'fret': fret,
-                        'position': positions[string][fret]
-                    })
+            # Save results
+            with open(os.path.join(stems_dir, "tab_results.json"), 'w') as f:
+                json.dump({
+                    k: {sk: sv if not isinstance(sv, np.ndarray) else sv.tolist() 
+                        for sk, sv in v.items()} 
+                    for k, v in results.items()
+                }, f, indent=2)
             
-            frames.append(frame_data)
-        
-        return frames
+            return results
+
+        except Exception as e:
+            logger.error(f"Processing failed: {str(e)}")
+            return {}
+
+    def _chords_to_notes(self, chords: List[Dict], tempo: float) -> List[Dict]:
+        """Convert chord progression to note data."""
+        notes = []
+        for chord in chords:
+            start_time = chord['time']
+            duration = chord['duration']
+            for note_name in chord['notes']:
+                notes.append({
+                    'time': start_time,
+                    'duration': duration,
+                    'note': note_name
+                })
+        return notes
+
+    def _notes_to_predictions(self, notes: List[Dict], shape: tuple) -> np.ndarray:
+        """Convert note data to prediction array format."""
+        predictions = np.zeros(shape)
+        for note in notes:
+            t = int(note['time'] / 0.0232)
+            if t < shape[0]:
+                # Find best string/fret for this note
+                mapped = self.audio_analyzer.map_note_to_fretboard(note['note'])
+                if mapped:
+                    string = mapped['string']
+                    fret = mapped['fret']
+                    predictions[t, string, fret] = 1.0
+        return predictions
+
+    def _predictions_to_notes(self, predictions: np.ndarray) -> List[Dict]:
+        """Convert prediction array to note data."""
+        notes = []
+        for t, frame in enumerate(predictions):
+            for string in range(6):
+                fret_idx = np.argmax(frame[string])
+                if frame[string, fret_idx] > 0:
+                    note_name = self.midi_to_note(fret_idx, string)
+                    notes.append({
+                        'time': t * 0.0232,
+                        'duration': 0.1,  # Default duration
+                        'note': note_name,
+                        'string': string,
+                        'fret': int(fret_idx)
+                    })
+        return notes
+
+    def _create_fretboard_data(self, optimized_tab: np.ndarray) -> List[Dict]:
+        """Convert optimized tab to fretboard visualization data."""
+        fretboard_data = []
+        for t, frame in enumerate(optimized_tab):
+            notes = []
+            for string in range(6):
+                fret_idx = np.argmax(frame[string])
+                if frame[string, fret_idx] > 0:
+                    notes.append({
+                        'string': int(string),
+                        'fret': int(fret_idx),
+                        'note': self.midi_to_note(fret_idx, string)
+                    })
+            if notes:
+                fretboard_data.append({
+                    'time': t * 0.0232,
+                    'notes': notes
+                })
+        return fretboard_data
 
 # Helper function for app.py integration
-def create_tablature(audio_file: str, style: str = 'rock') -> Optional[Dict[str, Dict]]:
-    """Main entry point for app.py"""
+def create_tablature(audio_file: str, style: str = 'rock'):
     processor = UnifiedTabProcessor()
     return processor.process_audio(audio_file, style)
 
+# Test function
 def test_with_audio_file(audio_path: str):
     """
     Test the unified tab processor with a specific audio file
@@ -291,116 +558,111 @@ def test_with_audio_file(audio_path: str):
     Args:
         audio_path: Path to the audio file to process
     """
-    logger = logging.getLogger(__name__)
-    logging.basicConfig(level=logging.INFO)
+    import matplotlib.pyplot as plt
+    import time
     
-    try:
-        # Create a dedicated directory for stems and processed files
-        base_dir = os.path.dirname(os.path.abspath(audio_path))
-        song_name = os.path.splitext(os.path.basename(audio_path))[0]
-        stems_dir = os.path.join(base_dir, "olitunes_stems", song_name)
-        os.makedirs(stems_dir, exist_ok=True)
+    start_time = time.time()
+    
+    # Initialize processor
+    processor = UnifiedTabProcessor()
+    
+    # Process audio
+    print(f"Processing audio file: {audio_path}")
+    results = processor.process_audio(audio_path, style='rock')
+    
+    # Print processing time
+    processing_time = time.time() - start_time
+    print(f"Processing completed in {processing_time:.2f} seconds")
+    
+    # Print results summary
+    if results and 'guitar' in results:
+        guitar_data = results['guitar']
+        print("\n=== Guitar Tablature Results ===")
+        print(f"Key: {guitar_data.get('key', 'Unknown')}")
+        print(f"Tempo: {guitar_data.get('tempo', 0):.1f} BPM")
+        print(f"Confidence: {guitar_data.get('confidence', 0):.2f}")
         
-        # Load and preprocess the audio
-        processed_audio = preprocess_audio(audio_path)
-        logger.info(f"Processed audio shape: {processed_audio.shape}")
+        # Print chord progression
+        chords = guitar_data.get('chords', [])
+        if chords:
+            print("\nChord Progression:")
+            for i, chord in enumerate(chords[:10]):  # Show first 10 chords
+                print(f"{i+1}. {chord['chord']} ({chord['time']:.2f}s - {chord['time'] + chord['duration']:.2f}s)")
+            if len(chords) > 10:
+                print(f"... and {len(chords) - 10} more chords")
         
-        # Initialize processors
-        demucs_processor = DemucsProcessor()
-        tabcnn_processor = TabCNNProcessor()
+        # Print tablature excerpt
+        tab_text = guitar_data.get('text_tab', '')
+        if tab_text:
+            print("\nTablature Excerpt (first 10 lines):")
+            tab_lines = tab_text.split('\n')
+            for line in tab_lines[:10]:
+                print(line)
+            if len(tab_lines) > 10:
+                print(f"... and {len(tab_lines) - 10} more lines")
         
-        # Process audio
-        separated_tracks = demucs_processor.separate_audio(audio_path, output_dir=stems_dir)
-        logger.info("Instrument separation complete")
+        # Print MIDI path
+        midi_path = guitar_data.get('midi_path')
+        if midi_path:
+            print(f"\nMIDI file saved to: {midi_path}")
         
-        # Display the separated stems
-        if separated_tracks:
-            print("\nSeparated stems:")
-            for instrument, path in separated_tracks.items():
-                print(f"{instrument}: {path}")
-            
-            # Save the paths to a file for reference
-            stems_file = os.path.join(stems_dir, "separated_stems.txt")
-            with open(stems_file, 'w') as f:
-                for instrument, path in separated_tracks.items():
-                    f.write(f"{instrument}: {path}\n")
-            print(f"\nStem paths saved to: {stems_file}")
-        else:
-            logger.error("No stems were separated")
-            return None
+        # Print stem path
+        stem_path = guitar_data.get('stem_path')
+        if stem_path:
+            print(f"Guitar stem saved to: {stem_path}")
         
-        # Process guitar track (labeled as "other" in Demucs)
-        guitar_track = None
-        if 'other' in separated_tracks:
-            logger.info("Found guitar stem (labeled as 'other')")
-            guitar_track = separated_tracks['other']
+        # Visualize fretboard data if available
+        fretboard_data = guitar_data.get('fretboard_data', [])
+        if fretboard_data:
+            print(f"\nGenerated {len(fretboard_data)} fretboard positions")
             
-            # Apply audio enhancement to the guitar stem
-            enhanced_guitar_path = os.path.join(stems_dir, "enhanced_guitar.wav")
-            enhanced_guitar_track = enhance_guitar_audio(guitar_track, enhanced_guitar_path)
-            
-            # Update the separated_tracks dictionary
-            separated_tracks['guitar'] = enhanced_guitar_track
-        elif 'guitar' in separated_tracks:
-            logger.info("Found guitar stem")
-            guitar_track = separated_tracks['guitar']
-            
-            # Apply audio enhancement to the guitar stem
-            enhanced_guitar_path = os.path.join(stems_dir, "enhanced_guitar.wav")
-            enhanced_guitar_track = enhance_guitar_audio(guitar_track, enhanced_guitar_path)
-            
-            # Update the separated_tracks dictionary
-            separated_tracks['guitar'] = enhanced_guitar_track
-        else:
-            logger.warning("No guitar track found, using full audio")
-            guitar_track = audio_path
-            
-            # Process the full audio as a fallback
-            enhanced_guitar_path = os.path.join(stems_dir, "enhanced_full_audio.wav")
-            enhanced_guitar_track = enhance_guitar_audio(guitar_track, enhanced_guitar_path)
-            separated_tracks['guitar'] = enhanced_guitar_track
-            
-        # Load and preprocess guitar track for TabCNN
-        guitar_audio, sr = load_audio_file(separated_tracks['guitar'], sr=22050, mono=True)
-        logger.info(f"Loaded guitar audio with shape: {guitar_audio.shape}")
-        
-        # Save a copy of the processed audio for debugging
-        processed_audio_path = os.path.join(stems_dir, "processed_guitar.wav")
-        sf.write(processed_audio_path, guitar_audio, sr)
-        logger.info(f"Saved processed guitar audio to: {processed_audio_path}")
-        
-        audio_representation = tabcnn_processor.preprocess_audio(processed_audio_path)
-        
-        # Get predictions
-        predictions = tabcnn_processor.predict_tablature(audio_representation)
-        if predictions is not None:
-            tab_positions = tabcnn_processor.convert_predictions_to_tab(predictions)
-            logger.info(f"Generated {len(tab_positions)} tab positions")
-            
-            # Print some results
-            print("\nFirst few tab positions:")
-            for i, pos in enumerate(tab_positions[:5]):
-                print(f"Position {i+1}: {pos}")
+            # Plot first few positions
+            try:
+                fig, axes = plt.subplots(2, 3, figsize=(15, 8))
+                axes = axes.flatten()
                 
-            # Save tab positions to a file
-            tab_positions_file = os.path.join(stems_dir, "tab_positions.npy")
-            np.save(tab_positions_file, tab_positions)
-            logger.info(f"Saved tab positions to: {tab_positions_file}")
-        else:
-            logger.error("Failed to get predictions from TabCNN")
-            
-        return tab_positions if predictions is not None else None
-        
-    except Exception as e:
-        logger.error(f"Error processing audio: {str(e)}")
-        raise
+                for i, ax in enumerate(axes):
+                    if i < min(6, len(fretboard_data)):
+                        frame = fretboard_data[i]
+                        time = frame['time']
+                        notes = frame['notes']
+                        
+                        # Create fretboard grid
+                        fretboard = np.zeros((6, 21))
+                        for note in notes:
+                            fretboard[note['string'], note['fret']] = 1
+                        
+                        ax.imshow(fretboard, aspect='auto', cmap='Blues')
+                        ax.set_title(f"Time: {time:.2f}s")
+                        ax.set_xlabel("Fret")
+                        ax.set_ylabel("String")
+                        ax.set_yticks(range(6))
+                        ax.set_yticklabels(['E', 'A', 'D', 'G', 'B', 'e'])
+                        
+                        # Annotate notes
+                        for note in notes:
+                            ax.text(note['fret'], note['string'], note['note'], 
+                                   ha='center', va='center', color='red')
+                    else:
+                        ax.axis('off')
+                
+                plt.tight_layout()
+                plt.savefig("fretboard_visualization.png")
+                print("Fretboard visualization saved to: fretboard_visualization.png")
+            except Exception as e:
+                print(f"Could not create visualization: {str(e)}")
+    else:
+        print("No results or guitar data found")
 
 if __name__ == "__main__":
     import sys
     if len(sys.argv) < 2:
         print("Usage: python unified_tab_processor.py <path_to_audio_file>")
         sys.exit(1)
-        
+    
     audio_path = sys.argv[1]
-    print(f"\nProcessing audio file: {audio_path}")
+    if not os.path.exists(audio_path):
+        print(f"Error: Audio file not found at {audio_path}")
+        sys.exit(1)
+    
     test_with_audio_file(audio_path)

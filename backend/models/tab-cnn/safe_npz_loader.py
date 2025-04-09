@@ -98,7 +98,7 @@ if __name__ == "__main__":
     # Example usage
     print("Testing safe_npz_loader module")
     try:
-        test_file = "path/to/test.npz"
+        test_file = "backend/models/tab-cnn/model/saved/c 2025-04-06 082819/4/predictions.npz"
         if os.path.exists(test_file):
             data = safe_load_npz(test_file, required_keys=['repr', 'tab'])
             if data:

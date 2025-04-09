@@ -2,6 +2,7 @@ import re
 import numpy as np
 import os
 from typing import List, Dict
+from unified_tab_processor2 import UnifiedTabProcessor
 
 def parse_ug_tab(tab_content: str) -> List[Dict]:
     """Parse UG ASCII tab into a list of note events with timing."""
@@ -50,9 +51,18 @@ def parse_ug_tab(tab_content: str) -> List[Dict]:
 def tab_to_lstm_array(note_events: List[Dict], timesteps: int = 50) -> np.ndarray:
     """Convert note events to LSTM input array."""
     num_frames = len(note_events)
+    time_step = 0.1  # Default time step between frames
+    
     if num_frames < timesteps:
-        padded_events = note_events + [{'time': e['time'] + time_step, 'notes': []} 
-                                      for e, time_step in enumerate(range(timesteps - num_frames))]
+        # Calculate the last time in the sequence
+        last_time = note_events[-1]['time'] if note_events else 0
+        
+        # Create padding events with incrementing times
+        padding = []
+        for i in range(timesteps - num_frames):
+            padding.append({'time': last_time + (i + 1) * time_step, 'notes': []})
+        
+        padded_events = note_events + padding
     else:
         padded_events = note_events[:timesteps]
     
@@ -112,7 +122,7 @@ def process_ug_tabs(tab_dir: str, output_dir: str, audio_dir: str = None):
 # Example usage
 if __name__ == "__main__":
     tab_dir = "F:/newrepos/olitunes/backend/data/tab_data/tab_files"  # Where UG tabs are saved
-    output_dir = "data/lstm_training_data"
+    output_dir = "F:/newrepos/olitunes/backend/data/lstm_training_data"
     audio_dir = None  # Optional: directory with corresponding audio files
     X_train, y_train = process_ug_tabs(tab_dir, output_dir, audio_dir)
     print(f"Processed {X_train.shape[0]} samples for LSTM training.")

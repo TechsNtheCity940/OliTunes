@@ -1,0 +1,339 @@
+2025-04-03 13:07:39,406 - model_trainer - INFO - Starting model training
+2025-04-03 13:07:39,464 - model_trainer - INFO - Loaded 38121 training examples
+2025-04-03 13:07:39,518 - model_trainer - INFO - Data reshaped for LSTM
+2025-04-03 13:07:39,838 - model_trainer - INFO - Created LSTM model
+2025-04-03 13:07:39,865 - model_trainer - ERROR - Error training model: When using `save_weights_only=True` in `ModelCheckpoint`, the filepath provided must end in `.weights.h5` (Keras weights format). Received: filepath=F:\newrepos\olitunes\backend\models\checkpoint_{epoch}.h5
+2025-04-03 13:07:52,872 - model_trainer - INFO - Starting model training
+2025-04-03 13:07:52,926 - model_trainer - INFO - Loaded 38121 training examples
+2025-04-03 13:07:53,161 - model_trainer - INFO - Created feedforward model
+2025-04-03 13:07:53,185 - model_trainer - ERROR - Error training model: When using `save_weights_only=True` in `ModelCheckpoint`, the filepath provided must end in `.weights.h5` (Keras weights format). Received: filepath=F:\newrepos\olitunes\backend\models\checkpoint_{epoch}.h5
+2025-04-03 17:28:58,036 - model_training_runner - INFO - TensorFlow version: 2.19.0
+2025-04-03 17:32:25,965 - model_training_runner - INFO - TensorFlow version: 2.19.0
+2025-04-03 17:32:26,116 - model_training_runner - INFO - === Preparing Training Data ===
+2025-04-03 17:32:26,173 - tab_processor - INFO - Loaded existing dataset with 38121 records
+2025-04-03 17:32:26,173 - synthetic_data - INFO - Loaded style configurations from F:\newrepos\olitunes\backend\data\tab_data\style_configs.json
+2025-04-03 17:32:26,226 - synthetic_data - INFO - Loaded existing dataset with 38121 records
+2025-04-03 17:32:26,226 - tab_data_pipeline - INFO - Initialized Tab Data Pipeline with context window 3
+2025-04-03 17:32:26,227 - model_training_runner - INFO - Found 20 tab files in F:\newrepos\olitunes\data\tab_data\tab_files
+2025-04-03 17:32:26,227 - tab_data_pipeline - INFO - Training data not found at F:\newrepos\olitunes\data\tab_data\training\training_data_cw3.npz, creating new dataset
+2025-04-03 17:32:26,227 - tab_data_pipeline - INFO - Real tab positions file not found, processing tab files...
+2025-04-03 17:32:26,227 - tab_data_pipeline - INFO - Processing 20 tab files from F:\newrepos\olitunes\data\tab_data\tab_files
+2025-04-03 17:32:26,230 - tab_processor - INFO - Extracted 0 positions from F:\newrepos\olitunes\data\tab_data\tab_files\All That Remains_THIS CALLING CHORDS.txt
+2025-04-03 17:32:26,232 - tab_processor - INFO - Extracted 0 positions from F:\newrepos\olitunes\data\tab_data\tab_files\All That Remains_THIS CALLING TAB (ver 3).txt
+2025-04-03 17:32:26,232 - tab_processor - INFO - Extracted 0 positions from F:\newrepos\olitunes\data\tab_data\tab_files\All That Remains_WHISPERS I HEAR YOU TAB (ver 3).txt
+2025-04-03 17:32:26,234 - tab_processor - INFO - Extracted 0 positions from F:\newrepos\olitunes\data\tab_data\tab_files\Asking Alexandria_A PROPHECY TAB (ver 3).txt
+2025-04-03 17:32:26,235 - tab_processor - INFO - Extracted 0 positions from F:\newrepos\olitunes\data\tab_data\tab_files\Asking Alexandria_ALONE IN A ROOM OFFICIAL.txt
+2025-04-03 17:32:26,236 - tab_processor - INFO - Extracted 0 positions from F:\newrepos\olitunes\data\tab_data\tab_files\Asking Alexandria_FINAL EPISODE LETS CHANGE THE CHANNEL OFFICIAL.txt
+2025-04-03 17:32:26,236 - tab_processor - INFO - Extracted 0 positions from F:\newrepos\olitunes\data\tab_data\tab_files\Asking Alexandria_MOVING ON OFFICIAL.txt
+2025-04-03 17:32:26,238 - tab_processor - INFO - Extracted 0 positions from F:\newrepos\olitunes\data\tab_data\tab_files\Ed Sheeran_PERFECT TAB (ver 4).txt
+2025-04-03 17:32:26,238 - tab_processor - INFO - Extracted 0 positions from F:\newrepos\olitunes\data\tab_data\tab_files\Incubus_DRIVE ACOUSTIC CHORDS (ver 2).txt
+2025-04-03 17:32:26,239 - tab_processor - INFO - Extracted 0 positions from F:\newrepos\olitunes\data\tab_data\tab_files\John Mayer_SLOW DANCING IN A BURNING ROOM INTERACTIVE TAB (ver 2).txt
+2025-04-03 17:32:26,239 - tab_processor - INFO - Extracted 0 positions from F:\newrepos\olitunes\data\tab_data\tab_files\Johnny Cash_FOLSOM PRISON BLUES INTERACTIVE TAB (ver 4).txt
+2025-04-03 17:32:26,240 - tab_processor - INFO - Extracted 0 positions from F:\newrepos\olitunes\data\tab_data\tab_files\Johnny Cash_HURT OFFICIAL.txt
+2025-04-03 17:32:26,242 - tab_processor - INFO - Extracted 0 positions from F:\newrepos\olitunes\data\tab_data\tab_files\Killswitch Engage_MY CURSE TAB (ver 3).txt
+2025-04-03 17:32:26,243 - tab_processor - INFO - Extracted 0 positions from F:\newrepos\olitunes\data\tab_data\tab_files\Killswitch Engage_THE END OF HEARTACHE INTERACTIVE TAB (ver 7).txt
+2025-04-03 17:32:26,244 - tab_processor - INFO - Extracted 0 positions from F:\newrepos\olitunes\data\tab_data\tab_files\Metallica for guitar, ukulele, piano at Ultimate-Guitar_NOTHING ELSE MATTERS CHORDS (ver 3).txt
+2025-04-03 17:32:26,244 - tab_processor - INFO - Extracted 0 positions from F:\newrepos\olitunes\data\tab_data\tab_files\Metallica_NOTHING ELSE MATTERS TAB (ver 10).txt
+2025-04-03 17:32:26,247 - tab_processor - INFO - Extracted 0 positions from F:\newrepos\olitunes\data\tab_data\tab_files\Morgan Wallen_LAST NIGHT CHORDS.txt
+2025-04-03 17:32:26,247 - tab_processor - INFO - Extracted 0 positions from F:\newrepos\olitunes\data\tab_data\tab_files\Morgan Wallen_LAST NIGHT INTRO TAB (ver 2).txt
+2025-04-03 17:32:26,248 - tab_processor - INFO - Extracted 0 positions from F:\newrepos\olitunes\data\tab_data\tab_files\Paramore_HARD TIMES TAB.txt
+2025-04-03 17:32:26,249 - tab_processor - INFO - Extracted 0 positions from F:\newrepos\olitunes\data\tab_data\tab_files\Paramore_THE ONLY EXCEPTION CHORDS (ver 11).txt
+2025-04-03 17:32:26,251 - tab_data_pipeline - INFO - Successfully processed 0 tab files with 0 positions
+2025-04-03 17:32:26,251 - model_training_runner - ERROR - Error preparing training data: 'TabDataProcessor' object has no attribute 'save_positions'
+2025-04-03 17:32:26,253 - model_training_runner - ERROR - Failed to prepare training data. Exiting.
+2025-04-03 17:41:54,138 - model_training_runner - INFO - TensorFlow version: 2.19.0
+2025-04-03 17:41:54,253 - model_training_runner - INFO - === Preparing Training Data ===
+2025-04-03 17:41:54,387 - tab_processor - INFO - Loaded existing dataset with 104716 records
+2025-04-03 17:41:54,387 - synthetic_data - INFO - Loaded style configurations from F:\newrepos\olitunes\backend\data\tab_data\style_configs.json
+2025-04-03 17:41:54,516 - synthetic_data - INFO - Loaded existing dataset with 104716 records
+2025-04-03 17:41:54,516 - tab_data_pipeline - INFO - Initialized Tab Data Pipeline with context window 3
+2025-04-03 17:41:54,518 - model_training_runner - INFO - Found 0 tab files in F:\newrepos\olitunes\data\tab_data\tab_files
+2025-04-03 17:41:54,518 - tab_data_pipeline - INFO - Training data not found at F:\newrepos\olitunes\data\tab_data\training\training_data_cw3.npz, creating new dataset
+2025-04-03 17:41:54,518 - tab_data_pipeline - INFO - Real tab positions file not found, processing tab files...
+2025-04-03 17:41:54,518 - tab_data_pipeline - WARNING - No tab files found in F:\newrepos\olitunes\data\tab_data\tab_files
+2025-04-03 17:41:54,518 - model_training_runner - ERROR - Error preparing training data: 'TabDataProcessor' object has no attribute 'save_positions'
+2025-04-03 17:41:54,522 - model_training_runner - ERROR - Failed to prepare training data. Exiting.
+2025-04-03 17:48:24,844 - model_training_runner - INFO - TensorFlow version: 2.19.0
+2025-04-03 17:48:24,973 - model_training_runner - INFO - === Preparing Training Data ===
+2025-04-03 17:48:25,105 - tab_processor - INFO - Loaded existing dataset with 104716 records
+2025-04-03 17:48:25,107 - synthetic_data - INFO - Loaded style configurations from F:\newrepos\olitunes\backend\data\tab_data\style_configs.json
+2025-04-03 17:48:25,236 - synthetic_data - INFO - Loaded existing dataset with 104716 records
+2025-04-03 17:48:25,236 - tab_data_pipeline - INFO - Initialized Tab Data Pipeline with context window 3
+2025-04-03 17:48:25,237 - model_training_runner - INFO - Using tab files from backend directory: F:\newrepos\olitunes\backend\data\tab_data\tab_files
+2025-04-03 17:48:25,238 - model_training_runner - INFO - Found 20 tab files in F:\newrepos\olitunes\backend\data\tab_data\tab_files
+2025-04-03 17:48:25,238 - tab_data_pipeline - INFO - Training data not found at F:\newrepos\olitunes\data\tab_data\training\training_data_cw3.npz, creating new dataset
+2025-04-03 17:48:25,238 - tab_data_pipeline - INFO - Real tab positions file not found, processing tab files...
+2025-04-03 17:48:25,239 - tab_data_pipeline - INFO - Using tab files from backend directory: F:\newrepos\olitunes\backend\data\tab_data\tab_files
+2025-04-03 17:48:25,239 - tab_data_pipeline - INFO - Processing 20 tab files from F:\newrepos\olitunes\backend\data\tab_data\tab_files
+2025-04-03 17:48:25,242 - tab_processor - INFO - Extracted 0 positions from F:\newrepos\olitunes\backend\data\tab_data\tab_files\All That Remains_THIS CALLING CHORDS.txt
+2025-04-03 17:48:25,245 - tab_processor - INFO - Extracted 0 positions from F:\newrepos\olitunes\backend\data\tab_data\tab_files\All That Remains_THIS CALLING TAB (ver 3).txt
+2025-04-03 17:48:25,245 - tab_processor - INFO - Extracted 0 positions from F:\newrepos\olitunes\backend\data\tab_data\tab_files\All That Remains_WHISPERS I HEAR YOU TAB (ver 3).txt
+2025-04-03 17:48:25,246 - tab_processor - INFO - Extracted 0 positions from F:\newrepos\olitunes\backend\data\tab_data\tab_files\Asking Alexandria_A PROPHECY TAB (ver 3).txt
+2025-04-03 17:48:25,247 - tab_processor - INFO - Extracted 0 positions from F:\newrepos\olitunes\backend\data\tab_data\tab_files\Asking Alexandria_ALONE IN A ROOM OFFICIAL.txt
+2025-04-03 17:48:25,247 - tab_processor - INFO - Extracted 0 positions from F:\newrepos\olitunes\backend\data\tab_data\tab_files\Asking Alexandria_FINAL EPISODE LETS CHANGE THE CHANNEL OFFICIAL.txt
+2025-04-03 17:48:25,248 - tab_processor - INFO - Extracted 0 positions from F:\newrepos\olitunes\backend\data\tab_data\tab_files\Asking Alexandria_MOVING ON OFFICIAL.txt
+2025-04-03 17:48:25,249 - tab_processor - INFO - Extracted 0 positions from F:\newrepos\olitunes\backend\data\tab_data\tab_files\Ed Sheeran_PERFECT TAB (ver 4).txt
+2025-04-03 17:48:25,250 - tab_processor - INFO - Extracted 0 positions from F:\newrepos\olitunes\backend\data\tab_data\tab_files\Incubus_DRIVE ACOUSTIC CHORDS (ver 2).txt
+2025-04-03 17:48:25,250 - tab_processor - INFO - Extracted 0 positions from F:\newrepos\olitunes\backend\data\tab_data\tab_files\John Mayer_SLOW DANCING IN A BURNING ROOM INTERACTIVE TAB (ver 2).txt
+2025-04-03 17:48:25,251 - tab_processor - INFO - Extracted 0 positions from F:\newrepos\olitunes\backend\data\tab_data\tab_files\Johnny Cash_FOLSOM PRISON BLUES INTERACTIVE TAB (ver 4).txt
+2025-04-03 17:48:25,252 - tab_processor - INFO - Extracted 0 positions from F:\newrepos\olitunes\backend\data\tab_data\tab_files\Johnny Cash_HURT OFFICIAL.txt
+2025-04-03 17:48:25,254 - tab_processor - INFO - Extracted 0 positions from F:\newrepos\olitunes\backend\data\tab_data\tab_files\Killswitch Engage_MY CURSE TAB (ver 3).txt
+2025-04-03 17:48:25,254 - tab_processor - INFO - Extracted 0 positions from F:\newrepos\olitunes\backend\data\tab_data\tab_files\Killswitch Engage_THE END OF HEARTACHE INTERACTIVE TAB (ver 7).txt
+2025-04-03 17:48:25,254 - tab_processor - INFO - Extracted 0 positions from F:\newrepos\olitunes\backend\data\tab_data\tab_files\Metallica for guitar, ukulele, piano at Ultimate-Guitar_NOTHING ELSE MATTERS CHORDS (ver 3).txt
+2025-04-03 17:48:25,256 - tab_processor - INFO - Extracted 0 positions from F:\newrepos\olitunes\backend\data\tab_data\tab_files\Metallica_NOTHING ELSE MATTERS TAB (ver 10).txt
+2025-04-03 17:48:25,256 - tab_processor - INFO - Extracted 0 positions from F:\newrepos\olitunes\backend\data\tab_data\tab_files\Morgan Wallen_LAST NIGHT CHORDS.txt
+2025-04-03 17:48:25,256 - tab_processor - INFO - Extracted 0 positions from F:\newrepos\olitunes\backend\data\tab_data\tab_files\Morgan Wallen_LAST NIGHT INTRO TAB (ver 2).txt
+2025-04-03 17:48:25,258 - tab_processor - INFO - Extracted 0 positions from F:\newrepos\olitunes\backend\data\tab_data\tab_files\Paramore_HARD TIMES TAB.txt
+2025-04-03 17:48:25,260 - tab_processor - INFO - Extracted 0 positions from F:\newrepos\olitunes\backend\data\tab_data\tab_files\Paramore_THE ONLY EXCEPTION CHORDS (ver 11).txt
+2025-04-03 17:48:25,260 - tab_data_pipeline - INFO - Successfully processed 0 tab files with 0 positions
+2025-04-03 17:48:25,261 - tab_processor - WARNING - No position data to save
+2025-04-03 17:48:25,261 - tab_data_pipeline - ERROR - Error loading real tab data: [Errno 2] No such file or directory: 'F:\\newrepos\\olitunes\\data\\tab_data\\processed\\real_positions.csv'
+2025-04-03 17:48:25,262 - tab_data_pipeline - INFO - Synthetic positions file not found, generating data...
+2025-04-03 17:48:25,262 - tab_data_pipeline - INFO - Generating 5000 synthetic samples across 7 styles
+2025-04-03 17:48:25,262 - model_training_runner - ERROR - Error preparing training data: 'SyntheticTabGenerator' object has no attribute 'generate_dataset'
+2025-04-03 17:48:25,266 - model_training_runner - ERROR - Failed to prepare training data. Exiting.
+2025-04-03 17:48:53,928 - model_training_runner - INFO - TensorFlow version: 2.19.0
+2025-04-03 17:48:54,055 - model_training_runner - INFO - === Preparing Training Data ===
+2025-04-03 17:48:54,196 - tab_processor - INFO - Loaded existing dataset with 104716 records
+2025-04-03 17:48:54,197 - synthetic_data - INFO - Loaded style configurations from F:\newrepos\olitunes\backend\data\tab_data\style_configs.json
+2025-04-03 17:48:54,334 - synthetic_data - INFO - Loaded existing dataset with 104716 records
+2025-04-03 17:48:54,334 - tab_data_pipeline - INFO - Initialized Tab Data Pipeline with context window 3
+2025-04-03 17:48:54,334 - model_training_runner - INFO - Using tab files from backend directory: F:\newrepos\olitunes\backend\data\tab_data\tab_files
+2025-04-03 17:48:54,334 - model_training_runner - INFO - Found 20 tab files in F:\newrepos\olitunes\backend\data\tab_data\tab_files
+2025-04-03 17:48:54,336 - tab_data_pipeline - INFO - Training data not found at F:\newrepos\olitunes\data\tab_data\training\training_data_cw3.npz, creating new dataset
+2025-04-03 17:48:54,336 - tab_data_pipeline - INFO - Real tab positions file not found, processing tab files...
+2025-04-03 17:48:54,336 - tab_data_pipeline - INFO - Using tab files from backend directory: F:\newrepos\olitunes\backend\data\tab_data\tab_files
+2025-04-03 17:48:54,338 - tab_data_pipeline - INFO - Processing 20 tab files from F:\newrepos\olitunes\backend\data\tab_data\tab_files
+2025-04-03 17:48:54,339 - tab_processor - INFO - Extracted 0 positions from F:\newrepos\olitunes\backend\data\tab_data\tab_files\All That Remains_THIS CALLING CHORDS.txt
+2025-04-03 17:48:54,341 - tab_processor - INFO - Extracted 0 positions from F:\newrepos\olitunes\backend\data\tab_data\tab_files\All That Remains_THIS CALLING TAB (ver 3).txt
+2025-04-03 17:48:54,343 - tab_processor - INFO - Extracted 0 positions from F:\newrepos\olitunes\backend\data\tab_data\tab_files\All That Remains_WHISPERS I HEAR YOU TAB (ver 3).txt
+2025-04-03 17:48:54,343 - tab_processor - INFO - Extracted 0 positions from F:\newrepos\olitunes\backend\data\tab_data\tab_files\Asking Alexandria_A PROPHECY TAB (ver 3).txt
+2025-04-03 17:48:54,345 - tab_processor - INFO - Extracted 0 positions from F:\newrepos\olitunes\backend\data\tab_data\tab_files\Asking Alexandria_ALONE IN A ROOM OFFICIAL.txt
+2025-04-03 17:48:54,346 - tab_processor - INFO - Extracted 0 positions from F:\newrepos\olitunes\backend\data\tab_data\tab_files\Asking Alexandria_FINAL EPISODE LETS CHANGE THE CHANNEL OFFICIAL.txt
+2025-04-03 17:48:54,347 - tab_processor - INFO - Extracted 0 positions from F:\newrepos\olitunes\backend\data\tab_data\tab_files\Asking Alexandria_MOVING ON OFFICIAL.txt
+2025-04-03 17:48:54,348 - tab_processor - INFO - Extracted 0 positions from F:\newrepos\olitunes\backend\data\tab_data\tab_files\Ed Sheeran_PERFECT TAB (ver 4).txt
+2025-04-03 17:48:54,349 - tab_processor - INFO - Extracted 0 positions from F:\newrepos\olitunes\backend\data\tab_data\tab_files\Incubus_DRIVE ACOUSTIC CHORDS (ver 2).txt
+2025-04-03 17:48:54,349 - tab_processor - INFO - Extracted 0 positions from F:\newrepos\olitunes\backend\data\tab_data\tab_files\John Mayer_SLOW DANCING IN A BURNING ROOM INTERACTIVE TAB (ver 2).txt
+2025-04-03 17:48:54,349 - tab_processor - INFO - Extracted 0 positions from F:\newrepos\olitunes\backend\data\tab_data\tab_files\Johnny Cash_FOLSOM PRISON BLUES INTERACTIVE TAB (ver 4).txt
+2025-04-03 17:48:54,349 - tab_processor - INFO - Extracted 0 positions from F:\newrepos\olitunes\backend\data\tab_data\tab_files\Johnny Cash_HURT OFFICIAL.txt
+2025-04-03 17:48:54,352 - tab_processor - INFO - Extracted 0 positions from F:\newrepos\olitunes\backend\data\tab_data\tab_files\Killswitch Engage_MY CURSE TAB (ver 3).txt
+2025-04-03 17:48:54,353 - tab_processor - INFO - Extracted 0 positions from F:\newrepos\olitunes\backend\data\tab_data\tab_files\Killswitch Engage_THE END OF HEARTACHE INTERACTIVE TAB (ver 7).txt
+2025-04-03 17:48:54,353 - tab_processor - INFO - Extracted 0 positions from F:\newrepos\olitunes\backend\data\tab_data\tab_files\Metallica for guitar, ukulele, piano at Ultimate-Guitar_NOTHING ELSE MATTERS CHORDS (ver 3).txt
+2025-04-03 17:48:54,355 - tab_processor - INFO - Extracted 0 positions from F:\newrepos\olitunes\backend\data\tab_data\tab_files\Metallica_NOTHING ELSE MATTERS TAB (ver 10).txt
+2025-04-03 17:48:54,356 - tab_processor - INFO - Extracted 0 positions from F:\newrepos\olitunes\backend\data\tab_data\tab_files\Morgan Wallen_LAST NIGHT CHORDS.txt
+2025-04-03 17:48:54,357 - tab_processor - INFO - Extracted 0 positions from F:\newrepos\olitunes\backend\data\tab_data\tab_files\Morgan Wallen_LAST NIGHT INTRO TAB (ver 2).txt
+2025-04-03 17:48:54,358 - tab_processor - INFO - Extracted 0 positions from F:\newrepos\olitunes\backend\data\tab_data\tab_files\Paramore_HARD TIMES TAB.txt
+2025-04-03 17:48:54,358 - tab_processor - INFO - Extracted 0 positions from F:\newrepos\olitunes\backend\data\tab_data\tab_files\Paramore_THE ONLY EXCEPTION CHORDS (ver 11).txt
+2025-04-03 17:48:54,359 - tab_data_pipeline - INFO - Successfully processed 0 tab files with 0 positions
+2025-04-03 17:48:54,359 - tab_processor - WARNING - No position data to save
+2025-04-03 17:48:54,360 - tab_data_pipeline - ERROR - Error loading real tab data: [Errno 2] No such file or directory: 'F:\\newrepos\\olitunes\\data\\tab_data\\processed\\real_positions.csv'
+2025-04-03 17:48:54,360 - tab_data_pipeline - INFO - Synthetic positions file not found, generating data...
+2025-04-03 17:48:54,360 - tab_data_pipeline - INFO - Generating 5000 synthetic samples across 7 styles
+2025-04-03 17:48:54,360 - synthetic_data - INFO - Generating dataset with 5000 samples across 7 styles
+2025-04-03 17:48:54,360 - synthetic_data - INFO - Generating 44 riffs for blues style
+2025-04-03 17:48:54,380 - synthetic_data - INFO - Generated 499 positions for blues
+2025-04-03 17:48:54,380 - synthetic_data - INFO - Generating 44 riffs for rock style
+2025-04-03 17:48:54,400 - synthetic_data - INFO - Generated 490 positions for rock
+2025-04-03 17:48:54,401 - synthetic_data - INFO - Generating 44 riffs for jazz style
+2025-04-03 17:48:54,424 - synthetic_data - INFO - Generated 449 positions for jazz
+2025-04-03 17:48:54,424 - synthetic_data - INFO - Generating 44 riffs for folk style
+2025-04-03 17:48:54,440 - synthetic_data - INFO - Generated 497 positions for folk
+2025-04-03 17:48:54,441 - synthetic_data - INFO - Generating 44 riffs for metal style
+2025-04-03 17:48:54,462 - synthetic_data - INFO - Generated 478 positions for metal
+2025-04-03 17:48:54,462 - synthetic_data - INFO - Generating 44 riffs for country style
+2025-04-03 17:48:54,483 - synthetic_data - INFO - Generated 502 positions for country
+2025-04-03 17:48:54,483 - synthetic_data - INFO - Generating 44 riffs for pop style
+2025-04-03 17:48:54,505 - synthetic_data - INFO - Generated 533 positions for pop
+2025-04-03 17:48:54,505 - synthetic_data - INFO - Total synthetic positions generated: 3448
+2025-04-03 17:48:54,532 - synthetic_data - INFO - Successfully saved 3448 samples to F:\newrepos\olitunes\data\tab_data\processed\synthetic_positions.csv
+2025-04-03 17:48:54,532 - tab_data_pipeline - INFO - Generated 3448 synthetic samples
+2025-04-03 17:48:54,542 - tab_data_pipeline - INFO - Loaded 3448 synthetic tab positions
+2025-04-03 17:48:54,542 - tab_data_pipeline - INFO - Using only synthetic data with 3448 samples
+2025-04-03 17:48:54,542 - tab_data_pipeline - INFO - Converting position data to training features...
+2025-04-03 17:48:54,553 - model_training_runner - ERROR - Error preparing training data: list assignment index out of range
+2025-04-03 17:48:54,557 - model_training_runner - ERROR - Failed to prepare training data. Exiting.
+2025-04-03 17:49:08,188 - model_training_runner - INFO - TensorFlow version: 2.19.0
+2025-04-03 17:49:08,307 - model_training_runner - INFO - === Preparing Training Data ===
+2025-04-03 17:49:08,445 - tab_processor - INFO - Loaded existing dataset with 104716 records
+2025-04-03 17:49:08,446 - synthetic_data - INFO - Loaded style configurations from F:\newrepos\olitunes\backend\data\tab_data\style_configs.json
+2025-04-03 17:49:08,578 - synthetic_data - INFO - Loaded existing dataset with 104716 records
+2025-04-03 17:49:08,580 - tab_data_pipeline - INFO - Initialized Tab Data Pipeline with context window 3
+2025-04-03 17:49:08,580 - model_training_runner - INFO - Using tab files from backend directory: F:\newrepos\olitunes\backend\data\tab_data\tab_files
+2025-04-03 17:49:08,580 - model_training_runner - INFO - Found 20 tab files in F:\newrepos\olitunes\backend\data\tab_data\tab_files
+2025-04-03 17:49:08,580 - tab_data_pipeline - INFO - Training data not found at F:\newrepos\olitunes\data\tab_data\training\training_data_cw3.npz, creating new dataset
+2025-04-03 17:49:08,582 - tab_data_pipeline - INFO - Real tab positions file not found, processing tab files...
+2025-04-03 17:49:08,582 - tab_data_pipeline - INFO - Using tab files from backend directory: F:\newrepos\olitunes\backend\data\tab_data\tab_files
+2025-04-03 17:49:08,582 - tab_data_pipeline - INFO - Processing 20 tab files from F:\newrepos\olitunes\backend\data\tab_data\tab_files
+2025-04-03 17:49:08,587 - tab_processor - INFO - Extracted 0 positions from F:\newrepos\olitunes\backend\data\tab_data\tab_files\All That Remains_THIS CALLING CHORDS.txt
+2025-04-03 17:49:08,589 - tab_processor - INFO - Extracted 0 positions from F:\newrepos\olitunes\backend\data\tab_data\tab_files\All That Remains_THIS CALLING TAB (ver 3).txt
+2025-04-03 17:49:08,589 - tab_processor - INFO - Extracted 0 positions from F:\newrepos\olitunes\backend\data\tab_data\tab_files\All That Remains_WHISPERS I HEAR YOU TAB (ver 3).txt
+2025-04-03 17:49:08,590 - tab_processor - INFO - Extracted 0 positions from F:\newrepos\olitunes\backend\data\tab_data\tab_files\Asking Alexandria_A PROPHECY TAB (ver 3).txt
+2025-04-03 17:49:08,591 - tab_processor - INFO - Extracted 0 positions from F:\newrepos\olitunes\backend\data\tab_data\tab_files\Asking Alexandria_ALONE IN A ROOM OFFICIAL.txt
+2025-04-03 17:49:08,592 - tab_processor - INFO - Extracted 0 positions from F:\newrepos\olitunes\backend\data\tab_data\tab_files\Asking Alexandria_FINAL EPISODE LETS CHANGE THE CHANNEL OFFICIAL.txt
+2025-04-03 17:49:08,592 - tab_processor - INFO - Extracted 0 positions from F:\newrepos\olitunes\backend\data\tab_data\tab_files\Asking Alexandria_MOVING ON OFFICIAL.txt
+2025-04-03 17:49:08,594 - tab_processor - INFO - Extracted 0 positions from F:\newrepos\olitunes\backend\data\tab_data\tab_files\Ed Sheeran_PERFECT TAB (ver 4).txt
+2025-04-03 17:49:08,595 - tab_processor - INFO - Extracted 0 positions from F:\newrepos\olitunes\backend\data\tab_data\tab_files\Incubus_DRIVE ACOUSTIC CHORDS (ver 2).txt
+2025-04-03 17:49:08,595 - tab_processor - INFO - Extracted 0 positions from F:\newrepos\olitunes\backend\data\tab_data\tab_files\John Mayer_SLOW DANCING IN A BURNING ROOM INTERACTIVE TAB (ver 2).txt
+2025-04-03 17:49:08,596 - tab_processor - INFO - Extracted 0 positions from F:\newrepos\olitunes\backend\data\tab_data\tab_files\Johnny Cash_FOLSOM PRISON BLUES INTERACTIVE TAB (ver 4).txt
+2025-04-03 17:49:08,597 - tab_processor - INFO - Extracted 0 positions from F:\newrepos\olitunes\backend\data\tab_data\tab_files\Johnny Cash_HURT OFFICIAL.txt
+2025-04-03 17:49:08,598 - tab_processor - INFO - Extracted 0 positions from F:\newrepos\olitunes\backend\data\tab_data\tab_files\Killswitch Engage_MY CURSE TAB (ver 3).txt
+2025-04-03 17:49:08,599 - tab_processor - INFO - Extracted 0 positions from F:\newrepos\olitunes\backend\data\tab_data\tab_files\Killswitch Engage_THE END OF HEARTACHE INTERACTIVE TAB (ver 7).txt
+2025-04-03 17:49:08,600 - tab_processor - INFO - Extracted 0 positions from F:\newrepos\olitunes\backend\data\tab_data\tab_files\Metallica for guitar, ukulele, piano at Ultimate-Guitar_NOTHING ELSE MATTERS CHORDS (ver 3).txt
+2025-04-03 17:49:08,601 - tab_processor - INFO - Extracted 0 positions from F:\newrepos\olitunes\backend\data\tab_data\tab_files\Metallica_NOTHING ELSE MATTERS TAB (ver 10).txt
+2025-04-03 17:49:08,602 - tab_processor - INFO - Extracted 0 positions from F:\newrepos\olitunes\backend\data\tab_data\tab_files\Morgan Wallen_LAST NIGHT CHORDS.txt
+2025-04-03 17:49:08,603 - tab_processor - INFO - Extracted 0 positions from F:\newrepos\olitunes\backend\data\tab_data\tab_files\Morgan Wallen_LAST NIGHT INTRO TAB (ver 2).txt
+2025-04-03 17:49:08,603 - tab_processor - INFO - Extracted 0 positions from F:\newrepos\olitunes\backend\data\tab_data\tab_files\Paramore_HARD TIMES TAB.txt
+2025-04-03 17:49:08,604 - tab_processor - INFO - Extracted 0 positions from F:\newrepos\olitunes\backend\data\tab_data\tab_files\Paramore_THE ONLY EXCEPTION CHORDS (ver 11).txt
+2025-04-03 17:49:08,605 - tab_data_pipeline - INFO - Successfully processed 0 tab files with 0 positions
+2025-04-03 17:49:08,605 - tab_processor - WARNING - No position data to save
+2025-04-03 17:49:08,605 - tab_data_pipeline - ERROR - Error loading real tab data: [Errno 2] No such file or directory: 'F:\\newrepos\\olitunes\\data\\tab_data\\processed\\real_positions.csv'
+2025-04-03 17:49:08,616 - tab_data_pipeline - INFO - Loaded 3448 synthetic tab positions
+2025-04-03 17:49:08,616 - tab_data_pipeline - INFO - Using only synthetic data with 3448 samples
+2025-04-03 17:49:08,617 - tab_data_pipeline - INFO - Converting position data to training features...
+2025-04-03 17:49:08,626 - model_training_runner - ERROR - Error preparing training data: list assignment index out of range
+2025-04-03 17:49:08,630 - model_training_runner - ERROR - Failed to prepare training data. Exiting.
+2025-04-03 17:49:59,378 - model_training_runner - INFO - TensorFlow version: 2.19.0
+2025-04-03 17:49:59,503 - model_training_runner - INFO - === Preparing Training Data ===
+2025-04-03 17:49:59,644 - tab_processor - INFO - Loaded existing dataset with 104716 records
+2025-04-03 17:49:59,645 - synthetic_data - INFO - Loaded style configurations from F:\newrepos\olitunes\backend\data\tab_data\style_configs.json
+2025-04-03 17:49:59,780 - synthetic_data - INFO - Loaded existing dataset with 104716 records
+2025-04-03 17:49:59,780 - tab_data_pipeline - INFO - Initialized Tab Data Pipeline with context window 3
+2025-04-03 17:49:59,780 - model_training_runner - INFO - Using tab files from backend directory: F:\newrepos\olitunes\backend\data\tab_data\tab_files
+2025-04-03 17:49:59,780 - model_training_runner - INFO - Found 20 tab files in F:\newrepos\olitunes\backend\data\tab_data\tab_files
+2025-04-03 17:49:59,782 - tab_data_pipeline - INFO - Training data not found at F:\newrepos\olitunes\data\tab_data\training\training_data_cw3.npz, creating new dataset
+2025-04-03 17:49:59,782 - tab_data_pipeline - INFO - Real tab positions file not found, processing tab files...
+2025-04-03 17:49:59,782 - tab_data_pipeline - INFO - Using tab files from backend directory: F:\newrepos\olitunes\backend\data\tab_data\tab_files
+2025-04-03 17:49:59,782 - tab_data_pipeline - INFO - Processing 20 tab files from F:\newrepos\olitunes\backend\data\tab_data\tab_files
+2025-04-03 17:49:59,786 - tab_processor - INFO - Extracted 0 positions from F:\newrepos\olitunes\backend\data\tab_data\tab_files\All That Remains_THIS CALLING CHORDS.txt
+2025-04-03 17:49:59,788 - tab_processor - INFO - Extracted 0 positions from F:\newrepos\olitunes\backend\data\tab_data\tab_files\All That Remains_THIS CALLING TAB (ver 3).txt
+2025-04-03 17:49:59,789 - tab_processor - INFO - Extracted 0 positions from F:\newrepos\olitunes\backend\data\tab_data\tab_files\All That Remains_WHISPERS I HEAR YOU TAB (ver 3).txt
+2025-04-03 17:49:59,790 - tab_processor - INFO - Extracted 0 positions from F:\newrepos\olitunes\backend\data\tab_data\tab_files\Asking Alexandria_A PROPHECY TAB (ver 3).txt
+2025-04-03 17:49:59,791 - tab_processor - INFO - Extracted 0 positions from F:\newrepos\olitunes\backend\data\tab_data\tab_files\Asking Alexandria_ALONE IN A ROOM OFFICIAL.txt
+2025-04-03 17:49:59,792 - tab_processor - INFO - Extracted 0 positions from F:\newrepos\olitunes\backend\data\tab_data\tab_files\Asking Alexandria_FINAL EPISODE LETS CHANGE THE CHANNEL OFFICIAL.txt
+2025-04-03 17:49:59,793 - tab_processor - INFO - Extracted 0 positions from F:\newrepos\olitunes\backend\data\tab_data\tab_files\Asking Alexandria_MOVING ON OFFICIAL.txt
+2025-04-03 17:49:59,794 - tab_processor - INFO - Extracted 0 positions from F:\newrepos\olitunes\backend\data\tab_data\tab_files\Ed Sheeran_PERFECT TAB (ver 4).txt
+2025-04-03 17:49:59,795 - tab_processor - INFO - Extracted 0 positions from F:\newrepos\olitunes\backend\data\tab_data\tab_files\Incubus_DRIVE ACOUSTIC CHORDS (ver 2).txt
+2025-04-03 17:49:59,795 - tab_processor - INFO - Extracted 0 positions from F:\newrepos\olitunes\backend\data\tab_data\tab_files\John Mayer_SLOW DANCING IN A BURNING ROOM INTERACTIVE TAB (ver 2).txt
+2025-04-03 17:49:59,795 - tab_processor - INFO - Extracted 0 positions from F:\newrepos\olitunes\backend\data\tab_data\tab_files\Johnny Cash_FOLSOM PRISON BLUES INTERACTIVE TAB (ver 4).txt
+2025-04-03 17:49:59,797 - tab_processor - INFO - Extracted 0 positions from F:\newrepos\olitunes\backend\data\tab_data\tab_files\Johnny Cash_HURT OFFICIAL.txt
+2025-04-03 17:49:59,797 - tab_processor - INFO - Extracted 0 positions from F:\newrepos\olitunes\backend\data\tab_data\tab_files\Killswitch Engage_MY CURSE TAB (ver 3).txt
+2025-04-03 17:49:59,799 - tab_processor - INFO - Extracted 0 positions from F:\newrepos\olitunes\backend\data\tab_data\tab_files\Killswitch Engage_THE END OF HEARTACHE INTERACTIVE TAB (ver 7).txt
+2025-04-03 17:49:59,800 - tab_processor - INFO - Extracted 0 positions from F:\newrepos\olitunes\backend\data\tab_data\tab_files\Metallica for guitar, ukulele, piano at Ultimate-Guitar_NOTHING ELSE MATTERS CHORDS (ver 3).txt
+2025-04-03 17:49:59,801 - tab_processor - INFO - Extracted 0 positions from F:\newrepos\olitunes\backend\data\tab_data\tab_files\Metallica_NOTHING ELSE MATTERS TAB (ver 10).txt
+2025-04-03 17:49:59,802 - tab_processor - INFO - Extracted 0 positions from F:\newrepos\olitunes\backend\data\tab_data\tab_files\Morgan Wallen_LAST NIGHT CHORDS.txt
+2025-04-03 17:49:59,802 - tab_processor - INFO - Extracted 0 positions from F:\newrepos\olitunes\backend\data\tab_data\tab_files\Morgan Wallen_LAST NIGHT INTRO TAB (ver 2).txt
+2025-04-03 17:49:59,803 - tab_processor - INFO - Extracted 0 positions from F:\newrepos\olitunes\backend\data\tab_data\tab_files\Paramore_HARD TIMES TAB.txt
+2025-04-03 17:49:59,804 - tab_processor - INFO - Extracted 0 positions from F:\newrepos\olitunes\backend\data\tab_data\tab_files\Paramore_THE ONLY EXCEPTION CHORDS (ver 11).txt
+2025-04-03 17:49:59,804 - tab_data_pipeline - INFO - Successfully processed 0 tab files with 0 positions
+2025-04-03 17:49:59,804 - tab_processor - WARNING - No position data to save
+2025-04-03 17:49:59,806 - tab_data_pipeline - ERROR - Error loading real tab data: [Errno 2] No such file or directory: 'F:\\newrepos\\olitunes\\data\\tab_data\\processed\\real_positions.csv'
+2025-04-03 17:49:59,816 - tab_data_pipeline - INFO - Loaded 3448 synthetic tab positions
+2025-04-03 17:49:59,818 - tab_data_pipeline - INFO - Using only synthetic data with 3448 samples
+2025-04-03 17:49:59,818 - tab_data_pipeline - INFO - Converting position data to training features...
+2025-04-03 17:49:59,821 - tab_data_pipeline - INFO - Processing 44 unique songs
+2025-04-03 17:50:01,489 - tab_data_pipeline - INFO - Created dataset with 3316 examples
+2025-04-03 17:50:01,490 - tab_data_pipeline - INFO - Input shape: (3316, 24), Output shape: (3316, 30)
+2025-04-03 17:50:01,505 - tab_data_pipeline - INFO - Saved training data with 3316 samples to F:\newrepos\olitunes\data\tab_data\training\training_data_cw3.npz
+2025-04-03 17:50:01,507 - tab_data_pipeline - INFO - Created new training data: 3316 samples
+2025-04-03 17:50:01,507 - tab_data_pipeline - INFO - Training set: 2652 samples, Validation set: 664 samples
+2025-04-03 17:50:01,508 - model_training_runner - INFO - Successfully prepared training data:
+2025-04-03 17:50:01,508 - model_training_runner - INFO -   X_train shape: (2652, 24)
+2025-04-03 17:50:01,508 - model_training_runner - INFO -   X_val shape: (664, 24)
+2025-04-03 17:50:01,513 - model_training_runner - INFO - === Training Individual Models ===
+2025-04-03 17:50:01,513 - model_training_runner - INFO - Training LSTM model...
+2025-04-03 17:50:01,514 - train_real_models - INFO - Initialized lstm model trainer with context window 3
+2025-04-03 17:50:01,514 - train_real_models - INFO - Model will be saved to F:\newrepos\olitunes\backend\models\lstm_model\lstm_model_20250403_175001.h5
+2025-04-03 17:50:01,652 - tab_processor - INFO - Loaded existing dataset with 104716 records
+2025-04-03 17:50:01,653 - synthetic_data - INFO - Loaded style configurations from F:\newrepos\olitunes\backend\data\tab_data\style_configs.json
+2025-04-03 17:50:01,784 - synthetic_data - INFO - Loaded existing dataset with 104716 records
+2025-04-03 17:50:01,786 - tab_data_pipeline - INFO - Initialized Tab Data Pipeline with context window 3
+2025-04-03 17:50:01,786 - tab_data_pipeline - INFO - Loading existing training data from F:\newrepos\olitunes\data\tab_data\training\training_data_cw3.npz
+2025-04-03 17:50:01,793 - tab_data_pipeline - INFO - Loaded training data: 3316 samples
+2025-04-03 17:50:01,793 - tab_data_pipeline - INFO - Training set: 2652 samples, Validation set: 664 samples
+2025-04-03 17:50:02,014 - real_models - INFO - Created LSTM model with 3 context window
+2025-04-03 17:50:02,014 - train_real_models - INFO - Starting lstm model training for up to 100 epochs
+2025-04-03 17:50:02,015 - train_real_models - INFO - Training data: (2652, 24), Validation data: (664, 24)
+2025-04-03 17:50:13,093 - absl - WARNING - You are saving your model as an HDF5 file via `model.save()` or `keras.saving.save_model(model)`. This file format is considered legacy. We recommend using instead the native Keras format, e.g. `model.save('my_model.keras')` or `keras.saving.save_model(model, 'my_model.keras')`. 
+2025-04-03 17:50:14,232 - absl - WARNING - You are saving your model as an HDF5 file via `model.save()` or `keras.saving.save_model(model)`. This file format is considered legacy. We recommend using instead the native Keras format, e.g. `model.save('my_model.keras')` or `keras.saving.save_model(model, 'my_model.keras')`. 
+2025-04-03 17:50:16,074 - absl - WARNING - You are saving your model as an HDF5 file via `model.save()` or `keras.saving.save_model(model)`. This file format is considered legacy. We recommend using instead the native Keras format, e.g. `model.save('my_model.keras')` or `keras.saving.save_model(model, 'my_model.keras')`. 
+2025-04-03 17:50:34,314 - train_real_models - INFO - Training completed. Best validation loss: 0.0477
+2025-04-03 17:50:34,320 - train_real_models - INFO - Saved model details to F:\newrepos\olitunes\backend\models\lstm_model\info_20250403_175001.json
+2025-04-03 17:50:34,322 - train_real_models - INFO - Saved compatibility configuration to F:\newrepos\olitunes\backend\models\lstm_model\model_config.json
+2025-04-03 17:50:34,328 - train_real_models - INFO - Evaluating lstm model on test data
+2025-04-03 17:50:34,531 - train_real_models - INFO - loss: 0.0477
+2025-04-03 17:50:34,532 - train_real_models - INFO - compile_metrics: 0.0951
+2025-04-03 17:50:34,532 - model_training_runner - INFO - LSTM model validation results:
+2025-04-03 17:50:34,532 - model_training_runner - INFO -   loss: 0.0477
+2025-04-03 17:50:34,533 - model_training_runner - INFO -   compile_metrics: 0.0951
+2025-04-03 17:50:34,533 - model_training_runner - INFO - Training TRANSFORMER model...
+2025-04-03 17:50:34,536 - train_real_models - INFO - Initialized transformer model trainer with context window 3
+2025-04-03 17:50:34,536 - train_real_models - INFO - Model will be saved to F:\newrepos\olitunes\backend\models\transformer_model\transformer_model_20250403_175034.h5
+2025-04-03 17:50:34,670 - tab_processor - INFO - Loaded existing dataset with 104716 records
+2025-04-03 17:50:34,670 - synthetic_data - INFO - Loaded style configurations from F:\newrepos\olitunes\backend\data\tab_data\style_configs.json
+2025-04-03 17:50:34,801 - synthetic_data - INFO - Loaded existing dataset with 104716 records
+2025-04-03 17:50:34,801 - tab_data_pipeline - INFO - Initialized Tab Data Pipeline with context window 3
+2025-04-03 17:50:34,802 - tab_data_pipeline - INFO - Loading existing training data from F:\newrepos\olitunes\data\tab_data\training\training_data_cw3.npz
+2025-04-03 17:50:34,806 - tab_data_pipeline - INFO - Loaded training data: 3316 samples
+2025-04-03 17:50:34,806 - tab_data_pipeline - INFO - Training set: 2652 samples, Validation set: 664 samples
+2025-04-03 17:50:34,989 - real_models - INFO - Created transformer-based model with 3 context window
+2025-04-03 17:50:34,989 - train_real_models - INFO - Starting transformer model training for up to 100 epochs
+2025-04-03 17:50:34,990 - train_real_models - INFO - Training data: (2652, 24), Validation data: (664, 24)
+2025-04-03 17:50:44,813 - absl - WARNING - You are saving your model as an HDF5 file via `model.save()` or `keras.saving.save_model(model)`. This file format is considered legacy. We recommend using instead the native Keras format, e.g. `model.save('my_model.keras')` or `keras.saving.save_model(model, 'my_model.keras')`. 
+2025-04-03 17:50:46,227 - absl - WARNING - You are saving your model as an HDF5 file via `model.save()` or `keras.saving.save_model(model)`. This file format is considered legacy. We recommend using instead the native Keras format, e.g. `model.save('my_model.keras')` or `keras.saving.save_model(model, 'my_model.keras')`. 
+2025-04-03 17:50:47,601 - absl - WARNING - You are saving your model as an HDF5 file via `model.save()` or `keras.saving.save_model(model)`. This file format is considered legacy. We recommend using instead the native Keras format, e.g. `model.save('my_model.keras')` or `keras.saving.save_model(model, 'my_model.keras')`. 
+2025-04-03 17:50:49,008 - absl - WARNING - You are saving your model as an HDF5 file via `model.save()` or `keras.saving.save_model(model)`. This file format is considered legacy. We recommend using instead the native Keras format, e.g. `model.save('my_model.keras')` or `keras.saving.save_model(model, 'my_model.keras')`. 
+2025-04-03 17:50:50,421 - absl - WARNING - You are saving your model as an HDF5 file via `model.save()` or `keras.saving.save_model(model)`. This file format is considered legacy. We recommend using instead the native Keras format, e.g. `model.save('my_model.keras')` or `keras.saving.save_model(model, 'my_model.keras')`. 
+2025-04-03 17:50:53,039 - absl - WARNING - You are saving your model as an HDF5 file via `model.save()` or `keras.saving.save_model(model)`. This file format is considered legacy. We recommend using instead the native Keras format, e.g. `model.save('my_model.keras')` or `keras.saving.save_model(model, 'my_model.keras')`. 
+2025-04-03 17:50:59,632 - absl - WARNING - You are saving your model as an HDF5 file via `model.save()` or `keras.saving.save_model(model)`. This file format is considered legacy. We recommend using instead the native Keras format, e.g. `model.save('my_model.keras')` or `keras.saving.save_model(model, 'my_model.keras')`. 
+2025-04-03 17:51:03,518 - absl - WARNING - You are saving your model as an HDF5 file via `model.save()` or `keras.saving.save_model(model)`. This file format is considered legacy. We recommend using instead the native Keras format, e.g. `model.save('my_model.keras')` or `keras.saving.save_model(model, 'my_model.keras')`. 
+2025-04-03 17:51:28,969 - train_real_models - INFO - Training completed. Best validation loss: 0.0478
+2025-04-03 17:51:28,978 - train_real_models - INFO - Saved model details to F:\newrepos\olitunes\backend\models\transformer_model\info_20250403_175034.json
+2025-04-03 17:51:28,978 - train_real_models - INFO - Saved compatibility configuration to F:\newrepos\olitunes\backend\models\transformer_model\model_config.json
+2025-04-03 17:51:28,984 - train_real_models - INFO - Evaluating transformer model on test data
+2025-04-03 17:51:29,207 - train_real_models - INFO - loss: 0.0478
+2025-04-03 17:51:29,208 - train_real_models - INFO - compile_metrics: 0.0948
+2025-04-03 17:51:29,208 - model_training_runner - INFO - TRANSFORMER model validation results:
+2025-04-03 17:51:29,208 - model_training_runner - INFO -   loss: 0.0478
+2025-04-03 17:51:29,209 - model_training_runner - INFO -   compile_metrics: 0.0948
+2025-04-03 17:51:29,209 - model_training_runner - INFO - Training HYBRID model...
+2025-04-03 17:51:29,221 - train_real_models - INFO - Initialized hybrid model trainer with context window 3
+2025-04-03 17:51:29,222 - train_real_models - INFO - Model will be saved to F:\newrepos\olitunes\backend\models\hybrid_model\hybrid_model_20250403_175129.h5
+2025-04-03 17:51:29,355 - tab_processor - INFO - Loaded existing dataset with 104716 records
+2025-04-03 17:51:29,356 - synthetic_data - INFO - Loaded style configurations from F:\newrepos\olitunes\backend\data\tab_data\style_configs.json
+2025-04-03 17:51:29,486 - synthetic_data - INFO - Loaded existing dataset with 104716 records
+2025-04-03 17:51:29,486 - tab_data_pipeline - INFO - Initialized Tab Data Pipeline with context window 3
+2025-04-03 17:51:29,488 - tab_data_pipeline - INFO - Loading existing training data from F:\newrepos\olitunes\data\tab_data\training\training_data_cw3.npz
+2025-04-03 17:51:29,492 - tab_data_pipeline - INFO - Loaded training data: 3316 samples
+2025-04-03 17:51:29,492 - tab_data_pipeline - INFO - Training set: 2652 samples, Validation set: 664 samples
+2025-04-03 17:51:29,669 - real_models - INFO - Created hybrid model with 3 context window
+2025-04-03 17:51:29,669 - train_real_models - INFO - Starting hybrid model training for up to 100 epochs
+2025-04-03 17:51:29,670 - train_real_models - INFO - Training data: (2652, 24), Validation data: (664, 24)
+2025-04-03 17:51:42,347 - absl - WARNING - You are saving your model as an HDF5 file via `model.save()` or `keras.saving.save_model(model)`. This file format is considered legacy. We recommend using instead the native Keras format, e.g. `model.save('my_model.keras')` or `keras.saving.save_model(model, 'my_model.keras')`. 
+2025-04-03 17:51:44,681 - absl - WARNING - You are saving your model as an HDF5 file via `model.save()` or `keras.saving.save_model(model)`. This file format is considered legacy. We recommend using instead the native Keras format, e.g. `model.save('my_model.keras')` or `keras.saving.save_model(model, 'my_model.keras')`. 
+2025-04-03 17:51:50,110 - absl - WARNING - You are saving your model as an HDF5 file via `model.save()` or `keras.saving.save_model(model)`. This file format is considered legacy. We recommend using instead the native Keras format, e.g. `model.save('my_model.keras')` or `keras.saving.save_model(model, 'my_model.keras')`. 
+2025-04-03 17:51:52,374 - absl - WARNING - You are saving your model as an HDF5 file via `model.save()` or `keras.saving.save_model(model)`. This file format is considered legacy. We recommend using instead the native Keras format, e.g. `model.save('my_model.keras')` or `keras.saving.save_model(model, 'my_model.keras')`. 
+2025-04-03 17:51:54,603 - absl - WARNING - You are saving your model as an HDF5 file via `model.save()` or `keras.saving.save_model(model)`. This file format is considered legacy. We recommend using instead the native Keras format, e.g. `model.save('my_model.keras')` or `keras.saving.save_model(model, 'my_model.keras')`. 
+2025-04-03 17:52:16,399 - train_real_models - INFO - Training completed. Best validation loss: 0.0477
+2025-04-03 17:52:16,407 - train_real_models - INFO - Saved model details to F:\newrepos\olitunes\backend\models\hybrid_model\info_20250403_175129.json
+2025-04-03 17:52:16,408 - train_real_models - INFO - Saved compatibility configuration to F:\newrepos\olitunes\backend\models\hybrid_model\model_config.json
+2025-04-03 17:52:16,413 - train_real_models - INFO - Evaluating hybrid model on test data
+2025-04-03 17:52:16,624 - train_real_models - INFO - loss: 0.0477
+2025-04-03 17:52:16,624 - train_real_models - INFO - compile_metrics: 0.0949
+2025-04-03 17:52:16,624 - model_training_runner - INFO - HYBRID model validation results:
+2025-04-03 17:52:16,626 - model_training_runner - INFO -   loss: 0.0477
+2025-04-03 17:52:16,626 - model_training_runner - INFO -   compile_metrics: 0.0949
+2025-04-03 17:52:16,627 - model_training_runner - INFO - === Creating and Training Ensemble Model ===
+2025-04-03 17:52:16,752 - real_models - INFO - Created LSTM model with 3 context window
+2025-04-03 17:52:16,916 - real_models - INFO - Created transformer-based model with 3 context window
+2025-04-03 17:52:17,083 - real_models - INFO - Created hybrid model with 3 context window
+2025-04-03 17:52:17,098 - ensemble_models - INFO - Created weighted_average ensemble model with 3 context window
+2025-04-03 17:52:17,098 - ensemble_models - INFO - Fine-tuning ensemble model for 50 epochs
+2025-04-03 17:52:17,183 - model_training_runner - ERROR - Error training ensemble model: 'Exception encountered when calling Functional.call().\n\n\x1b[1m2711975844160\x1b[0m\n\nArguments received by Functional.call():\n  • inputs=tf.Tensor(shape=(None, 24), dtype=float32)\n  • training=True\n  • mask=None'
+2025-04-03 17:52:17,184 - model_training_runner - INFO - === Testing Model Integration ===
+2025-04-03 17:52:17,185 - model_integration - INFO - Found latest model: F:\newrepos\olitunes\backend\models\hybrid_model
+2025-04-03 17:52:17,185 - model_integration - INFO - Loaded model config: hybrid (Real model: True)
+2025-04-03 17:52:17,186 - model_integration - INFO - Context window: 3, Features per note: 8
+2025-04-03 17:52:17,186 - model_integration - INFO - Model integration initialized with model directory: F:\newrepos\olitunes\backend\models\hybrid_model
+2025-04-03 17:52:17,186 - model_integration - INFO - Loading TensorFlow model from F:\newrepos\olitunes\backend\models\hybrid_model\hybrid_model_20250403_175129.h5
+2025-04-03 17:52:17,392 - model_integration - ERROR - Error loading model: Could not locate function 'mse'. Make sure custom classes are decorated with `@keras.saving.register_keras_serializable()`. Full object config: {'module': 'keras.metrics', 'class_name': 'function', 'config': 'mse', 'registered_name': 'mse'}
+2025-04-03 17:52:17,393 - model_training_runner - ERROR - Failed to load model for integration

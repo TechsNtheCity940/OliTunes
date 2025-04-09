@@ -1,0 +1,18 @@
+{
+  "model_type": "hybrid",
+  "name": "hybrid_model",
+  "context_window": 3,
+  "input_features": 8,
+  "created_date": "2025-04-03 17:52:16",
+  "training_metrics": {
+    "final_loss": 0.04791933670639992,
+    "final_val_loss": 0.04774250090122223,
+    "best_val_loss": 0.047715771943330765,
+    "epochs_trained": 32
+  },
+  "file_paths": {
+    "model_h5": "F:\\newrepos\\olitunes\\backend\\models\\hybrid_model\\hybrid_model_20250403_175129.h5",
+    "model_json": "F:\\newrepos\\olitunes\\backend\\models\\hybrid_model\\hybrid_model_20250403_175129.json",
+    "history": "F:\\newrepos\\olitunes\\backend\\models\\hybrid_model\\history_20250403_175129.json"
+  }
+}

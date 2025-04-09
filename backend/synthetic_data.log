@@ -1,0 +1,19 @@
+2025-04-03 13:07:15,623 - synthetic_data - INFO - Starting synthetic data generation
+2025-04-03 13:07:15,625 - synthetic_data - INFO - Saved default style configurations to F:\newrepos\olitunes\backend\data\tab_data\style_configs.json
+2025-04-03 13:07:15,677 - synthetic_data - INFO - Loaded existing dataset with 34604 records
+2025-04-03 13:07:15,677 - synthetic_data - INFO - Generating 62 riffs for blues style
+2025-04-03 13:07:15,703 - synthetic_data - INFO - Generated 728 positions for blues
+2025-04-03 13:07:15,704 - synthetic_data - INFO - Generating 62 riffs for rock style
+2025-04-03 13:07:15,733 - synthetic_data - INFO - Generated 698 positions for rock
+2025-04-03 13:07:15,733 - synthetic_data - INFO - Generating 62 riffs for jazz style
+2025-04-03 13:07:15,788 - synthetic_data - INFO - Generated 667 positions for jazz
+2025-04-03 13:07:15,788 - synthetic_data - INFO - Generating 62 riffs for folk style
+2025-04-03 13:07:15,813 - synthetic_data - INFO - Generated 728 positions for folk
+2025-04-03 13:07:15,813 - synthetic_data - INFO - Generating 62 riffs for metal style
+2025-04-03 13:07:15,842 - synthetic_data - INFO - Generated 696 positions for metal
+2025-04-03 13:07:15,842 - synthetic_data - INFO - Total synthetic positions generated: 3517
+2025-04-03 13:07:16,051 - synthetic_data - INFO - Saved 38121 positions to F:\newrepos\olitunes\backend\data\tab_data\fretboard_positions.csv
+2025-04-03 13:07:16,105 - synthetic_data - INFO - Preparing training data from 38121 positions
+2025-04-03 13:07:23,357 - synthetic_data - INFO - Saved training data: 38121 samples
+2025-04-03 13:07:23,357 - synthetic_data - INFO - Input shape: (38121, 176), Output shape: (38121, 150)
+2025-04-03 13:07:23,409 - synthetic_data - INFO - Synthetic data generation complete

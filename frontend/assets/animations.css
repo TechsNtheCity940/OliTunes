@@ -1,0 +1,256 @@
+/* Custom animations for OliTunes UI */
+
+/* Floating animation for UI elements */
+@keyframes float {
+  0% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+  100% {
+    transform: translateY(0px);
+  }
+}
+
+.float {
+  animation: float 4s ease-in-out infinite;
+}
+
+.float-slow {
+  animation: float 6s ease-in-out infinite;
+}
+
+.float-fast {
+  animation: float 3s ease-in-out infinite;
+}
+
+/* Pulse animation for attention */
+@keyframes pulse {
+  0% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.05);
+    opacity: 0.8;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.pulse {
+  animation: pulse 2s ease-in-out infinite;
+}
+
+/* Wave animation for audio visualizers */
+@keyframes wave {
+  0% {
+    transform: scaleY(0.5);
+  }
+  50% {
+    transform: scaleY(1.2);
+  }
+  100% {
+    transform: scaleY(0.5);
+  }
+}
+
+.wave {
+  animation: wave 1.5s ease-in-out infinite;
+}
+
+.wave-1 {
+  animation-delay: 0s;
+}
+
+.wave-2 {
+  animation-delay: 0.2s;
+}
+
+.wave-3 {
+  animation-delay: 0.4s;
+}
+
+.wave-4 {
+  animation-delay: 0.6s;
+}
+
+.wave-5 {
+  animation-delay: 0.8s;
+}
+
+/* Shimmer effect for gradients */
+@keyframes shimmer {
+  0% {
+    background-position: -100% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.shimmer {
+  background: linear-gradient(90deg, #00c2cb, #9c64a6, #00c2cb);
+  background-size: 200% 100%;
+  animation: shimmer 3s infinite;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Gentle fade-in for page transitions */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.fade-in {
+  animation: fadeIn 0.5s ease-out forwards;
+}
+
+.fade-in-delay-1 {
+  animation: fadeIn 0.5s ease-out 0.1s forwards;
+  opacity: 0;
+}
+
+.fade-in-delay-2 {
+  animation: fadeIn 0.5s ease-out 0.2s forwards;
+  opacity: 0;
+}
+
+.fade-in-delay-3 {
+  animation: fadeIn 0.5s ease-out 0.3s forwards;
+  opacity: 0;
+}
+
+.fade-in-delay-4 {
+  animation: fadeIn 0.5s ease-out 0.4s forwards;
+  opacity: 0;
+}
+
+.fade-in-delay-5 {
+  animation: fadeIn 0.5s ease-out 0.5s forwards;
+  opacity: 0;
+}
+
+/* String pluck animation */
+@keyframes pluck {
+  0% {
+    transform: translateX(0);
+  }
+  10% {
+    transform: translateX(3px);
+  }
+  20% {
+    transform: translateX(-2px);
+  }
+  30% {
+    transform: translateX(1px);
+  }
+  40% {
+    transform: translateX(-1px);
+  }
+  50% {
+    transform: translateX(0.5px);
+  }
+  60% {
+    transform: translateX(-0.5px);
+  }
+  70% {
+    transform: translateX(0.25px);
+  }
+  80% {
+    transform: translateX(-0.25px);
+  }
+  90%, 100% {
+    transform: translateX(0);
+  }
+}
+
+.pluck {
+  animation: pluck 0.5s ease-out;
+}
+
+/* Spin animation for loading elements */
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.spin {
+  animation: spin 1.5s linear infinite;
+}
+
+/* Beat animation for rhythm elements */
+@keyframes beat {
+  0%, 100% {
+    transform: scale(1);
+  }
+  25% {
+    transform: scale(1.1);
+  }
+  50% {
+    transform: scale(1);
+  }
+  75% {
+    transform: scale(1.05);
+  }
+}
+
+.beat {
+  animation: beat 1s ease-in-out infinite;
+}
+
+/* Focus in blur animation */
+@keyframes focusIn {
+  0% {
+    filter: blur(5px);
+    opacity: 0;
+  }
+  100% {
+    filter: blur(0);
+    opacity: 1;
+  }
+}
+
+.focus-in {
+  animation: focusIn 0.8s cubic-bezier(0.55, 0.085, 0.68, 0.53) forwards;
+}
+
+/* Equalizer animation for audio bars */
+.equalizer-bar {
+  height: 20px;
+  width: 4px;
+  background-color: #00c2cb;
+  margin: 0 1px;
+  border-radius: 2px;
+  transform-origin: bottom;
+}
+
+.equalizer-container {
+  display: flex;
+  align-items: flex-end;
+  height: 30px;
+}
+
+.eq-bar-1 { animation: wave 0.5s ease-in-out infinite; animation-delay: 0.0s; }
+.eq-bar-2 { animation: wave 0.5s ease-in-out infinite; animation-delay: 0.1s; }
+.eq-bar-3 { animation: wave 0.5s ease-in-out infinite; animation-delay: 0.2s; }
+.eq-bar-4 { animation: wave 0.5s ease-in-out infinite; animation-delay: 0.1s; }
+.eq-bar-5 { animation: wave 0.5s ease-in-out infinite; animation-delay: 0.0s; }
+.eq-bar-6 { animation: wave 0.5s ease-in-out infinite; animation-delay: 0.1s; }
+.eq-bar-7 { animation: wave 0.5s ease-in-out infinite; animation-delay: 0.2s; }
+.eq-bar-8 { animation: wave 0.5s ease-in-out infinite; animation-delay: 0.1s; }

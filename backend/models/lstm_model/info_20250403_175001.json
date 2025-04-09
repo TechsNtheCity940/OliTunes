@@ -1,0 +1,18 @@
+{
+  "model_type": "lstm",
+  "name": "lstm_model",
+  "context_window": 3,
+  "input_features": 8,
+  "created_date": "2025-04-03 17:50:34",
+  "training_metrics": {
+    "final_loss": 0.047955580055713654,
+    "final_val_loss": 0.047770459204912186,
+    "best_val_loss": 0.047727178782224655,
+    "epochs_trained": 24
+  },
+  "file_paths": {
+    "model_h5": "F:\\newrepos\\olitunes\\backend\\models\\lstm_model\\lstm_model_20250403_175001.h5",
+    "model_json": "F:\\newrepos\\olitunes\\backend\\models\\lstm_model\\lstm_model_20250403_175001.json",
+    "history": "F:\\newrepos\\olitunes\\backend\\models\\lstm_model\\history_20250403_175001.json"
+  }
+}

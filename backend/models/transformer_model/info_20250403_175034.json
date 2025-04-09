@@ -1,0 +1,18 @@
+{
+  "model_type": "transformer",
+  "name": "transformer_model",
+  "context_window": 3,
+  "input_features": 8,
+  "created_date": "2025-04-03 17:51:28",
+  "training_metrics": {
+    "final_loss": 0.04790360853075981,
+    "final_val_loss": 0.04786316305398941,
+    "best_val_loss": 0.047811929136514664,
+    "epochs_trained": 35
+  },
+  "file_paths": {
+    "model_h5": "F:\\newrepos\\olitunes\\backend\\models\\transformer_model\\transformer_model_20250403_175034.h5",
+    "model_json": "F:\\newrepos\\olitunes\\backend\\models\\transformer_model\\transformer_model_20250403_175034.json",
+    "history": "F:\\newrepos\\olitunes\\backend\\models\\transformer_model\\history_20250403_175034.json"
+  }
+}

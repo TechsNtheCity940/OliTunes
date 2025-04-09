@@ -1,0 +1,13 @@
+[8276:13568:0403/210716.819:INFO:chrome_browser_cloud_management_controller.cc(202)] No machine level policy manager exists.
+[8276:13568:0403/210727.292:WARNING:controller_impl.cc(1187)] Background download complete, client: 6, completion type: 0, file size:265059
+[8276:13568:0403/210727.373:WARNING:controller_impl.cc(1187)] Background download complete, client: 6, completion type: 0, file size:5156
+[8276:13568:0403/210727.513:WARNING:controller_impl.cc(1187)] Background download complete, client: 6, completion type: 0, file size:883094
+[8276:13568:0403/210727.629:WARNING:controller_impl.cc(1187)] Background download complete, client: 6, completion type: 0, file size:2200227
+[8276:13568:0403/210727.868:WARNING:controller_impl.cc(1187)] Background download complete, client: 6, completion type: 0, file size:2992963
+[8276:13568:0403/210728.955:WARNING:controller_impl.cc(1187)] Background download complete, client: 6, completion type: 0, file size:2747170
+[8276:13568:0403/210729.157:WARNING:controller_impl.cc(1187)] Background download complete, client: 6, completion type: 0, file size:4680
+[8276:13568:0403/210729.324:WARNING:controller_impl.cc(1187)] Background download complete, client: 6, completion type: 0, file size:118577
+[8276:13568:0403/210729.662:WARNING:controller_impl.cc(1187)] Background download complete, client: 6, completion type: 0, file size:45169
+[8276:13568:0403/210732.788:ERROR:new_tab_page_handler.cc(1345)] NewTabPage loaded into a non-browser-tab context
+[17052:14680:0403/210732.830:WARNING:sqlite_persistent_store_backend_base.cc(176)] Failed to post task from FlushAndNotifyInBackground@net\extras\sqlite\sqlite_persistent_store_backend_base.cc:226 to client_task_runner_.
+[17052:14680:0403/210732.830:WARNING:sqlite_persistent_store_backend_base.cc(176)] Failed to post task from FlushAndNotifyInBackground@net\extras\sqlite\sqlite_persistent_store_backend_base.cc:226 to client_task_runner_.

@@ -1,0 +1,10 @@
+{
+  "model_type": "lstm",
+  "real_model": true,
+  "input_dim": 24,
+  "output_dim": 30,
+  "context_window": 3,
+  "features_per_note": 8,
+  "model_path": "backend\\models\\lstm_model\\lstm_model_20250403_175001.h5",
+  "created_date": "2025-04-03 17:50:34"
+}

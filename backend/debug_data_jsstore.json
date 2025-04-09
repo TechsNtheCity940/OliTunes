@@ -1,0 +1,1581 @@
+{
+  "config": {
+    "releaseVer": "ug-web_app_1.14.45",
+    "backendReleaseVer": "13.19.54",
+    "renderType": "react",
+    "urlFacebook": "https://www.ultimate-guitar.com/user/auth/oauth?service=facebook",
+    "urlGoogle": "https://www.ultimate-guitar.com/user/auth/oauth?service=google",
+    "urlApple": "https://www.ultimate-guitar.com/user/auth/oauth?service=apple",
+    "main_server": "ultimate-guitar.com",
+    "ps_server": "plus.ultimate-guitar.com",
+    "api_web_serv": "api-web.ultimate-guitar.com",
+    "static_server": "https://www.ultimate-guitar.com/static",
+    "statik_cache": "_ver1743695904",
+    "staticPrefix": "/static",
+    "requestSchema": "https",
+    "time": 1743706923000,
+    "isGDPRAvailable": false,
+    "isCcpaAvailable": false,
+    "user": {
+      "id": 0,
+      "uuid": 0,
+      "unified_id": "1.1743706923.372962911",
+      "session": {
+        "id": "1.1743706920.1743706923.1",
+        "expire_duration": 300,
+        "expire_duration_dispersion": [
+          5000,
+          10000
+        ],
+        "enable_refresh": true,
+        "parsed_session": {
+          "version": 1,
+          "id": 1743706920,
+          "updated": 1743706923,
+          "number": 1
+        },
+        "is_renew_session": true
+      },
+      "username": "Unregistered",
+      "iq": "",
+      "contributorPower": false,
+      "is_bot": false,
+      "is_banned": false
+    },
+    "isOfficeUser": false,
+    "isOfficeRequest": false,
+    "isWebp": false,
+    "isBot": false,
+    "is_mobile": false,
+    "is_tablet": false,
+    "isThemeMobile": false,
+    "isIe": false,
+    "isEs6": true,
+    "isAsia": false,
+    "tabSeoExperimentVariation": false,
+    "isPaidMobWeb": false,
+    "socketCluster": {
+      "serviceKey": "f0557aa8-2d06-43d9-9c16-f885bc710b97:main",
+      "channelPrefix": "f0557aa8-2d06-43d9-9c16-f885bc710b97:main#prod",
+      "hostname": "socketcluster.k8s.mu.se",
+      "port": 443,
+      "channelName": "e2b911c3d39e5e206f13c6dab0ac7bcc"
+    },
+    "metricaId": 0,
+    "captcha_id": "6LfCo_8SAAAAALEMHnlK18j8IemlAdvmxwRnQe2v",
+    "stripeApiKey": "",
+    "country": "US",
+    "countryCode": "US",
+    "browserName": "Firefox",
+    "os": "Windows",
+    "platform": 1,
+    "browser": "{\"browser\":{\"name\":\"Firefox\",\"version\":\"89.0\",\"type\":\"browser\"},\"engine\":{\"name\":\"Gecko\",\"version\":\"89.0\"},\"os\":{\"name\":\"Windows\",\"version\":{\"value\":\"10.0\",\"alias\":\"10\"}},\"device\":{\"type\":\"desktop\"}}",
+    "urlUgProAppIcon": "https://www.ultimate-guitar.com/static/public/ug/img/app_icons/icon_ug_pro.png",
+    "withCritical": false,
+    "analytics": {
+      "pageViewId": 1743706923072161,
+      "userTrackerId": "SA=="
+    },
+    "braintree": {
+      "environment": "production",
+      "tokenizationKey": "production_8htvrhhr_67vpx3rpxt6m5z7c",
+      "paypalClientId": "ASwoeikdyflPIKFAC3U34ewfFVRE5-_p6qc1TTQG9g_sHNs3RP5Sq3pE_e7V2p0VTi-nJQuIA5ApP1XH",
+      "googlePayClientId": "BCR2DN6TZPEKBZBZ"
+    },
+    "vimeo": {
+      "baseImagePath": "https://cdn.ustatik.com/s3/ug.video.warm/preview/"
+    },
+    "hasStaticCache": 0,
+    "rtAnalytics": {
+      "trackUrl": "https://datahub.ultimate-guitar.com/components/data",
+      "trackingEnabled": true,
+      "forceSendEvents": [
+        "Tab Favorite Add Click",
+        "Tab Rate Click",
+        "Tab View",
+        "Tab View 12s",
+        "Tab View 15s",
+        "Tab View 60s",
+        "Tab View 120s",
+        "Tab View 180s",
+        "View",
+        "View 15s",
+        "Tour Start"
+      ],
+      "tabToolLogging": true,
+      "samplerHeartbeat": 5,
+      "forceSendDebounceTimeout": 1000,
+      "bufferSize": 10
+    },
+    "xtz": {
+      "isActive": true,
+      "hasAccess": true,
+      "canToggle": false,
+      "feedbackChannel": null,
+      "tabDownloadHost": "https://tabs.ultimate-guitar.com"
+    },
+    "metricaParams": {
+      "rights": 0,
+      "proRights": 0,
+      "coursesRights": 0,
+      "singRights": 0,
+      "u_id": "SA==",
+      "auth": "None",
+      "is_registered": 0,
+      "ab": {
+        "4488": 1,
+        "4701": 2,
+        "5241": 2,
+        "5876": 2,
+        "5891": 2,
+        "5924": 1,
+        "2513": 3,
+        "2738": 2,
+        "3115": 3,
+        "3412": 1,
+        "3442": 2,
+        "3523": 2,
+        "3775": 2,
+        "3874": 2,
+        "3922": 2,
+        "4099": 2,
+        "4195": 2,
+        "4476": 2,
+        "4491": 2,
+        "4530": 2,
+        "4569": 2,
+        "4665": 2,
+        "4752": 2,
+        "4881": 3,
+        "5178": 2,
+        "5274": 2,
+        "5313": 2,
+        "5526": 2,
+        "5544": 2,
+        "5562": 2,
+        "5691": 2,
+        "5700": 2,
+        "5709": 2
+      },
+      "bookRights": 0,
+      "bookEduRights": 0,
+      "unified_id": "1.1743706923.372962911",
+      "session_id": "1.1743706920.1743706923.1"
+    }
+  },
+  "store": {
+    "offers": [],
+    "page": {
+      "data": {
+        "search_query": "Queen",
+        "search_query_type": "bands",
+        "results_count": 69,
+        "results": [
+          {
+            "artist_name": "Queen",
+            "artist_url": "/artist/queen_590",
+            "tabs_cnt": 1514
+          },
+          {
+            "artist_name": "Queen\u2019s Pleasure",
+            "artist_url": "/artist/1701620",
+            "tabs_cnt": 1
+          },
+          {
+            "artist_name": "Queen of Jeans",
+            "artist_url": "/artist/queen_of_jeans_152857",
+            "tabs_cnt": 20
+          },
+          {
+            "artist_name": "QUEEN BEE (Ziyoou-vachi)",
+            "artist_url": "/artist/queen_bee_ziyoou-vachi_198066",
+            "tabs_cnt": 19
+          },
+          {
+            "artist_name": "Queen Adreena",
+            "artist_url": "/artist/queen_adreena_3225",
+            "tabs_cnt": 18
+          },
+          {
+            "artist_name": "Queen Naija",
+            "artist_url": "/artist/queen_naija_146661",
+            "tabs_cnt": 10
+          },
+          {
+            "artist_name": "Queen Kona",
+            "artist_url": "/artist/queen_kona_2003137",
+            "tabs_cnt": 7
+          },
+          {
+            "artist_name": "Queen Chimera",
+            "artist_url": "/artist/queen_chimera_1015130",
+            "tabs_cnt": 5
+          },
+          {
+            "artist_name": "Queen Lili'uokalani",
+            "artist_url": "/artist/queen_liliuokalani_45291",
+            "tabs_cnt": 4
+          },
+          {
+            "artist_name": "Queen Latifah",
+            "artist_url": "/artist/queen_latifah_28748",
+            "tabs_cnt": 3
+          },
+          {
+            "artist_name": "Queen Moo",
+            "artist_url": "/artist/queen_moo_67421",
+            "tabs_cnt": 2
+          },
+          {
+            "artist_name": "Queen Ifrica",
+            "artist_url": "/artist/queen_ifrica_89457",
+            "tabs_cnt": 2
+          },
+          {
+            "artist_name": "Queen Bee (Germany)",
+            "artist_url": "/artist/queen_bee_germany_198072",
+            "tabs_cnt": 2
+          },
+          {
+            "artist_name": "Queen Kwong",
+            "artist_url": "/artist/queen_kwong_56826",
+            "tabs_cnt": 1
+          },
+          {
+            "artist_name": "Ras & Queen Sparrow",
+            "artist_url": "/artist/ras_queen_sparrow_57973",
+            "tabs_cnt": 1
+          },
+          {
+            "artist_name": "Queen City Kids",
+            "artist_url": "/artist/queen_city_kids_103885",
+            "tabs_cnt": 1
+          },
+          {
+            "artist_name": "Queen Clairie",
+            "artist_url": "/artist/queen_clairie_896420",
+            "tabs_cnt": 1
+          },
+          {
+            "artist_name": "Queen Rat",
+            "artist_url": "/artist/queen_rat_1874486",
+            "tabs_cnt": 1
+          },
+          {
+            "artist_name": "Queen Zara",
+            "artist_url": "/artist/queen_zara_2681076",
+            "tabs_cnt": 1
+          },
+          {
+            "artist_name": "Queen of Distortion",
+            "artist_url": "/artist/queen_of_distortion_2706156",
+            "tabs_cnt": 1
+          },
+          {
+            "artist_name": "Queens of the Stone Age",
+            "artist_url": "/artist/queens_of_the_stone_age_586",
+            "tabs_cnt": 1086
+          },
+          {
+            "artist_name": "Queensr\u00ffche",
+            "artist_url": "/artist/589",
+            "tabs_cnt": 316
+          },
+          {
+            "artist_name": "Queensberry",
+            "artist_url": "/artist/queensberry_23495",
+            "tabs_cnt": 5
+          },
+          {
+            "artist_name": "Queencab",
+            "artist_url": "/artist/queencab_2980",
+            "tabs_cnt": 2
+          },
+          {
+            "artist_name": "Queenie May",
+            "artist_url": "/artist/queenie_may_38979",
+            "tabs_cnt": 2
+          },
+          {
+            "artist_name": "Queensway",
+            "artist_url": "/artist/queensway_503051",
+            "tabs_cnt": 2
+          },
+          {
+            "artist_name": "Queens Club",
+            "artist_url": "/artist/queens_club_28127",
+            "tabs_cnt": 1
+          },
+          {
+            "artist_name": "Kings & Queens",
+            "artist_url": "/artist/kings_queens_2009302",
+            "tabs_cnt": 1
+          },
+          {
+            "artist_name": "Queenza",
+            "artist_url": "/artist/queenza_2721521",
+            "tabs_cnt": 1
+          },
+          {
+            "artist_name": "I Killed the Prom Queen",
+            "artist_url": "/artist/i_killed_the_prom_queen_7873",
+            "tabs_cnt": 95
+          },
+          {
+            "artist_name": "Josiah Queen",
+            "artist_url": "/artist/josiah_queen_581045",
+            "tabs_cnt": 68
+          },
+          {
+            "artist_name": "The Good, The Bad & The Queen",
+            "artist_url": "/artist/the_good_the_bad_the_queen_16459",
+            "tabs_cnt": 50
+          },
+          {
+            "artist_name": "Baby Queen",
+            "artist_url": "/artist/baby_queen_624473",
+            "tabs_cnt": 22
+          },
+          {
+            "artist_name": "King and Queen of the Losers",
+            "artist_url": "/artist/king_and_queen_of_the_losers_112665",
+            "tabs_cnt": 13
+          },
+          {
+            "artist_name": "Scene Queen",
+            "artist_url": "/artist/scene_queen_1682656",
+            "tabs_cnt": 6
+          },
+          {
+            "artist_name": "Valley Queen",
+            "artist_url": "/artist/valley_queen_177483",
+            "tabs_cnt": 5
+          },
+          {
+            "artist_name": "Citizen Queen",
+            "artist_url": "/artist/citizen_queen_190443",
+            "tabs_cnt": 4
+          },
+          {
+            "artist_name": "Eva Queen",
+            "artist_url": "/artist/eva_queen_970154",
+            "tabs_cnt": 3
+          },
+          {
+            "artist_name": "Mississippi Queen",
+            "artist_url": "/artist/mississippi_queen_36605",
+            "tabs_cnt": 2
+          },
+          {
+            "artist_name": "Ivy Queen",
+            "artist_url": "/artist/ivy_queen_53375",
+            "tabs_cnt": 2
+          },
+          {
+            "artist_name": "Roman Queen of Roses",
+            "artist_url": "/artist/roman_queen_of_roses_1514533",
+            "tabs_cnt": 2
+          },
+          {
+            "artist_name": "Purple Queen Enthroned",
+            "artist_url": "/artist/purple_queen_enthroned_13781",
+            "tabs_cnt": 1
+          },
+          {
+            "artist_name": "The King and Queen",
+            "artist_url": "/artist/the_king_and_queen_66470",
+            "tabs_cnt": 1
+          },
+          {
+            "artist_name": "Drill Queen",
+            "artist_url": "/artist/drill_queen_77785",
+            "tabs_cnt": 1
+          },
+          {
+            "artist_name": "Valentina (drag queen)",
+            "artist_url": "/artist/valentina_drag_queen_190542",
+            "tabs_cnt": 1
+          },
+          {
+            "artist_name": "Stephen Mc-Queen",
+            "artist_url": "/artist/stephen_mc-queen_542284",
+            "tabs_cnt": 1
+          },
+          {
+            "artist_name": "Trash Queen",
+            "artist_url": "/artist/trash_queen_550091",
+            "tabs_cnt": 1
+          },
+          {
+            "artist_name": "The Bandit Queen of Sorrows",
+            "artist_url": "/artist/the_bandit_queen_of_sorrows_1497961",
+            "tabs_cnt": 1
+          },
+          {
+            "artist_name": "Southern Gypsey Queen",
+            "artist_url": "/artist/southern_gypsey_queen_1651384",
+            "tabs_cnt": 1
+          },
+          {
+            "artist_name": "All The Queen`s Horses",
+            "artist_url": "/artist/all_the_queens_horses_1712165",
+            "tabs_cnt": 1
+          }
+        ],
+        "pagination": {
+          "total": 2,
+          "current": 1
+        },
+        "spellcheck": "",
+        "not_found": false,
+        "order": null,
+        "filters": null
+      },
+      "header_bidding": {
+        "page_type": "search_desktop",
+        "ad_units": [
+          {
+            "code": "ad_cs_2010324_728_90",
+            "dfpCode": "UG_ATF_728",
+            "sizes": [
+              [
+                728,
+                90
+              ],
+              [
+                970,
+                250
+              ]
+            ],
+            "placementId": "8549999",
+            "layoutPlacement": "top",
+            "mediaTypes": {
+              "banner": {
+                "sizes": [
+                  [
+                    728,
+                    90
+                  ],
+                  [
+                    970,
+                    250
+                  ]
+                ]
+              }
+            },
+            "appnexusPlacementId": 12097756,
+            "mediaType": "banner",
+            "bids": [
+              {
+                "bidder": "appnexus",
+                "params": {
+                  "placementId": 8549999,
+                  "keywords": {
+                    "is_refresh": "false",
+                    "subcat": "search"
+                  }
+                }
+              },
+              {
+                "bidder": "openx",
+                "params": {
+                  "delDomain": "ultimate-guitar-d.openx.net",
+                  "unit": "538591653"
+                }
+              },
+              {
+                "bidder": "pubmatic",
+                "params": {
+                  "publisherId": "72623",
+                  "adSlot": "3131195"
+                }
+              },
+              {
+                "bidder": "rubicon",
+                "params": {
+                  "accountId": "15178",
+                  "siteId": "93918",
+                  "zoneId": "441934"
+                }
+              },
+              {
+                "bidder": "ix",
+                "params": {
+                  "id": 2,
+                  "siteId": "179681"
+                }
+              },
+              {
+                "bidder": "sharethrough",
+                "params": {
+                  "pkey": "tO312qbWyz8wa3LshlmQJKSR"
+                }
+              },
+              {
+                "bidder": "rise",
+                "params": {
+                  "org": "63a2de6e59cc1900018d95e6"
+                }
+              },
+              {
+                "bidder": "ttd",
+                "params": {
+                  "supplySourceId": "muse",
+                  "publisherId": "1"
+                }
+              },
+              {
+                "bidder": "shemedia",
+                "params": {
+                  "accountId": "10278",
+                  "siteId": "210096",
+                  "zoneId": "3510326"
+                }
+              },
+              {
+                "bidder": "oms",
+                "params": {
+                  "publisherId": "21082"
+                }
+              }
+            ],
+            "customTargeting": {
+              "ab_var_web_UG_4488": 1,
+              "ab_var_web_UG_4701": 2,
+              "ab_var_web_UG_5891": 2
+            }
+          },
+          {
+            "code": "ad_cs_2010324_160_600",
+            "dfpCode": "UG_ATF_160",
+            "sizes": [
+              [
+                160,
+                600
+              ]
+            ],
+            "placementId": "8549999",
+            "layoutPlacement": "side",
+            "mediaTypes": {
+              "banner": {
+                "sizes": [
+                  [
+                    160,
+                    600
+                  ]
+                ]
+              }
+            },
+            "appnexusPlacementId": 12097756,
+            "mediaType": "banner",
+            "bids": [
+              {
+                "bidder": "appnexus",
+                "params": {
+                  "placementId": 8549999,
+                  "keywords": {
+                    "is_refresh": "false",
+                    "subcat": "search"
+                  }
+                }
+              },
+              {
+                "bidder": "openx",
+                "params": {
+                  "delDomain": "ultimate-guitar-d.openx.net",
+                  "unit": "538591659"
+                }
+              },
+              {
+                "bidder": "pubmatic",
+                "params": {
+                  "publisherId": "72623",
+                  "adSlot": "3131193"
+                }
+              },
+              {
+                "bidder": "rubicon",
+                "params": {
+                  "accountId": "15178",
+                  "siteId": "93918",
+                  "zoneId": "441934"
+                }
+              },
+              {
+                "bidder": "ix",
+                "params": {
+                  "id": 1,
+                  "siteId": "177325"
+                }
+              },
+              {
+                "bidder": "sharethrough",
+                "params": {
+                  "pkey": "2DMGYqOnPeq1qmyOc10E0J7p"
+                }
+              },
+              {
+                "bidder": "rise",
+                "params": {
+                  "org": "63a2de6e59cc1900018d95e6"
+                }
+              },
+              {
+                "bidder": "ttd",
+                "params": {
+                  "supplySourceId": "muse",
+                  "publisherId": "1"
+                }
+              },
+              {
+                "bidder": "shemedia",
+                "params": {
+                  "accountId": "10278",
+                  "siteId": "210096",
+                  "zoneId": "3510326"
+                }
+              },
+              {
+                "bidder": "oms",
+                "params": {
+                  "publisherId": "21082"
+                }
+              }
+            ],
+            "customTargeting": {
+              "ab_var_web_UG_4488": 1,
+              "ab_var_web_UG_4701": 2,
+              "ab_var_web_UG_5891": 2
+            }
+          },
+          {
+            "code": "ad_cs_4219367_300_250",
+            "dfpCode": "UG_BTFL_300",
+            "sizes": [
+              [
+                300,
+                250
+              ]
+            ],
+            "placementId": "8550000",
+            "layoutPlacement": "bottom",
+            "mediaTypes": {
+              "banner": {
+                "sizes": [
+                  [
+                    300,
+                    250
+                  ]
+                ]
+              }
+            },
+            "appnexusPlacementId": 12097785,
+            "mediaType": "banner",
+            "bids": [
+              {
+                "bidder": "appnexus",
+                "params": {
+                  "placementId": 8550000,
+                  "keywords": {
+                    "is_refresh": "false",
+                    "subcat": "search"
+                  }
+                }
+              },
+              {
+                "bidder": "openx",
+                "params": {
+                  "delDomain": "ultimate-guitar-d.openx.net",
+                  "unit": "538591656"
+                }
+              },
+              {
+                "bidder": "pubmatic",
+                "params": {
+                  "publisherId": "72623",
+                  "adSlot": "3131213"
+                }
+              },
+              {
+                "bidder": "rubicon",
+                "params": {
+                  "accountId": "15178",
+                  "siteId": "93918",
+                  "zoneId": "467538"
+                }
+              },
+              {
+                "bidder": "ix",
+                "params": {
+                  "id": 5,
+                  "siteID": "179684"
+                }
+              },
+              {
+                "bidder": "rise",
+                "params": {
+                  "org": "63a2de6e59cc1900018d95e6"
+                }
+              }
+            ],
+            "customTargeting": {
+              "ab_var_web_UG_4488": 1,
+              "ab_var_web_UG_4701": 2,
+              "ab_var_web_UG_5891": 2
+            }
+          },
+          {
+            "code": "ad_cs_2010322_300_250",
+            "dfpCode": "UG_BTFR_300",
+            "sizes": [
+              [
+                300,
+                250
+              ]
+            ],
+            "placementId": "8550001",
+            "layoutPlacement": "bottomRight",
+            "mediaTypes": {
+              "banner": {
+                "sizes": [
+                  [
+                    300,
+                    250
+                  ]
+                ]
+              }
+            },
+            "appnexusPlacementId": 12097784,
+            "mediaType": "banner",
+            "bids": [
+              {
+                "bidder": "appnexus",
+                "params": {
+                  "placementId": 8550001,
+                  "keywords": {
+                    "is_refresh": "false",
+                    "subcat": "search"
+                  }
+                }
+              },
+              {
+                "bidder": "openx",
+                "params": {
+                  "delDomain": "ultimate-guitar-d.openx.net",
+                  "unit": "538591661"
+                }
+              },
+              {
+                "bidder": "pubmatic",
+                "params": {
+                  "publisherId": "72623",
+                  "adSlot": "3131198@300x250"
+                }
+              },
+              {
+                "bidder": "rubicon",
+                "params": {
+                  "accountId": "15178",
+                  "siteId": "93918",
+                  "zoneId": "467536"
+                }
+              }
+            ],
+            "customTargeting": {
+              "ab_var_web_UG_4488": 1,
+              "ab_var_web_UG_4701": 2,
+              "ab_var_web_UG_5891": 2
+            }
+          },
+          {
+            "code": "ad_cs_10000000_2_2",
+            "dfpCode": "UG_ATG_728_BX_MASTHEAD",
+            "sizes": [
+              [
+                1,
+                1
+              ]
+            ],
+            "placementId": "10000000",
+            "layoutPlacement": "outOfPage",
+            "mediaTypes": {
+              "banner": {
+                "sizes": [
+                  [
+                    1,
+                    1
+                  ]
+                ]
+              }
+            },
+            "refresh": {
+              "enabled": false
+            },
+            "mediaType": "banner",
+            "bids": []
+          }
+        ]
+      },
+      "experiments": {
+        "variations": {
+          "4488": 1,
+          "4701": 2,
+          "5241": 2,
+          "5876": 2,
+          "5891": 2,
+          "5924": 1,
+          "2513": 3,
+          "2738": 2,
+          "3115": 3,
+          "3412": 1,
+          "3442": 2,
+          "3523": 2,
+          "3775": 2,
+          "3874": 2,
+          "3922": 2,
+          "4099": 2,
+          "4195": 2,
+          "4476": 2,
+          "4491": 2,
+          "4530": 2,
+          "4569": 2,
+          "4665": 2,
+          "4752": 2,
+          "4881": 3,
+          "5178": 2,
+          "5274": 2,
+          "5313": 2,
+          "5526": 2,
+          "5544": 2,
+          "5562": 2,
+          "5691": 2,
+          "5700": 2,
+          "5709": 2
+        },
+        "closed_experiments": {
+          "2513": 3,
+          "2738": 2,
+          "3115": 3,
+          "3412": 1,
+          "3442": 2,
+          "3523": 2,
+          "3775": 2,
+          "3874": 2,
+          "3922": 2,
+          "4099": 2,
+          "4195": 2,
+          "4476": 2,
+          "4491": 2,
+          "4530": 2,
+          "4569": 2,
+          "4665": 2,
+          "4752": 2,
+          "4881": 3,
+          "5178": 2,
+          "5274": 2,
+          "5313": 2,
+          "5526": 2,
+          "5544": 2,
+          "5562": 2,
+          "5691": 2,
+          "5700": 2,
+          "5709": 2
+        }
+      },
+      "template": {
+        "module": "search",
+        "controller": "search",
+        "action": "index",
+        "reactAction": ""
+      },
+      "documents": {
+        "enabled": true
+      }
+    },
+    "i18n": {
+      "locale": "en-US",
+      "language": "en",
+      "links": {
+        "default": "https://www.ultimate-guitar.com/search.php?search_type=band&value=Queen",
+        "pt": "https://www.ultimate-guitar.com/search.php?search_type=band&value=Queen",
+        "es": "https://www.ultimate-guitar.com/search.php?search_type=band&value=Queen"
+      }
+    },
+    "promotion": {
+      "promoKey": "ugapp:topBannerShow:SpringSale2025",
+      "promoType": "Spring",
+      "endedKey": "_ug_promotionEnded_v4",
+      "emergency": {
+        "imgUrl": "https://cdn.ustatik.com/storage/marketing/images/c/c6fa07b482a9940c2ef0201cd11463020bb4f039.webp",
+        "title": "SPRING SALE"
+      },
+      "exit": {
+        "imgUrl": "https://cdn.ustatik.com/storage/marketing/images/0/034269a1216107eae9c0fa61d8565944efb615f4.webp",
+        "title": "SPRING SALE",
+        "subtitle": "",
+        "hasLabel": false,
+        "hasTimer": false
+      },
+      "heroBanner": {
+        "imgUrl": "https://cdn.ustatik.com/storage/marketing/images/2/2c3292d5ee2129b4d15f3d8e01adfcc8a1202116.webp",
+        "title": "",
+        "subtitle": "SPRING SALE"
+      },
+      "heroBlock": {
+        "imgUrl": "https://cdn.ustatik.com/storage/marketing/images/1/11568ee9c4a71882a67b356aeaff468fb41b4f26.webp",
+        "buttonColor": "accent"
+      },
+      "payment": {
+        "imgUrl": "https://cdn.ustatik.com/storage/marketing/images/e/ed56115f49149a787e8da9954cff6302bf364d87.webp",
+        "title": "SPRING\nSALE",
+        "planName": "Spring sale"
+      },
+      "permBanner": {
+        "<24h_logged-in": {
+          "imgUrl": "https://cdn.ustatik.com/storage/marketing/images/a/a35e092c959a889d8c36cf40ab8df5d45c4b0f10.webp",
+          "title": "Spring Sale:",
+          "subtitle": "Pro Access %percentage%",
+          "hasTimer": false,
+          "buttonText": "GET SPECIAL OFFER"
+        },
+        ">24h_logged-in": {
+          "imgUrl": "https://cdn.ustatik.com/storage/marketing/images/b/b9a4efbdfcd406ae9fa4a6a4bbc512cfee52bf1a.jpeg",
+          "title": "Welcome Offer:",
+          "subtitle": "%percentage% on annual membership of Ultimate Guitar Pro",
+          "hasTimer": false,
+          "buttonText": "TRY NOW"
+        },
+        "<24h_logged-out": {
+          "imgUrl": "https://cdn.ustatik.com/storage/marketing/images/a/a35e092c959a889d8c36cf40ab8df5d45c4b0f10.webp",
+          "title": "Spring Sale:",
+          "subtitle": "Pro Access %percentage%",
+          "buttonText": "GET SPECIAL OFFER"
+        },
+        ">24h_logged-out": {
+          "imgUrl": "https://cdn.ustatik.com/storage/marketing/images/b/b9a4efbdfcd406ae9fa4a6a4bbc512cfee52bf1a.jpeg",
+          "title": "Welcome Offer:",
+          "subtitle": "%percentage% on annual membership of Ultimate Guitar Pro",
+          "hasTimer": false,
+          "buttonText": "TRY NOW"
+        },
+        "default": {
+          "imgUrl": "https://cdn.ustatik.com/storage/marketing/images/b/b9a4efbdfcd406ae9fa4a6a4bbc512cfee52bf1a.jpeg",
+          "title": "Welcome Offer",
+          "subtitle": "%percentage% on annual membership of UG Pro",
+          "buttonText": "TRY NOW"
+        }
+      },
+      "stickyBanner": {
+        "imgUrl": "https://cdn.ustatik.com/storage/marketing/images/0/01a2bd7590ae1f959f1c0f56b86e7780ccf9889e.webp",
+        "title": "",
+        "subtitle": "SPRING SALE"
+      }
+    },
+    "user": {
+      "id": 0,
+      "pa_id": 0,
+      "avatarUrl": "https://www.ultimate-guitar.com/static/users/0/0/0/0.gif?d=d&h=1743706907",
+      "username": "Unregistered",
+      "email": "",
+      "usergroupid": 0,
+      "contributor": {
+        "isContributor": false,
+        "isTabContributor": false,
+        "first_tab": 0
+      },
+      "iq": 0,
+      "tabsCount": 0,
+      "playlistCount": 0,
+      "coursesCount": 0,
+      "messagesCount": 0,
+      "rights": [],
+      "hasExpiredCard": null,
+      "hasChargeError": null,
+      "hasActiveProPause": false,
+      "hasActiveEduPause": false,
+      "tab_try": null,
+      "content_access": [],
+      "joinDate": 0,
+      "user_status": "",
+      "segment": {
+        "preview": null,
+        "current": {
+          "segment": 8,
+          "prediction": 1,
+          "group_segment": 3,
+          "segment_label": "core_buyers_from_first_visits",
+          "group_segment_label": "core_paying"
+        }
+      },
+      "uid2_token_url": null,
+      "ip": "74.193.99.108",
+      "id5_hashed": "",
+      "family": null,
+      "spotify_songs_count": null,
+      "spotify_is_connected": null
+    },
+    "notifications": {
+      "count_new": 0,
+      "data": [],
+      "giveaway_id": 0,
+      "texts": {
+        "markAll": "Mark all as read",
+        "settings": "Settings",
+        "thanksForVote": "Thanks for your vote"
+      }
+    },
+    "forms": [],
+    "theme": "dark",
+    "commentForm": {
+      "is_new": 0
+    },
+    "isUgOffice": 0,
+    "book": {
+      "is_top_menu": true
+    },
+    "ugSearch": {
+      "type": "bands",
+      "value": "Queen"
+    },
+    "sponsorsFooter": null,
+    "takeover": {
+      "show": false
+    },
+    "interstitial": false,
+    "customAlerts": []
+  },
+  "globalHelpers": [],
+  "helpers": {
+    "typeHelper": {
+      "short": {
+        "Official": "OFFICIAL",
+        "Chords": "CRD",
+        "Tabs": "TAB",
+        "Pro": "PRO",
+        "Power": "PWR",
+        "Bass Tabs": "BASS",
+        "Drum Tabs": "DRM",
+        "Video": "VID",
+        "Ukulele Chords": "UKE",
+        "Tab Pro": "TAB PRO",
+        "Chord Pro": "CRD PRO",
+        "Vocal": "VOCAL"
+      },
+      "filter": {
+        "Official": "official",
+        "Chords": "chords",
+        "Tabs": "tab",
+        "Pro": "guitar pro",
+        "Power": "power",
+        "Bass Tabs": "bass",
+        "Drum Tabs": "drums",
+        "Video": "video",
+        "Ukulele Chords": "ukulele",
+        "Tab Pro": "tab pro",
+        "Chord Pro": "chord pro",
+        "Vocal": "vocal"
+      },
+      "full": {
+        "Official": "official tab",
+        "Chords": "chords",
+        "Tabs": "tab",
+        "Pro": "guitar pro tab",
+        "Power": "power tab",
+        "Bass Tabs": "bass tab",
+        "Drum Tabs": "drum tab",
+        "Video": "video tab",
+        "Ukulele Chords": "ukulele chords",
+        "Tab Pro": "tab pro",
+        "Chord Pro": "chord pro",
+        "Vocal": "vocal tab"
+      },
+      "recommendations": {
+        "Official": "Official",
+        "Chords": "Chords",
+        "Tabs": "Tab",
+        "Pro": "Pro",
+        "Power": "Power",
+        "Bass Tabs": "Bass",
+        "Drum Tabs": "Drum",
+        "Video": "Video",
+        "Ukulele Chords": "Ukulele",
+        "Tab Pro": "Tab Pro",
+        "Chord Pro": "Chord",
+        "Vocal": "Vocal"
+      }
+    },
+    "allowedDomains": [
+      "ultimate-guitar.com",
+      "instagram.com",
+      "facebook.com",
+      "twitter.com",
+      "youtube.com",
+      "youtu.be"
+    ]
+  },
+  "cmp": {
+    "setConsentUrl": "https://www.ultimate-guitar.com/user/security/consent"
+  },
+  "bidding": {
+    "analytics": {
+      "logUrl": "//track.ultimate-guitar.com/ug/",
+      "pageType": "search_desktop",
+      "region": "US",
+      "device": "desktop",
+      "variation": "",
+      "hasHardRefresh": true
+    },
+    "refresh": {
+      "limit": 30,
+      "maxVisibleTime": 1000,
+      "delay": 30000,
+      "delayDeviation": 10000,
+      "enabled": true,
+      "hasHardRefresh": true,
+      "availableBidders": [
+        "appnexus",
+        "ix",
+        "pubmatic",
+        "rubicon",
+        "openx",
+        "adform",
+        "sharethrough"
+      ],
+      "ignoreChangePageVisibility": false
+    },
+    "minRefreshCpm": 0.04,
+    "cpmFloor": 0.2,
+    "timeout": 2000,
+    "refreshTimeout": 1000,
+    "dfpId": 74268401,
+    "units": [
+      {
+        "code": "ad_cs_2010324_728_90",
+        "dfpCode": "UG_ATF_728",
+        "sizes": [
+          [
+            728,
+            90
+          ],
+          [
+            970,
+            250
+          ]
+        ],
+        "placementId": "8549999",
+        "layoutPlacement": "top",
+        "mediaTypes": {
+          "banner": {
+            "sizes": [
+              [
+                728,
+                90
+              ],
+              [
+                970,
+                250
+              ]
+            ]
+          }
+        },
+        "appnexusPlacementId": 12097756,
+        "mediaType": "banner",
+        "bids": [
+          {
+            "bidder": "appnexus",
+            "params": {
+              "placementId": 8549999,
+              "keywords": {
+                "is_refresh": "false",
+                "subcat": "search"
+              }
+            }
+          },
+          {
+            "bidder": "openx",
+            "params": {
+              "delDomain": "ultimate-guitar-d.openx.net",
+              "unit": "538591653"
+            }
+          },
+          {
+            "bidder": "pubmatic",
+            "params": {
+              "publisherId": "72623",
+              "adSlot": "3131195"
+            }
+          },
+          {
+            "bidder": "rubicon",
+            "params": {
+              "accountId": "15178",
+              "siteId": "93918",
+              "zoneId": "441934"
+            }
+          },
+          {
+            "bidder": "ix",
+            "params": {
+              "id": 2,
+              "siteId": "179681"
+            }
+          },
+          {
+            "bidder": "sharethrough",
+            "params": {
+              "pkey": "tO312qbWyz8wa3LshlmQJKSR"
+            }
+          },
+          {
+            "bidder": "rise",
+            "params": {
+              "org": "63a2de6e59cc1900018d95e6"
+            }
+          },
+          {
+            "bidder": "ttd",
+            "params": {
+              "supplySourceId": "muse",
+              "publisherId": "1"
+            }
+          },
+          {
+            "bidder": "shemedia",
+            "params": {
+              "accountId": "10278",
+              "siteId": "210096",
+              "zoneId": "3510326"
+            }
+          },
+          {
+            "bidder": "oms",
+            "params": {
+              "publisherId": "21082"
+            }
+          }
+        ],
+        "customTargeting": {
+          "ab_var_web_UG_4488": 1,
+          "ab_var_web_UG_4701": 2,
+          "ab_var_web_UG_5891": 2
+        }
+      },
+      {
+        "code": "ad_cs_2010324_160_600",
+        "dfpCode": "UG_ATF_160",
+        "sizes": [
+          [
+            160,
+            600
+          ]
+        ],
+        "placementId": "8549999",
+        "layoutPlacement": "side",
+        "mediaTypes": {
+          "banner": {
+            "sizes": [
+              [
+                160,
+                600
+              ]
+            ]
+          }
+        },
+        "appnexusPlacementId": 12097756,
+        "mediaType": "banner",
+        "bids": [
+          {
+            "bidder": "appnexus",
+            "params": {
+              "placementId": 8549999,
+              "keywords": {
+                "is_refresh": "false",
+                "subcat": "search"
+              }
+            }
+          },
+          {
+            "bidder": "openx",
+            "params": {
+              "delDomain": "ultimate-guitar-d.openx.net",
+              "unit": "538591659"
+            }
+          },
+          {
+            "bidder": "pubmatic",
+            "params": {
+              "publisherId": "72623",
+              "adSlot": "3131193"
+            }
+          },
+          {
+            "bidder": "rubicon",
+            "params": {
+              "accountId": "15178",
+              "siteId": "93918",
+              "zoneId": "441934"
+            }
+          },
+          {
+            "bidder": "ix",
+            "params": {
+              "id": 1,
+              "siteId": "177325"
+            }
+          },
+          {
+            "bidder": "sharethrough",
+            "params": {
+              "pkey": "2DMGYqOnPeq1qmyOc10E0J7p"
+            }
+          },
+          {
+            "bidder": "rise",
+            "params": {
+              "org": "63a2de6e59cc1900018d95e6"
+            }
+          },
+          {
+            "bidder": "ttd",
+            "params": {
+              "supplySourceId": "muse",
+              "publisherId": "1"
+            }
+          },
+          {
+            "bidder": "shemedia",
+            "params": {
+              "accountId": "10278",
+              "siteId": "210096",
+              "zoneId": "3510326"
+            }
+          },
+          {
+            "bidder": "oms",
+            "params": {
+              "publisherId": "21082"
+            }
+          }
+        ],
+        "customTargeting": {
+          "ab_var_web_UG_4488": 1,
+          "ab_var_web_UG_4701": 2,
+          "ab_var_web_UG_5891": 2
+        }
+      },
+      {
+        "code": "ad_cs_4219367_300_250",
+        "dfpCode": "UG_BTFL_300",
+        "sizes": [
+          [
+            300,
+            250
+          ]
+        ],
+        "placementId": "8550000",
+        "layoutPlacement": "bottom",
+        "mediaTypes": {
+          "banner": {
+            "sizes": [
+              [
+                300,
+                250
+              ]
+            ]
+          }
+        },
+        "appnexusPlacementId": 12097785,
+        "mediaType": "banner",
+        "bids": [
+          {
+            "bidder": "appnexus",
+            "params": {
+              "placementId": 8550000,
+              "keywords": {
+                "is_refresh": "false",
+                "subcat": "search"
+              }
+            }
+          },
+          {
+            "bidder": "openx",
+            "params": {
+              "delDomain": "ultimate-guitar-d.openx.net",
+              "unit": "538591656"
+            }
+          },
+          {
+            "bidder": "pubmatic",
+            "params": {
+              "publisherId": "72623",
+              "adSlot": "3131213"
+            }
+          },
+          {
+            "bidder": "rubicon",
+            "params": {
+              "accountId": "15178",
+              "siteId": "93918",
+              "zoneId": "467538"
+            }
+          },
+          {
+            "bidder": "ix",
+            "params": {
+              "id": 5,
+              "siteID": "179684"
+            }
+          },
+          {
+            "bidder": "rise",
+            "params": {
+              "org": "63a2de6e59cc1900018d95e6"
+            }
+          }
+        ],
+        "customTargeting": {
+          "ab_var_web_UG_4488": 1,
+          "ab_var_web_UG_4701": 2,
+          "ab_var_web_UG_5891": 2
+        }
+      },
+      {
+        "code": "ad_cs_2010322_300_250",
+        "dfpCode": "UG_BTFR_300",
+        "sizes": [
+          [
+            300,
+            250
+          ]
+        ],
+        "placementId": "8550001",
+        "layoutPlacement": "bottomRight",
+        "mediaTypes": {
+          "banner": {
+            "sizes": [
+              [
+                300,
+                250
+              ]
+            ]
+          }
+        },
+        "appnexusPlacementId": 12097784,
+        "mediaType": "banner",
+        "bids": [
+          {
+            "bidder": "appnexus",
+            "params": {
+              "placementId": 8550001,
+              "keywords": {
+                "is_refresh": "false",
+                "subcat": "search"
+              }
+            }
+          },
+          {
+            "bidder": "openx",
+            "params": {
+              "delDomain": "ultimate-guitar-d.openx.net",
+              "unit": "538591661"
+            }
+          },
+          {
+            "bidder": "pubmatic",
+            "params": {
+              "publisherId": "72623",
+              "adSlot": "3131198@300x250"
+            }
+          },
+          {
+            "bidder": "rubicon",
+            "params": {
+              "accountId": "15178",
+              "siteId": "93918",
+              "zoneId": "467536"
+            }
+          }
+        ],
+        "customTargeting": {
+          "ab_var_web_UG_4488": 1,
+          "ab_var_web_UG_4701": 2,
+          "ab_var_web_UG_5891": 2
+        }
+      },
+      {
+        "code": "ad_cs_10000000_2_2",
+        "dfpCode": "UG_ATG_728_BX_MASTHEAD",
+        "sizes": [
+          [
+            1,
+            1
+          ]
+        ],
+        "placementId": "10000000",
+        "layoutPlacement": "outOfPage",
+        "mediaTypes": {
+          "banner": {
+            "sizes": [
+              [
+                1,
+                1
+              ]
+            ]
+          }
+        },
+        "refresh": {
+          "enabled": false
+        },
+        "mediaType": "banner",
+        "bids": []
+      }
+    ],
+    "priceGranularity": [
+      {
+        "precision": 2,
+        "min": 0,
+        "max": 1,
+        "increment": 0.01
+      },
+      {
+        "precision": 2,
+        "min": 1,
+        "max": 2,
+        "increment": 0.02
+      },
+      {
+        "precision": 2,
+        "min": 2,
+        "max": 5,
+        "increment": 0.05
+      },
+      {
+        "precision": 2,
+        "min": 5,
+        "max": 10,
+        "increment": 0.1
+      },
+      {
+        "precision": 2,
+        "min": 10,
+        "max": 20,
+        "increment": 0.2
+      },
+      {
+        "precision": 2,
+        "min": 20,
+        "max": 50,
+        "increment": 0.5
+      }
+    ],
+    "dynamicLoad": true,
+    "disableAdx": false,
+    "isGDPRAvailable": false,
+    "isShowOnTap": false,
+    "adsTargeting": null,
+    "isRegistered": 0,
+    "emailHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "hasConsentCookie": false,
+    "slots": []
+  }
+}
