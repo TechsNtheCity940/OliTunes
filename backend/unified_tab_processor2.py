@@ -3,7 +3,7 @@ import logging
 import numpy as np
 import librosa
 import soundfile as sf
-from typing import Dict, List, Optional, Any
+from typing import Dict, List, Optional, Any, Tuple
 import json
 import warnings
 from scipy import signal
@@ -12,7 +12,7 @@ from scipy import signal
 warnings.filterwarnings("ignore", category=RuntimeWarning, message="Couldn't find ffmpeg or avconv")
 
 # Assuming these are your existing imports from your project structure
-from interpreter import DemucsProcessor, TabCNNProcessor
+from interpreter import DemucsProcessor, TabCNNProcessor, BasicPitchProcessor, basic_pitch_available
 from models.lstm_model.LSTMPredictor import LSTMPredictor
 from models.fretboard_position_model.position_predictor import FretboardPositionPredictor
 
@@ -22,6 +22,7 @@ from midi_converter import MidiConverter
 from music_theory_analyzer import MusicTheoryAnalyzer
 from tab_text_generator import TabTextGenerator
 from enhanced_audio_analyzer import EnhancedAudioAnalyzer
+from lilypond_tab_generator import LilypondTabGenerator, lilypond_available
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -30,22 +31,79 @@ class UnifiedTabProcessor:
     """Enhanced processor for generating guitar tablature from audio."""
     
     def __init__(self):
+        try:
+            import essentia
+            self.essentia_available = True
+        except ImportError:
+            self.essentia_available = False
+            logger.warning("Essentia not available - using simplified audio analysis")
+        
         self.demucs = DemucsProcessor()
         self.tabcnn = TabCNNProcessor()
         # Try to load weights, but don't fail if there's an issue
         try:
-            custom_weights_path = 'F:/newrepos/olitunes/backend/models/tab-cnn/model/saved/c 2025-04-06 082819/4/model.weights.h5'
-            if os.path.exists(custom_weights_path):
-                try:
-                    self.tabcnn.model.load_weights(custom_weights_path)
-                    logger.info(f"Loaded TabCNN weights successfully")
-                except TypeError as type_error:
-                    if "by_name" in str(type_error):
-                        logger.info(f"TabCNN model doesn't support by_name parameter, trying without it")
-                        self.tabcnn.model.load_weights(custom_weights_path)
-                        logger.info(f"Loaded TabCNN weights successfully")
+            # Get the model directory
+            model_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "models", "tab-cnn", "model", "saved")
+            
+            if os.path.exists(model_dir):
+                # Find the most recent model directory
+                model_dirs = [d for d in os.listdir(model_dir) if os.path.isdir(os.path.join(model_dir, d))]
+                if model_dirs:
+                    latest_model_dir = sorted(model_dirs)[-1]
+                    version_dirs = os.path.join(model_dir, latest_model_dir)
+                    if os.path.exists(version_dirs):
+                        version_subdirs = [d for d in os.listdir(version_dirs) if os.path.isdir(os.path.join(version_dirs, d))]
+                        if version_subdirs:
+                            latest_version = sorted(version_subdirs)[-1]
+                            custom_weights_path = os.path.join(version_dirs, latest_version, "model.weights.h5")
+                            
+                            if os.path.exists(custom_weights_path):
+                                # Rebuild the model to match the saved weights format
+                                # Create a simpler model that only has a single output to match saved weights
+                                try:
+                                    import tensorflow as tf
+                                    from tensorflow.keras.models import Model
+                                    from tensorflow.keras.layers import Input, Conv2D, MaxPooling2D, Dense, Dropout, Flatten, Add
+                                    
+                                    # Build a simpler model with only one output
+                                    inputs = Input(shape=(128, 9, 1))
+                                    x = Conv2D(32, (3, 3), activation='relu', padding='same')(inputs)
+                                    x = Conv2D(64, (3, 3), activation='relu', padding='same')(x)
+                                    residual = x
+                                    x = Conv2D(64, (3, 3), activation='relu', padding='same')(x)
+                                    x = Add()([x, residual])  # Residual connection
+                                    x = MaxPooling2D((2, 2))(x)
+                                    x = Dropout(0.25)(x)
+                                    x = Flatten()(x)
+                                    x = Dense(128, activation='relu')(x)
+                                    x = Dropout(0.5)(x)
+                                    outputs = Dense(126, activation='sigmoid')(x)  # Single output for all strings and frets
+                                    
+                                    # Create and compile the model
+                                    self.tabcnn.model = Model(inputs, outputs)
+                                    self.tabcnn.model.compile(loss='binary_crossentropy',
+                                              optimizer='adam', metrics=['accuracy'])
+                                    
+                                    # Now load the weights
+                                    self.tabcnn.model.load_weights(custom_weights_path)
+                                    logger.info(f"Loaded TabCNN weights successfully from {custom_weights_path}")
+                                    self.tabcnn.initialized = True
+                                    
+                                except Exception as e:
+                                    logger.error(f"Error rebuilding TabCNN model: {e}")
+                                    # Continue with default model
+                                    logger.warning("Falling back to default model")
+                            else:
+                                logger.warning(f"Custom weights file not found at {custom_weights_path}")
+                        else:
+                            logger.warning("No version subdirectories found")
                     else:
-                        raise
+                        logger.warning(f"Version directory not found at {version_dirs}")
+                else:
+                    logger.warning(f"No model directories found in {model_dir}")
+            else:
+                logger.warning(f"Model directory not found at {model_dir}")
+                
         except Exception as e:
             logger.warning(f"Could not load custom TabCNN weights: {e}. Using default model.")
         
@@ -57,6 +115,29 @@ class UnifiedTabProcessor:
         self.theory_analyzer = MusicTheoryAnalyzer()
         self.audio_analyzer = EnhancedAudioAnalyzer()
         
+        # Initialize LilyPond generator
+        try:
+            from .lilypond_tab_generator import LilypondTabGenerator, lilypond_available
+            self.lilypond_generator = LilypondTabGenerator()
+            self.lilypond_available = lilypond_available
+            logger.info(f"LilyPond generator initialized. Available: {lilypond_available}")
+        except ImportError as e:
+            logger.warning(f"LilyPond generator module not available: {e}")
+            self.lilypond_generator = None
+            self.lilypond_available = False
+
+        # Initialize Basic Pitch processor if available
+        try:
+            if basic_pitch_available:
+                self.basic_pitch = BasicPitchProcessor()
+                logger.info("Basic Pitch processor initialized successfully")
+            else:
+                self.basic_pitch = None
+                logger.warning("Basic Pitch is not available. Will use fallback methods for MIDI conversion.")
+        except ImportError:
+            self.basic_pitch = None
+            logger.warning("Could not import Basic Pitch. Will use fallback methods for MIDI conversion.")
+            
         # Load style configurations
         with open('F:/newrepos/olitunes/backend/data/tab_data/style_configs.json') as f:
             self.style_configs = json.load(f)
@@ -113,13 +194,14 @@ class UnifiedTabProcessor:
             logging.warning(f"Could not load FretboardPositionPredictor: {e}")
             self.fretboard_model = None
 
-    def preprocess_audio(self, y: np.ndarray, sr: int) -> tuple[np.ndarray, np.ndarray, float]:
-        """Enhanced audio preprocessing with onset detection and tempo.
-
+    def preprocess_audio(self, y: np.ndarray, sr: int) -> Tuple[np.ndarray, np.ndarray, float]:
+        """
+        Preprocess audio for TabCNN model
+        
         Args:
-            y (np.ndarray): Audio time series.
-            sr (int): Sample rate of the audio.
-
+            y: Audio data
+            sr: Sample rate
+            
         Returns:
             tuple: (mel-spectrogram, onsets, tempo)
         """
@@ -140,6 +222,29 @@ class UnifiedTabProcessor:
 
         # Mel-spectrogram with guitar-tuned bins
         spec = librosa.feature.melspectrogram(y=y, sr=sr, n_mels=128, fmin=80, fmax=4000, hop_length=512)
+        
+        # Convert to dB scale
+        spec = librosa.power_to_db(spec, ref=np.max)
+        
+        # Normalize
+        spec = (spec - np.mean(spec)) / (np.std(spec) if np.std(spec) > 0 else 1)
+        
+        # Reshape to match the expected model input shape (None, 128, 9, 1)
+        # First, ensure we have the right width dimension (9)
+        target_width = 9  # Model expects 9 time steps
+        
+        if spec.shape[1] > target_width:
+            # Truncate
+            spec = spec[:, :target_width]
+        elif spec.shape[1] < target_width:
+            # Pad with zeros
+            padding = np.zeros((spec.shape[0], target_width - spec.shape[1]))
+            spec = np.hstack((spec, padding))
+        
+        # Add batch and channel dimensions to match (batch, height, width, channels)
+        # For a single input: (1, 128, 9, 1)
+        spec = np.expand_dims(spec, axis=0)  # Add batch dimension (1, 128, 9)
+        spec = np.expand_dims(spec, axis=3)  # Add channel dimension (1, 128, 9, 1)
 
         # Onset detection
         onsets = librosa.onset.onset_detect(y=y, sr=sr, hop_length=512)
@@ -264,111 +369,141 @@ class UnifiedTabProcessor:
                     optimized[t, note['string'], note['fret']] = 1.0
             return optimized
 
-    def process_audio(self, audio_path: str, style: str = "rock") -> Dict[str, Any]:
-        """Process audio file to generate guitar tablature."""
+    def process_audio(self, audio_path: str, style: str = "metalcore", reference_tabs: list = None) -> dict:
+        """
+        Full processing pipeline:
+        1. Demucs6 - Source separation
+        2. Basic Pitch - Note detection
+        3. Music theory analysis
+        4. MIDI conversion
+        5. TabCNN prediction
+        6. Fretboard position modeling
+        7. LilyPond generation
+        """
         try:
-            if not os.path.exists(audio_path):
-                raise FileNotFoundError(f"Audio file not found: {audio_path}")
-                
-            logger.info(f"Processing audio file: {audio_path}")
+            # 1. Source separation with Demucs6
+            logger.info("Separating audio tracks with Demucs6...")
+            separated = self.demucs.separate(audio_path)
+            guitar_track = separated["guitar"]
             
-            audio, sr = librosa.load(audio_path, sr=None, mono=True)
-            logger.info(f"Loaded audio with sample rate: {sr}Hz")
+            # 2. Note detection with Basic Pitch
+            logger.info("Detecting notes and frequencies...")
+            midi_data = self.basic_pitch.predict(guitar_track)
             
-            style_config = self.style_configs.get(style, self.style_configs["rock"])
+            # 3. Music theory refinement
+            logger.info("Applying music theory analysis...")
+            analyzed = self.music_theory_analyzer.analyze(midi_data)
             
-            stems = self.demucs.separate_audio(audio_path)
-            for stem_name, stem_data in stems.items():
-                if not np.all(np.isfinite(stem_data)):
-                    logger.warning(f"Stem '{stem_name}' contains non-finite values, cleaning")
-                    stems[stem_name] = np.nan_to_num(stem_data, nan=0.0, posinf=0.0, neginf=0.0)
-            logger.info(f"Raw stems: {list(stems.keys())}")
+            # 4. Convert to MIDI
+            logger.info("Creating MIDI representation...")
+            midi_path = os.path.join(self.output_dir, "guitar_track.mid")
+            midi_data.write(midi_path)
             
-            guitar_audio = None                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                
-            if stems.get('other'):
-                logger.info("Checking 'other' stem for guitar content")
-                guitar_audio = self._enhance_guitar_audio(stems['other'], sr)
-                if not self._contains_guitar_frequencies(guitar_audio, sr):
-                    logger.warning("'other' stem doesn't contain guitar frequencies")
-                    guitar_audio = None
+            # 5. TabCNN prediction
+            logger.info("Predicting tablature with TabCNN...")
+            tab_prediction = self.tab_cnn.predict(midi_path)
             
-            if guitar_audio is None:
-                logger.warning("Using original audio - no guitar stem found")
-                guitar_audio = self._enhance_guitar_audio(audio, sr)
-            
-            # Preprocess guitar audio
-            spec, onsets, tempo = self.preprocess_audio(guitar_audio, sr)
-            
-            # TabCNN processing
-            tabcnn_results = self.tabcnn.predict_tablature(spec)
-            if not tabcnn_results:
-                raise RuntimeError("TabCNN processing failed")
-            
-            # LSTM refinement
-            if hasattr(self, 'lstm') and self.lstm.model:
-                lstm_results = self.lstm.predict(tabcnn_results['predictions'])
-            
-            # Music theory analysis
-            key_info = self.theory_analyzer.detect_key(audio, sr)
-            key = key_info['key']
-            chords = self.theory_analyzer.analyze_chord_progression(audio, sr)
-
-            raw_tab = tabcnn_results['predictions']
-            use_pred, conf, rec = self.confidence_evaluator.should_use_prediction(raw_tab, 'tablature')
-            
-            if not use_pred and rec == 'use_rules':
-                text_tab = self.text_gen.generate_text_tab(
-                    self._chords_to_notes(chords, tempo), 
-                    {'tempo': tempo, 'key': key, 'chords': chords}
-                )
-                refined_tab = raw_tab
-            else:
-                refined_tab = lstm_results['refined_tab']
-                if rec == 'hybrid':
-                    rule_notes = self._chords_to_notes(chords, tempo)
-                    rule_tab = self._notes_to_predictions(rule_notes, refined_tab.shape)
-                    refined_tab = self.confidence_evaluator.blend_predictions(refined_tab, rule_tab, conf)
-
-            optimized_tab = self.optimize_fretboard(refined_tab, key)
-            note_data = self._predictions_to_notes(optimized_tab)
-            text_tab = self.text_gen.generate_text_tab(
-                note_data,
-                {'tempo': tempo, 'key': key, 'chords': chords}
+            # 6. Fretboard position modeling
+            logger.info("Optimizing fretboard positions...")
+            optimized_tab = self.fretboard_model.optimize_positions(
+                tab_prediction, 
+                style=style,
+                reference_tabs=reference_tabs
             )
-
-            midi_notes = [
-                {'time': note['time'], 'note': note['note'], 'duration': note['duration'], 'velocity': 100}
-                for note in note_data
-            ]
-            midi_path = os.path.join(os.path.dirname(audio_path), "guitar_tab.mid")
-            midi_result = self.midi_converter.notes_to_midi(midi_notes, midi_path, bpm=tempo)
-
-            results = {
-                'guitar': {
-                    'text_tab': text_tab,
-                    'fretboard_data': self._create_fretboard_data(optimized_tab),
-                    'stem_path': stems.get('guitar', audio_path),
-                    'onsets': onsets.tolist(),
-                    'midi_path': midi_path if midi_result == midi_path else None,
-                    'confidence': conf,
-                    'key': key,
-                    'chords': chords,
-                    'tempo': float(tempo)
-                }
+            
+            # 7. Generate LilyPond output
+            logger.info("Generating LilyPond tablature...")
+            lilypond_output = self.lilypond_generator.generate_tab(
+                optimized_tab,
+                title=os.path.basename(audio_path),
+                tuning="Drop D" if style == "metalcore" else "Standard",
+                show_techniques=True
+            )
+            
+            return {
+                "status": "success",
+                "midi_path": midi_path,
+                "tab_data": optimized_tab,
+                "lilypond_path": lilypond_output,
+                "audio_path": audio_path
             }
             
-            with open(os.path.join(os.path.dirname(audio_path), "tab_results.json"), 'w') as f:
-                json.dump({
-                    k: {sk: sv if not isinstance(sv, np.ndarray) else sv.tolist() 
-                        for sk, sv in v.items()} 
-                    for k, v in results.items()
-                }, f, indent=2)
-            
-            return results
-            
         except Exception as e:
-            logger.error(f"Failed to process audio: {str(e)}")
-            return {"error": str(e)}
+            logger.error(f"Audio processing failed: {e}")
+            return {"status": "error", "message": str(e)}
+
+    def _enhance_predictions_with_midi(self, predictions: np.ndarray, midi_notes: List[Dict]) -> np.ndarray:
+        """Enhance TabCNN predictions with MIDI note data
+        
+        Args:
+            predictions: TabCNN predictions array
+            midi_notes: List of MIDI note events from Basic Pitch
+            
+        Returns:
+            Enhanced predictions array
+        """
+        if len(midi_notes) == 0:
+            return predictions
+            
+        # Create a copy of the predictions to modify
+        enhanced = np.copy(predictions)
+        
+        # Map MIDI notes to fretboard positions
+        for note in midi_notes:
+            # Get pitch and time information
+            pitch = note['pitch']
+            start_time = note['start_time']
+            
+            # Map pitch to string and fret
+            string, fret = self._map_midi_to_guitar(pitch)
+            
+            if string is not None and fret is not None:
+                # Convert time to frame index (assuming 0.0232s per frame)
+                frame_idx = int(start_time / 0.0232)
+                
+                if 0 <= frame_idx < len(enhanced):
+                    # Set the predicted fret for this string
+                    # Only override if the confidence is high enough
+                    confidence = note.get('confidence', 0.7)
+                    if confidence > 0.6:
+                        # Clear existing predictions for this string
+                        enhanced[frame_idx, string, :] = 0
+                        # Set the new prediction
+                        enhanced[frame_idx, string, fret] = 1.0
+        
+        return enhanced
+        
+    def _map_midi_to_guitar(self, midi_pitch: int) -> Tuple[Optional[int], Optional[int]]:
+        """Map MIDI pitch to guitar string and fret
+        
+        Args:
+            midi_pitch: MIDI pitch value
+            
+        Returns:
+            Tuple of (string, fret) or (None, None) if mapping not possible
+        """
+        # Standard guitar tuning (from low to high): E2(40), A2(45), D3(50), G3(55), B3(59), E4(64)
+        string_tunings = [40, 45, 50, 55, 59, 64]
+        
+        # Try to find the best string/fret combination
+        best_string = None
+        best_fret = None
+        best_distance = float('inf')
+        
+        for string_idx, base_pitch in enumerate(string_tunings):
+            # Calculate fret number
+            fret = midi_pitch - base_pitch
+            
+            # Check if note is playable on this string
+            if 0 <= fret <= 24:  # Assuming 24 frets max
+                # Prefer lower frets and lower strings
+                distance = fret + (string_idx * 0.5)  # Slight preference for lower strings
+                if distance < best_distance:
+                    best_string = string_idx
+                    best_fret = fret
+                    best_distance = distance
+        
+        return best_string, best_fret
 
     def _chords_to_notes(self, chords: List[Dict], tempo: float) -> List[Dict]:
         """Convert chord progression to note data."""
@@ -397,30 +532,112 @@ class UnifiedTabProcessor:
     def _predictions_to_notes(self, predictions: np.ndarray) -> List[Dict]:
         """Convert predictions to note data."""
         notes = []
-        for t in range(predictions.shape[0]):
-            for s in range(6):
-                fret = np.argmax(predictions[t, s])
-                if fret > 0:
-                    notes.append({
-                        'time': t * 0.0232,
-                        'duration': 0.1,
-                        'note': self.midi_to_note(fret, s),
-                        'string': s,
-                        'fret': fret
-                    })
+        
+        # Handle different prediction shapes
+        if len(predictions.shape) == 3:
+            # Original 3D format (time, string, fret)
+            for t in range(predictions.shape[0]):
+                for s in range(6):
+                    fret = np.argmax(predictions[t, s])
+                    if fret > 0:
+                        notes.append({
+                            'time': t * 0.0232,
+                            'duration': 0.1,
+                            'note': self.midi_to_note(fret, s),
+                            'string': s,
+                            'fret': fret
+                        })
+        elif len(predictions.shape) == 2:
+            # Handle 2D predictions - common output format from CNN models
+            if predictions.shape[0] == 1:
+                # Batch size of 1 with features
+                features = predictions[0]
+                
+                # For TabCNN, the output is often a flattened representation
+                # Each group of consecutive values represents frets for a string
+                # Assuming 21 frets per string (0-20) for 6 strings = 126 values
+                num_frets = 21  # Including open string (0)
+                num_strings = 6
+                
+                if len(features) == num_strings * num_frets:
+                    # Format is likely [string1_frets, string2_frets, ...]
+                    for s in range(num_strings):
+                        string_start = s * num_frets
+                        string_end = (s + 1) * num_frets
+                        string_preds = features[string_start:string_end]
+                        
+                        # Find the highest probability fret
+                        if np.max(string_preds) > 0.1:  # Confidence threshold
+                            fret = np.argmax(string_preds)
+                            if fret > 0:  # Skip if it's a 0 (open string)
+                                notes.append({
+                                    'time': 0,  # Single time step
+                                    'duration': 0.1,
+                                    'note': self.midi_to_note(fret, s),
+                                    'string': s,
+                                    'fret': fret
+                                })
+            else:
+                # Multiple time steps
+                for t in range(predictions.shape[0]):
+                    row_data = predictions[t]
+                    # Handle row data as needed
+                    # This would need specific knowledge of the format
+                    logger.warning(f"Unsupported prediction shape: {predictions.shape}")
+        
         return notes
 
     def _create_fretboard_data(self, predictions: np.ndarray) -> List[Dict]:
         """Generate fretboard visualization data."""
         frames = []
-        for frame_idx in range(predictions.shape[0]):
-            frame_data = {'time': frame_idx * 0.0232, 'notes': []}
-            for string in range(6):
-                fret = np.argmax(predictions[frame_idx, string])
-                if fret > 0:
-                    frame_data['notes'].append({'string': string, 'fret': fret})
-            if frame_data['notes']:
+        
+        # Handle different prediction shapes
+        if len(predictions.shape) == 3:
+            # Original 3D format (time, string, fret)
+            for frame_idx in range(predictions.shape[0]):
+                frame_data = {'time': frame_idx * 0.0232, 'notes': []}
+                for string in range(6):
+                    fret = np.argmax(predictions[frame_idx, string])
+                    if fret > 0:
+                        frame_data['notes'].append({
+                            'string': string,
+                            'fret': int(fret),
+                            'note': self.midi_to_note(fret, string)
+                        })
                 frames.append(frame_data)
+        elif len(predictions.shape) == 2:
+            # Handle 2D predictions
+            if predictions.shape[0] == 1:
+                # Single frame with features
+                frame_data = {'time': 0, 'notes': []}
+                features = predictions[0]
+                
+                # For TabCNN, assuming 21 frets per string (0-20) for 6 strings = 126 values
+                num_frets = 21
+                num_strings = 6
+                
+                if len(features) == num_strings * num_frets:
+                    for s in range(num_strings):
+                        string_start = s * num_frets
+                        string_end = (s + 1) * num_frets
+                        string_preds = features[string_start:string_end]
+                        
+                        if np.max(string_preds) > 0.1:  # Confidence threshold
+                            fret = np.argmax(string_preds)
+                            if fret > 0:  # Skip if it's a 0 (open string)
+                                frame_data['notes'].append({
+                                    'string': s,
+                                    'fret': int(fret),
+                                    'note': self.midi_to_note(fret, s)
+                                })
+                    
+                    # Add the frame if it has any notes
+                    if frame_data['notes']:
+                        frames.append(frame_data)
+            else:
+                # Multiple time steps
+                logger.warning(f"Unsupported prediction shape for fretboard visualization: {predictions.shape}")
+        
         return frames
 
 # Example usage
@@ -432,7 +649,7 @@ if __name__ == "__main__":
         sys.exit(1)
         
     audio_path = sys.argv[1]
-    style = sys.argv[2] if len(sys.argv) > 2 else "rock"
+    style = sys.argv[2] if len(sys.argv) > 2 else "metalcore"
     
     processor = UnifiedTabProcessor()
     results = processor.process_audio(audio_path, style)

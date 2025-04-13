@@ -1,0 +1,6 @@
+String 1 (E): |-|
+String 2 (D): |-|
+String 3 (C): |-|
+String 4 (B): |-|
+String 5 (A): |-|
+String 6 (@): |-|

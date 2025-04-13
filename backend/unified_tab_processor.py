@@ -16,12 +16,12 @@ import librosa
 
 # Import existing modules
 from interpreter import DemucsProcessor, TabCNNProcessor
-from models.lstm_model.predictor import LSTMPredictor
+from models.lstm_model.LSTMPredictor import LSTMPredictor
 from tab_text_generator import TabTextGenerator
 
 # New imports for enhanced functionality
-from music_theory import MusicTheoryAnalyzer
-from midi_conversion import MidiConverter
+from music_theory_analyzer import MusicTheoryAnalyzer
+from midi_converter import MidiConverter
 from audio_analyzer_connector import EnhancedAudioAnalyzer
 
 logging.basicConfig(level=logging.INFO)

@@ -8,6 +8,7 @@ class MidiConverter:
     
     def __init__(self):
         self.has_midi = PRETTY_MIDI_AVAILABLE and MIDO_AVAILABLE
+        self.has_basic_pitch = 'basic_pitch_available' in globals() and globals()['basic_pitch_available']
         
     def notes_to_midi(self, notes: List[Dict[str, Any]], 
                       output_file: str, 
@@ -411,6 +412,179 @@ class MidiConverter:
             return {
                 'success': False,
                 'error': f"MIDI creation failed: {str(e)}"
+            }
+
+    def audio_to_midi(self, audio_file: str, output_file: str = None, 
+                      instrument_name: str = "Acoustic Guitar (nylon)") -> Dict[str, Any]:
+        """
+        Convert audio directly to MIDI using Basic Pitch when available
+        
+        Args:
+            audio_file: Path to audio file
+            output_file: Path to save the MIDI file (if None, will be generated from audio_file)
+            instrument_name: MIDI instrument name
+            
+        Returns:
+            Dictionary with conversion results including path to MIDI file and notes data
+        """
+        if not self.has_midi:
+            return {
+                'success': False,
+                'error': "MIDI libraries not available. Install pretty_midi and mido."
+            }
+            
+        # Generate output file path if not provided
+        if output_file is None:
+            output_dir = os.path.dirname(audio_file)
+            base_filename = os.path.splitext(os.path.basename(audio_file))[0]
+            output_file = os.path.join(output_dir, f"{base_filename}.mid")
+            
+        try:
+            # Try using Basic Pitch if available
+            if self.has_basic_pitch:
+                logger.info("Using Basic Pitch for audio to MIDI conversion")
+                from interpreter import BasicPitchProcessor
+                
+                basic_pitch = BasicPitchProcessor()
+                result = basic_pitch.audio_to_midi(
+                    audio_file=audio_file,
+                    output_dir=os.path.dirname(output_file),
+                    save_midi=True,
+                    save_notes=True
+                )
+                
+                if result and result['midi_path']:
+                    return {
+                        'success': True,
+                        'path': result['midi_path'],
+                        'notes': result['notes'],
+                        'confidence': result.get('confidence', 0.8),
+                        'method': 'basic_pitch'
+                    }
+                    
+            # Fallback to librosa-based conversion
+            logger.info("Using librosa for audio to MIDI conversion")
+            return self._librosa_audio_to_midi(audio_file, output_file, instrument_name)
+                
+        except Exception as e:
+            error_msg = f"Error in audio to MIDI conversion: {str(e)}"
+            logger.error(error_msg)
+            return {
+                'success': False,
+                'error': error_msg
+            }
+            
+    def _librosa_audio_to_midi(self, audio_file: str, output_file: str, 
+                              instrument_name: str = "Acoustic Guitar (nylon)") -> Dict[str, Any]:
+        """
+        Convert audio to MIDI using librosa for pitch detection
+        
+        Args:
+            audio_file: Path to audio file
+            output_file: Path to save the MIDI file
+            instrument_name: MIDI instrument name
+            
+        Returns:
+            Dictionary with conversion results
+        """
+        try:
+            # Load audio
+            y, sr = librosa.load(audio_file, sr=None)
+            
+            # Extract pitch using librosa
+            pitches, magnitudes = librosa.piptrack(y=y, sr=sr)
+            
+            # Create MIDI file
+            midi_data = pretty_midi.PrettyMIDI()
+            
+            # Get instrument program number
+            try:
+                program_num = pretty_midi.instrument_name_to_program(instrument_name)
+            except:
+                logger.warning(f"Unknown instrument name: {instrument_name}. Using acoustic guitar.")
+                program_num = 24  # Acoustic Guitar (nylon)
+                
+            instrument = pretty_midi.Instrument(program=program_num)
+            
+            # Process pitch data
+            notes = []
+            current_note = None
+            
+            # Simple note extraction from pitch data
+            for i, time in enumerate(librosa.times_like(pitches)):
+                index = magnitudes[:, i].argmax()
+                pitch = pitches[index, i]
+                
+                if pitch > 0 and magnitudes[index, i] > 0.1:  # Threshold for note detection
+                    midi_pitch = int(round(librosa.hz_to_midi(pitch)))
+                    
+                    if current_note is None or current_note['pitch'] != midi_pitch:
+                        # End previous note if exists
+                        if current_note is not None:
+                            end_time = time
+                            note = pretty_midi.Note(
+                                velocity=100,
+                                pitch=current_note['pitch'],
+                                start=current_note['start_time'],
+                                end=end_time
+                            )
+                            instrument.notes.append(note)
+                            
+                            notes.append({
+                                'pitch': current_note['pitch'],
+                                'start_time': current_note['start_time'],
+                                'end_time': end_time,
+                                'duration': end_time - current_note['start_time'],
+                                'velocity': 100,
+                                'confidence': 0.6  # Lower confidence for librosa method
+                            })
+                        
+                        # Start new note
+                        current_note = {
+                            'pitch': midi_pitch,
+                            'start_time': time
+                        }
+            
+            # Add the last note if exists
+            if current_note is not None:
+                end_time = len(y) / sr
+                note = pretty_midi.Note(
+                    velocity=100,
+                    pitch=current_note['pitch'],
+                    start=current_note['start_time'],
+                    end=end_time
+                )
+                instrument.notes.append(note)
+                
+                notes.append({
+                    'pitch': current_note['pitch'],
+                    'start_time': current_note['start_time'],
+                    'end_time': end_time,
+                    'duration': end_time - current_note['start_time'],
+                    'velocity': 100,
+                    'confidence': 0.6
+                })
+            
+            midi_data.instruments.append(instrument)
+            midi_data.write(output_file)
+            
+            logger.info(f"Saved MIDI file to {output_file}")
+            
+            return {
+                'success': True,
+                'path': output_file,
+                'notes': notes,
+                'confidence': 0.6,  # Lower confidence for librosa method
+                'method': 'librosa',
+                'note_count': len(instrument.notes)
+            }
+                
+        except Exception as e:
+            error_msg = f"Error in librosa audio to MIDI conversion: {str(e)}"
+            logger.error(error_msg)
+            return {
+                'success': False,
+                'error': error_msg
             }
 
 # Standalone function for direct import

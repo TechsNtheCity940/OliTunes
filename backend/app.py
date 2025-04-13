@@ -38,11 +38,13 @@ from audio_analysis import AudioAnalyzer
 from audio_analyzer_connector import EnhancedAudioAnalyzer
 
 # Import custom modules for OliTunes
+# Temporarily disabled due to import error
 from web_tab_integration import register_blueprint as register_tab_extractor
+register_tab_extractor(app)
 from user_feedback import FeedbackCollector
-from tab_data_processor import TabDataProcessor
+from unified_tab_processor2 import TabDataProcessor
 from model_performance import ModelPerformanceTracker
-from music_theory import MusicTheoryAnalyzer
+from music_theory_analyzer import MusicTheoryAnalyzer
 
 # Import TabCNN and Demucs integration modules
 try:
@@ -1069,6 +1071,52 @@ def analyze_generate_tab(filename):
         logger.error(f"Unexpected error in analyze_generate_tab: {str(e)}", exc_info=True)
         return jsonify({'error': f"Unexpected error: {str(e)}"}), 500
 
+@app.route('/api/generate_tab', methods=['POST'])
+def generate_tab():
+    """
+    Simplified endpoint that:
+    1. Accepts single audio file
+    2. Processes using unified_tab_processor2
+    3. Returns generated files
+    """
+    if 'file' not in request.files:
+        return jsonify({"error": "No file provided"}), 400
+    
+    file = request.files['file']
+    if not file or file.filename == '':
+        return jsonify({"error": "Empty file"}), 400
+    
+    try:
+        # Create temp directory
+        session_id = str(uuid.uuid4())
+        temp_dir = os.path.join(app.config['UPLOAD_FOLDER'], session_id)
+        os.makedirs(temp_dir, exist_ok=True)
+        
+        # Save original
+        audio_path = os.path.join(temp_dir, secure_filename(file.filename))
+        file.save(audio_path)
+        
+        # Process using unified_tab_processor2
+        processor = UnifiedTabProcessor()
+        result = processor.process_audio(audio_path)
+        
+        if not result.get('success'):
+            return jsonify({"error": result.get('message', 'Processing failed')}), 500
+            
+        return jsonify({
+            "status": "success",
+            "session_id": session_id,
+            "files": {
+                "midi": f"/download/{session_id}/output.mid",
+                "tab": f"/download/{session_id}/tab.ly",
+                "audio": f"/download/{session_id}/{os.path.basename(audio_path)}"
+            }
+        })
+        
+    except Exception as e:
+        logger.error(f"Tab generation error: {str(e)}", exc_info=True)
+        return jsonify({"error": "Internal server error"}), 500
+
 @app.route('/audio/<path:filename>')
 def serve_audio(filename):
     """Serve audio files from the upload directory"""
@@ -1363,7 +1411,7 @@ def get_model_calibration():
         return jsonify({"error": str(e)}), 500
 
 # Register the tab extractor blueprint
-register_tab_extractor(app)
+# register_tab_extractor(app)
 
 # Initialize components
 feedback_collector = FeedbackCollector()
@@ -1827,10 +1875,10 @@ def generate_text_tablature(filename):
                     'Em': [(5, 0), (4, 2), (3, 2), (2, 0), (1, 0), (0, 0)],
                 }
                 
-                # If no chords detected, use a simple progression
-                chords_to_use = song_info['chords']
-                if not chords_to_use or len(chords_to_use) < 2:
-                    chords_to_use = [
+                # Add default pattern if no chords detected
+                if not song_info['chords'] or len(song_info['chords']) < 2:
+                    # Create a progression of common chords
+                    song_info['chords'] = [
                         {'chord': 'G', 'start_time': 0.0, 'end_time': 2.0},
                         {'chord': 'Em', 'start_time': 2.0, 'end_time': 4.0},
                         {'chord': 'C', 'start_time': 4.0, 'end_time': 6.0},
@@ -1838,7 +1886,7 @@ def generate_text_tablature(filename):
                     ]
                 
                 # Generate notes from chord pattern
-                for chord_data in chords_to_use:
+                for chord_data in song_info['chords']:
                     if isinstance(chord_data, dict) and 'chord' in chord_data:
                         chord_name = chord_data['chord']
                         start_time = chord_data.get('start_time', 0)
@@ -1911,7 +1959,7 @@ def process_audio():
             }
         
         # 2. Process through full pipeline
-        from unified_tab_processor import UnifiedTabProcessor
+        from unified_tab_processor2 import UnifiedTabProcessor
         processor = UnifiedTabProcessor()
         tabs = processor.process_audio(temp_path, analysis['style'], key=analysis['key'])
         
@@ -1984,6 +2032,75 @@ def generate_tab():
         })
     except Exception as e:
         return jsonify({'status': 'error', 'message': str(e)})
+
+@app.route('/api/process_tab', methods=['POST'])
+def process_tab():
+    """
+    Full tab generation endpoint:
+    1. Accepts audio upload
+    2. Processes through Demucs -> Basic Pitch -> TabCNN -> Fretboard Model
+    3. Returns paths to generated files
+    """
+    if 'file' not in request.files:
+        return jsonify({"error": "No file provided"}), 400
+        
+    file = request.files['file']
+    if file.filename == '':
+        return jsonify({"error": "Empty filename"}), 400
+    
+    try:
+        # Create processing directory
+        session_id = str(uuid.uuid4())
+        process_dir = os.path.join(app.config['UPLOAD_FOLDER'], session_id)
+        os.makedirs(process_dir, exist_ok=True)
+        
+        # Save original file
+        audio_path = os.path.join(process_dir, secure_filename(file.filename))
+        file.save(audio_path)
+        
+        # Get processing parameters from frontend
+        style = request.form.get('style', 'metalcore')
+        tuning = request.form.get('tuning', 'Drop D')
+        
+        # Initialize processor with current configuration
+        processor = UnifiedTabProcessor(
+            output_dir=process_dir,
+            config=current_app.config
+        )
+        
+        # Run full processing pipeline
+        result = processor.process_audio(
+            audio_path,
+            style=style,
+            reference_tabs=get_reference_tabs(style)
+        )
+        
+        if result.get('status') != 'success':
+            return jsonify({"error": result.get('message', 'Processing failed')}), 500
+            
+        # Return URLs for frontend to access
+        return jsonify({
+            "status": "success",
+            "session_id": session_id,
+            "midi_url": url_for('serve_processing_file', 
+                               filename=f"{session_id}/{os.path.basename(result['midi_path'])}"),
+            "tab_url": url_for('serve_processing_file', 
+                             filename=f"{session_id}/{os.path.basename(result['lilypond_path'])}"),
+            "audio_url": url_for('serve_processing_file',
+                               filename=f"{session_id}/{os.path.basename(audio_path)}")
+        })
+        
+    except Exception as e:
+        logger.error(f"Tab processing error: {str(e)}", exc_info=True)
+        return jsonify({"error": "Server error during processing"}), 500
+        
+@app.route('/processing/<path:filename>')
+def serve_processing_file(filename):
+    """Serve files from processing directories"""
+    return send_from_directory(
+        os.path.join(app.config['UPLOAD_FOLDER']),
+        filename
+    )
 
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=5000)

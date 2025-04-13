@@ -48,42 +48,49 @@ class UltimateGuitarExtractor:
         """
         self.rate_limit = rate_limit
         self.session = requests.Session()
+        self.session.headers.update({
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+            'Accept': 'text/html,application/xhtml+xml',
+            'Accept-Language': 'en-US,en;q=0.5',
+            'Accept-Encoding': 'gzip, deflate, br',
+            'DNT': '1',
+            'Connection': 'keep-alive',
+            'Upgrade-Insecure-Requests': '1',
+            'Sec-Fetch-Dest': 'document',
+            'Sec-Fetch-Mode': 'navigate',
+            'Sec-Fetch-Site': 'none',
+            'Sec-Fetch-User': '?1'
+        })
     
     def _get_random_user_agent(self):
         """Get a random user agent to avoid detection"""
         return random.choice(USER_AGENTS)
     
-    def _make_request(self, url, headers=None, params=None):
-        """
-        Make an HTTP request with proper headers and rate limiting
-        
-        Args:
-            url: URL to request
-            headers: Optional headers dictionary
-            params: Optional query parameters
-            
-        Returns:
-            Response object or None if failed
-        """
-        if headers is None:
-            headers = {
-                'User-Agent': self._get_random_user_agent(),
-                'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
-                'Accept-Language': 'en-US,en;q=0.5',
-                'DNT': '1',
-                'Connection': 'keep-alive',
-                'Upgrade-Insecure-Requests': '1',
-            }
-        
+    def _make_request(self, url):
+        """Make a request to Ultimate Guitar"""
         try:
-            time.sleep(self.rate_limit)  # Rate limiting
-            response = self.session.get(url, headers=headers, params=params, timeout=30)
-            if response.status_code != 200:
-                logger.error(f"Request failed with status code: {response.status_code}")
-                return None
+            time.sleep(self.rate_limit)
+            
+            # Rotate user agent
+            headers = {'User-Agent': random.choice(USER_AGENTS)}
+            
+            response = self.session.get(
+                url, 
+                headers=headers,
+                timeout=30,
+                allow_redirects=True
+            )
+            
+            if response.status_code == 406:
+                logger.warning(f"Received 406 for {url} - retrying with new session")
+                self.session = requests.Session()  # Reset session
+                return self._make_request(url)
+                
+            response.raise_for_status()
             return response
-        except requests.RequestException as e:
-            logger.error(f"Request error: {e}")
+            
+        except requests.exceptions.RequestException as e:
+            logger.error(f"Request failed for {url}: {e}")
             return None
     
     def search_for_artist(self, artist_name, max_pages=3):

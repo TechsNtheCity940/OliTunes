@@ -172,6 +172,160 @@ class TabTextGenerator:
         
         return "".join(tab_text)
 
+    def generate_tab(self, 
+                     predictions, 
+                     key='C', 
+                     tempo=120, 
+                     style='rock'):
+        """
+        Generate guitar tablature from model predictions
+        
+        Args:
+            predictions: Model predictions array or list
+            key: Detected music key
+            tempo: Detected tempo in BPM
+            style: Style for tablature generation ('rock', 'blues', etc.)
+            
+        Returns:
+            Formatted tablature as string
+        """
+        # Convert predictions to notes
+        notes = self._predictions_to_notes(predictions)
+        
+        # Add song info
+        song_info = {
+            'title': 'Generated Tab',
+            'artist': 'OliTunes',
+            'timeSignature': {'numerator': 4, 'denominator': 4},
+            'tempo': tempo,
+            'key': key,
+            'style': style
+        }
+        
+        # Generate tab using existing generate_text_tab method
+        return self.generate_text_tab(notes, song_info=song_info)
+        
+    def _predictions_to_notes(self, predictions):
+        """
+        Convert model predictions to note dictionaries
+        
+        Args:
+            predictions: Model prediction array/matrix
+            
+        Returns:
+            List of note dictionaries
+        """
+        notes = []
+        
+        # Handle different prediction formats
+        if isinstance(predictions, np.ndarray):
+            # Check the shape of predictions
+            if len(predictions.shape) == 3:  # [time, string, fret]
+                # Handle 3D predictions (time, string, fret)
+                for t in range(predictions.shape[0]):
+                    for s in range(predictions.shape[1]):
+                        # Get the highest probability fret for this string at this time
+                        if np.max(predictions[t, s]) > 0.1:  # Confidence threshold
+                            fret = np.argmax(predictions[t, s])
+                            if fret > 0:  # Skip if it's a 0 (open string or no note)
+                                notes.append({
+                                    'time': t * 0.25,  # Assuming 16th note grid (0.25 beats)
+                                    'string': s,
+                                    'fret': int(fret)
+                                })
+            elif len(predictions.shape) == 2:
+                # Handle 2D predictions
+                # Check if it's in the format [batch, features]
+                if predictions.shape[0] == 1:
+                    # Handle the case where first dimension is batch size
+                    # Common format for CNN models like TabCNN
+                    features = predictions[0]  # Get the features for the single batch item
+                    
+                    # For TabCNN, the output is often a flattened representation
+                    # Each group of consecutive values represents frets for a string
+                    # Assuming 21 frets per string (0-20) for 6 strings = 126 values
+                    num_frets = 21  # Including open string (0)
+                    num_strings = 6
+                    
+                    if len(features) == num_strings * num_frets:
+                        # Format is likely [string1_frets, string2_frets, ...]
+                        for s in range(num_strings):
+                            string_start = s * num_frets
+                            string_end = (s + 1) * num_frets
+                            string_preds = features[string_start:string_end]
+                            
+                            # Find the highest probability fret
+                            if np.max(string_preds) > 0.1:  # Confidence threshold
+                                fret = np.argmax(string_preds)
+                                if fret > 0:  # Skip if it's a 0 (open string)
+                                    notes.append({
+                                        'time': 0,  # Single time step
+                                        'string': s,
+                                        'fret': int(fret)
+                                    })
+                    else:
+                        # If we don't know the exact format, make a best guess
+                        # Split the features evenly among 6 strings
+                        frets_per_string = len(features) // 6
+                        for s in range(6):
+                            start_idx = s * frets_per_string
+                            end_idx = (s + 1) * frets_per_string
+                            string_preds = features[start_idx:end_idx]
+                            
+                            if np.max(string_preds) > 0.1:
+                                fret = np.argmax(string_preds) + 1  # +1 because fret 0 is open string
+                                notes.append({
+                                    'time': 0,
+                                    'string': s,
+                                    'fret': int(fret)
+                                })
+                else:
+                    # Handle the case where rows might represent time steps
+                    for t in range(predictions.shape[0]):
+                        row_preds = predictions[t]
+                        
+                        # If we have 6 strings with 21 frets each (0-20)
+                        # and flattened as [string1_frets, string2_frets, ...]
+                        if len(row_preds) == 126:  # 6 strings * 21 frets
+                            for s in range(6):
+                                start_idx = s * 21
+                                end_idx = (s + 1) * 21
+                                string_preds = row_preds[start_idx:end_idx]
+                                
+                                if np.max(string_preds) > 0.1:
+                                    fret = np.argmax(string_preds)
+                                    if fret > 0:
+                                        notes.append({
+                                            'time': t * 0.25,
+                                            'string': s,
+                                            'fret': int(fret)
+                                        })
+                        else:
+                            # If we don't know the exact format, make a best guess
+                            frets_per_string = len(row_preds) // 6
+                            for s in range(6):
+                                start_idx = s * frets_per_string
+                                end_idx = (s + 1) * frets_per_string
+                                string_preds = row_preds[start_idx:end_idx]
+                                
+                                if np.max(string_preds) > 0.1:
+                                    fret = np.argmax(string_preds) + 1
+                                    notes.append({
+                                        'time': t * 0.25,
+                                        'string': s,
+                                        'fret': int(fret)
+                                    })
+        elif isinstance(predictions, list):
+            # If it's already a list of note dictionaries
+            for note in predictions:
+                if isinstance(note, dict) and 'string' in note and 'fret' in note:
+                    # Already in the right format
+                    notes.append(note)
+                    
+        # Sort by time
+        notes.sort(key=lambda x: x.get('time', 0))
+        return notes
+
     def format_note_as_tab(self, note_data: List[Dict[str, Any]], song_duration: float) -> str:
         """
         Simplified tablature generation for testing or when detailed analysis isn't available.

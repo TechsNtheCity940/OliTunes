@@ -1,0 +1,13 @@
+{
+  "batch_id": 4,
+  "num_samples": 50,
+  "time_steps": 50,
+  "mel_bins": 128,
+  "date_created": "2025-04-10 04:19:13",
+  "styles_used": [
+    "chords",
+    "scales",
+    "melody",
+    "mixed"
+  ]
+}

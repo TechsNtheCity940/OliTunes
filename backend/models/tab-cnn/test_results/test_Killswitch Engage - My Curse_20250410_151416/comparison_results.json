@@ -1,0 +1,7 @@
+{
+    "model_path": "f:\\newrepos\\olitunes\\backend\\models\\tab-cnn\\trained_models\\tabcnn_advanced_20250410-145226\\checkpoints\\model_epoch_42_val_loss_0.6807.h5",
+    "audio_path": "F:\\newrepos\\olitunes\\backend\\uploads\\Killswitch Engage - My Curse.mp3",
+    "tab_path": "F:\\newrepos\\olitunes\\backend\\data\\tab_data\\tab_files\\Killswitch Engage_MY CURSE TAB (ver 3).txt",
+    "similarity_score": 0.0011417466476917949,
+    "timestamp": "2025-04-10 15:14:29"
+}

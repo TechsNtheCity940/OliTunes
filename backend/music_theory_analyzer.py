@@ -56,25 +56,65 @@ class MusicTheoryAnalyzer:
         if np.sum(chroma_avg) > 0:
             chroma_avg = chroma_avg / np.sum(chroma_avg)
         
-        # Convert to Music21 pitch class distribution
-        pc_distribution = [float(val) for val in chroma_avg]
-        
-        # Use Music21's key analyzer
-        analyzer = music21.analysis.discrete.KeyWeightKeyAnalysis()
-        music21_key = analyzer.solve(pc_distribution)
+        try:
+            # Use Music21's key analysis - method may vary depending on Music21 version
+            try:
+                # Try newer method
+                pc_distribution = [float(val) for val in chroma_avg]
+                
+                # Use Music21's key analyzer
+                analyzer = music21.analysis.discrete.KeyWeightKeyAnalysis()
+                music21_key = analyzer.solve(pc_distribution)
+            except (AttributeError, TypeError):
+                try:
+                    # Try alternate approach with Krumhansl key correlation
+                    krumhansl = music21.analysis.discrete.KrumhanslSchmuckler()
+                    # Different versions of music21 have different APIs
+                    try:
+                        music21_key = krumhansl.getSolution(chroma_avg)
+                    except:
+                        music21_key = krumhansl.solveProblem(chroma_avg)
+                except:
+                    # Fallback to simple approach
+                    music21_key = None
+            
+            # If that failed, try using music21's built-in key determination from chroma
+            if music21_key is None:
+                try:
+                    analysis_stream = music21.analysis.discrete.analyzeStream(
+                        music21.stream.Stream(), method='krumhansl')
+                    music21_key = analysis_stream.analyze('key')
+                except:
+                    music21_key = None
+        except Exception as e:
+            logging.warning(f"Music21 key analysis method failed: {e}")
+            music21_key = None
+            
+        # If all Music21 methods failed, use a fallback
+        if music21_key is None:
+            music21_key = music21.key.Key('C')
         
         # Get key details
-        key_name = str(music21_key)
-        mode = 'minor' if key_name.endswith('minor') else 'major'
-        tonic = key_name.split()[0]
-        
-        # Get scale degrees and chords
-        key_obj = music21.key.Key(tonic, mode)
-        scale = key_obj.getPitches()
-        scale_names = [p.name for p in scale]
-        
-        # Get common chord progression for this key
-        chords = self._get_key_chords(key_obj)
+        try:
+            key_name = str(music21_key)
+            mode = 'minor' if key_name.endswith('minor') or 'm' in key_name else 'major'
+            tonic = key_name.split()[0] if ' ' in key_name else key_name.replace('minor', '').replace('major', '')
+            
+            # Get scale degrees and chords
+            key_obj = music21.key.Key(tonic, mode)
+            scale = key_obj.getPitches()
+            scale_names = [p.name for p in scale]
+            
+            # Get common chord progression for this key
+            chords = self._get_key_chords(key_obj)
+        except Exception as e:
+            logging.warning(f"Error processing music21 key results: {e}")
+            # Fallback values
+            key_name = 'C major'
+            tonic = 'C'
+            mode = 'major'
+            scale_names = ['C', 'D', 'E', 'F', 'G', 'A', 'B']
+            chords = ['C', 'F', 'G', 'Am']
         
         return {
             'key': key_name,
@@ -84,6 +124,104 @@ class MusicTheoryAnalyzer:
             'confidence': 0.85,  # Music21 doesn't provide confidence
             'chords': chords
         }
+    
+    def _get_key_chords(self, key_obj) -> List[str]:
+        """Get common chord progression for a Music21 key"""
+        import music21
+        
+        # Common chord progressions
+        if key_obj.mode == 'major':
+            # Common major progressions: I-IV-V, I-vi-IV-V, etc.
+            degrees = [1, 4, 5, 6]  # I, IV, V, vi
+        else:
+            # Common minor progressions: i-iv-V, i-VI-III-VII, etc.
+            degrees = [1, 3, 6, 7]  # i, III, VI, VII
+            
+        # Generate chord names for these degrees
+        chord_names = []
+        for degree in degrees:
+            try:
+                # Use Roman numeral approach for compatibility
+                roman_numerals = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII']
+                roman_notation = roman_numerals[degree - 1]
+                
+                # Minor chords in major keys
+                if key_obj.mode == 'major' and degree in [2, 3, 6]:
+                    roman_notation = roman_notation.lower()
+                
+                # Major chords in minor keys
+                if key_obj.mode == 'minor' and degree in [3, 5, 6, 7]:
+                    roman_notation = roman_notation.upper()
+                elif key_obj.mode == 'minor':  # Minor chords in minor keys
+                    roman_notation = roman_notation.lower()
+                    
+                # Get chord from Roman numeral
+                chord_name = self._roman_to_chord(roman_notation, key_obj)
+                chord_names.append(chord_name)
+            except Exception as e:
+                logger.warning(f"Error getting chord for degree {degree}: {e}")
+                # Add a fallback chord if we can't calculate properly
+                if degree == 1:
+                    chord_names.append(key_obj.tonic.name + ('m' if key_obj.mode == 'minor' else ''))
+        
+        # If we couldn't get any chords, use a fallback
+        if not chord_names:
+            if key_obj.mode == 'major':
+                tonic = key_obj.tonic.name
+                subdominant = music21.note.Note(music21.interval.Interval('P4').transposePitch(key_obj.tonic)).name
+                dominant = music21.note.Note(music21.interval.Interval('P5').transposePitch(key_obj.tonic)).name
+                chord_names = [tonic, subdominant, dominant]
+            else:
+                tonic = key_obj.tonic.name + 'm'
+                subdominant = music21.note.Note(music21.interval.Interval('P4').transposePitch(key_obj.tonic)).name + 'm'
+                dominant = music21.note.Note(music21.interval.Interval('P5').transposePitch(key_obj.tonic)).name
+                chord_names = [tonic, subdominant, dominant]
+        
+        return chord_names
+    
+    def _roman_to_chord(self, roman_notation: str, key_obj) -> str:
+        """
+        Convert Roman numeral notation to chord name
+        
+        Args:
+            roman_notation: Roman numeral chord notation (e.g., 'I', 'V7', 'bVII')
+            key_obj: Music21 Key object
+            
+        Returns:
+            String chord name (e.g., 'C', 'G7', 'Bb')
+        """
+        import music21
+        
+        try:
+            # Create Roman numeral object
+            rn = music21.roman.RomanNumeral(roman_notation, key_obj)
+            chord_name = rn.figure
+            
+            # Get chord root name
+            chord_root = rn.root().name
+            
+            # Add quality suffix based on chord type
+            if rn.isDiminishedTriad():
+                chord_name = chord_root + 'dim'
+            elif rn.isAugmentedTriad():
+                chord_name = chord_root + 'aug'
+            elif rn.isMinorTriad():
+                chord_name = chord_root + 'm'
+            elif rn.isMajorTriad():
+                chord_name = chord_root
+            elif rn.isDominantSeventh():
+                chord_name = chord_root + '7'
+            elif rn.isMinorSeventh():
+                chord_name = chord_root + 'm7'
+            elif rn.isMajorSeventh():
+                chord_name = chord_root + 'maj7'
+            else:
+                chord_name = chord_root
+                
+            return chord_name
+        except Exception as e:
+            logger.warning(f"Error converting Roman numeral to chord: {e}")
+            return roman_notation  # Return original as fallback
     
     def _detect_key_chromagram(self, audio: np.ndarray, sr: int) -> Dict[str, Any]:
         """Detect key using Krumhansl-Schmuckler algorithm"""
@@ -147,7 +285,7 @@ class MusicTheoryAnalyzer:
         # Select intervals based on mode
         intervals = major_intervals if mode == 'major' else minor_intervals
         
-        # Map tonic name to MIDI note number for C0
+        # Map tonic to index
         tonic_names = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B']
         tonic_idx = tonic_names.index(tonic)
         
@@ -158,47 +296,6 @@ class MusicTheoryAnalyzer:
             scale.append(tonic_names[note_idx])
         
         return scale
-    
-    def _get_key_chords(self, key_obj) -> list[Dict[str, Any]]:
-        """Get common chord progression for a Music21 key"""
-        import music21
-        
-        # Generate diatonic chords
-        chords = []
-        for scale_degree in range(1, 8):
-            chord = key_obj.getDiatonicTriad(scale_degree)
-            
-            # Get chord symbol
-            chord_symbol = self._get_chord_symbol(chord, key_obj, scale_degree)
-            
-            # Get chord notes
-            notes = [p.nameWithOctave for p in chord.pitches]
-            
-            chords.append({
-                'name': chord_symbol,
-                'notes': notes,
-                'scale_degree': scale_degree,
-                'roman': music21.roman.romanNumeralFromChord(chord, key_obj).figure
-            })
-        
-        return chords
-    
-    def _get_chord_symbol(self, chord, key, scale_degree):
-        """Get chord symbol (e.g., Cmaj, Dmin)"""
-        root = chord.root().name
-        chord_type = chord.commonName
-        
-        # Simple mapping of chord types
-        if 'minor' in chord_type:
-            return f"{root}min"
-        elif 'major' in chord_type:
-            return f"{root}maj"
-        elif 'diminished' in chord_type:
-            return f"{root}dim"
-        elif 'augmented' in chord_type:
-            return f"{root}aug"
-        else:
-            return root
     
     def _get_simple_chord_progression(self, tonic: str, mode: str) -> List[Dict[str, Any]]:
         """Generate a simple chord progression for a key when Music21 is not available"""
@@ -247,241 +344,15 @@ class MusicTheoryAnalyzer:
             # Convert indices to note names
             notes = [tonic_names[idx] for idx in note_indices]
             
-            # Add chord to list
+            # Determine roman numeral (simplified)
+            roman = self._get_simple_roman_numeral(root, quality, {'tonic': tonic, 'mode': mode})
+            
             chords.append({
                 'name': f"{root}{quality}",
                 'notes': notes,
                 'scale_degree': i + 1,
                 'roman': roman
             })
-        
-        return chords
-    
-    def key_to_index(self, key: str) -> int:
-        """
-        Convert a musical key string (e.g., 'C major', 'A minor') to a numeric index (0-11)
-        for use with the fretboard position model.
-        
-        Args:
-            key: String representation of the key (e.g., 'C major', 'A minor')
-            
-        Returns:
-            Integer index (0-11) representing the key's tonic
-        """
-        if not key:
-            return 0  # Default to C (0) if no key provided
-            
-        # Extract tonic from key string
-        tonic = key.split()[0] if ' ' in key else key
-        
-        # Map tonic to index
-        tonic_map = {
-            'C': 0, 'C#': 1, 'Db': 1, 
-            'D': 2, 'D#': 3, 'Eb': 3,
-            'E': 4, 
-            'F': 5, 'F#': 6, 'Gb': 6,
-            'G': 7, 'G#': 8, 'Ab': 8,
-            'A': 9, 'A#': 10, 'Bb': 10,
-            'B': 11
-        }
-        
-        return tonic_map.get(tonic, 0)  # Default to C (0) if tonic not found
-    
-    def analyze_chord_progression(self, audio: np.ndarray, sr: int, 
-                                segment_duration: float = 1.0) -> List[Dict[str, Any]]:
-        """
-        Analyze the chord progression in the audio
-        
-        Args:
-            audio: Audio data
-            sr: Sample rate
-            segment_duration: Duration of each segment to analyze (in seconds)
-            
-        Returns:
-            List of detected chords with timing information
-        """
-        if self.has_music21:
-            try:
-                return self._analyze_chords_music21(audio, sr, segment_duration)
-            except Exception as e:
-                logging.warning(f"Music21 chord analysis failed: {str(e)}")
-        
-        # Fallback to simple chord detection
-        return self._analyze_chords_simple(audio, sr, segment_duration)
-    
-    def _analyze_chords_music21(self, audio: np.ndarray, sr: int, 
-                              segment_duration: float) -> List[Dict[str, Any]]:
-        """Use Music21 for chord analysis"""
-        import music21
-        
-        # Compute chromagram
-        hop_length = 512
-        chroma = librosa.feature.chroma_cqt(y=audio, sr=sr, hop_length=hop_length)
-        
-        # Get times for each chroma frame
-        chroma_times = librosa.times_like(chroma, sr=sr, hop_length=hop_length)
-        
-        # First detect the overall key
-        key_info = self.detect_key(audio, sr)
-        key_obj = music21.key.Key(key_info['tonic'], key_info['mode'])
-        
-        # Define segment boundaries (in frames)
-        segment_frames = int(segment_duration * sr / hop_length)
-        num_segments = max(1, chroma.shape[1] // segment_frames)
-        
-        chords = []
-        
-        for i in range(num_segments):
-            # Get the segment range
-            start_frame = i * segment_frames
-            end_frame = min(chroma.shape[1], (i + 1) * segment_frames)
-            
-            if end_frame <= start_frame:
-                continue
-            
-            # Get the segment times
-            start_time = chroma_times[start_frame]
-            end_time = chroma_times[min(len(chroma_times) - 1, end_frame - 1)]
-            
-            # Get the average chroma for this segment
-            segment_chroma = np.mean(chroma[:, start_frame:end_frame], axis=1)
-            
-            # Convert to pitch class distribution for Music21
-            pc_distribution = [float(val) for val in segment_chroma]
-            
-            # Use Music21 to identify the chord
-            try:
-                analyzer = music21.analysis.discrete.ChordWeightAnalysis()
-                music21_chord = analyzer.solveProblem(pc_distribution)
-                
-                # Get chord details
-                chord_root = music21_chord.root().name
-                chord_type = music21_chord.commonName
-                chord_name = f"{chord_root} {chord_type}"
-                
-                # Get chord notes
-                notes = [p.nameWithOctave for p in music21_chord.pitches]
-                
-                # Get Roman numeral
-                roman = music21.roman.romanNumeralFromChord(music21_chord, key_obj).figure
-                
-                chords.append({
-                    'name': chord_name,
-                    'time': float(start_time),
-                    'duration': float(end_time - start_time),
-                    'notes': notes,
-                    'roman': roman
-                })
-            except Exception as e:
-                logging.warning(f"Error analyzing chord at {start_time}s: {str(e)}")
-        
-        return chords
-    
-    def _analyze_chords_simple(self, audio: np.ndarray, sr: int, 
-                             segment_duration: float) -> List[Dict[str, Any]]:
-        """Simple chord detection using chromagram templates"""
-        # Define chord templates for major and minor triads
-        chord_templates = {}
-        note_names = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B']
-        
-        # Create templates for major and minor chords
-        for i, root in enumerate(note_names):
-            # Major chord: root, major third, perfect fifth
-            major_template = np.zeros(12)
-            major_template[i] = 1.0  # root
-            major_template[(i + 4) % 12] = 0.8  # major third
-            major_template[(i + 7) % 12] = 0.9  # perfect fifth
-            chord_templates[f"{root}maj"] = major_template
-            
-            # Minor chord: root, minor third, perfect fifth
-            minor_template = np.zeros(12)
-            minor_template[i] = 1.0  # root
-            minor_template[(i + 3) % 12] = 0.8  # minor third
-            minor_template[(i + 7) % 12] = 0.9  # perfect fifth
-            chord_templates[f"{root}min"] = minor_template
-        
-        # Compute chromagram
-        hop_length = 512
-        chroma = librosa.feature.chroma_cqt(y=audio, sr=sr, hop_length=hop_length)
-        
-        # Get times for each chroma frame
-        chroma_times = librosa.times_like(chroma, sr=sr, hop_length=hop_length)
-        
-        # Define segment boundaries (in frames)
-        segment_frames = int(segment_duration * sr / hop_length)
-        num_segments = max(1, chroma.shape[1] // segment_frames)
-        
-        # First detect overall key for context
-        key_info = self._detect_key_chromagram(audio, sr)
-        
-        chords = []
-        
-        for i in range(num_segments):
-            # Get the segment range
-            start_frame = i * segment_frames
-            end_frame = min(chroma.shape[1], (i + 1) * segment_frames)
-            
-            if end_frame <= start_frame:
-                continue
-            
-            # Get the segment times
-            start_time = chroma_times[start_frame]
-            end_time = chroma_times[min(len(chroma_times) - 1, end_frame - 1)]
-            
-            # Get the average chroma for this segment
-            segment_chroma = np.mean(chroma[:, start_frame:end_frame], axis=1)
-            
-            # Normalize
-            if np.sum(segment_chroma) > 0:
-                segment_chroma = segment_chroma / np.sum(segment_chroma)
-            
-            # Compare with chord templates
-            chord_matches = []
-            for chord_name, template in chord_templates.items():
-                # Calculate correlation
-                correlation = np.corrcoef(segment_chroma, template)[0, 1]
-                chord_matches.append((correlation, chord_name))
-            
-            # Sort by correlation
-            chord_matches.sort(reverse=True)
-            
-            # Get the best match
-            if chord_matches and not np.isnan(chord_matches[0][0]):
-                best_corr, chord_name = chord_matches[0]
-                
-                # Only add if correlation is reasonable
-                if best_corr > 0.5:
-                    # Parse chord name to get root and quality
-                    if chord_name.endswith('maj'):
-                        root = chord_name[:-3]
-                        quality = 'maj'
-                    elif chord_name.endswith('min'):
-                        root = chord_name[:-3]
-                        quality = 'min'
-                    else:
-                        root = chord_name
-                        quality = ''
-                    
-                    # Generate notes for this chord
-                    root_idx = note_names.index(root)
-                    if quality == 'maj':
-                        note_indices = [root_idx, (root_idx + 4) % 12, (root_idx + 7) % 12]
-                    else:  # 'min'
-                        note_indices = [root_idx, (root_idx + 3) % 12, (root_idx + 7) % 12]
-                    
-                    notes = [note_names[idx] for idx in note_indices]
-                    
-                    # Determine roman numeral (simplified)
-                    roman = self._get_simple_roman_numeral(root, quality, key_info)
-                    
-                    chords.append({
-                        'name': chord_name,
-                        'time': float(start_time),
-                        'duration': float(end_time - start_time),
-                        'notes': notes,
-                        'roman': roman,
-                        'confidence': float((best_corr + 1) / 2)  # Convert correlation to confidence
-                    })
         
         return chords
     
@@ -690,3 +561,231 @@ class MusicTheoryAnalyzer:
             logging.warning(f"Error determining chord from notes: {str(e)}")
             
         return result
+
+    def key_to_index(self, key: str) -> int:
+        """
+        Convert a musical key string (e.g., 'C major', 'A minor') to a numeric index (0-11)
+        for use with the fretboard position model.
+        
+        Args:
+            key: String representation of the key (e.g., 'C major', 'A minor')
+            
+        Returns:
+            Integer index (0-11) representing the key's tonic
+        """
+        if not key:
+            return 0  # Default to C (0) if no key provided
+            
+        # Extract tonic from key string
+        tonic = key.split()[0] if ' ' in key else key
+        
+        # Map tonic to index
+        tonic_map = {
+            'C': 0, 'C#': 1, 'Db': 1, 
+            'D': 2, 'D#': 3, 'Eb': 3,
+            'E': 4, 
+            'F': 5, 'F#': 6, 'Gb': 6,
+            'G': 7, 'G#': 8, 'Ab': 8,
+            'A': 9, 'A#': 10, 'Bb': 10,
+            'B': 11
+        }
+        
+        return tonic_map.get(tonic, 0)  # Default to C (0) if tonic not found
+    
+    def analyze_chord_progression(self, audio: np.ndarray, sr: int, 
+                                segment_duration: float = 1.0) -> List[Dict[str, Any]]:
+        """
+        Analyze the chord progression in the audio
+        
+        Args:
+            audio: Audio data
+            sr: Sample rate
+            segment_duration: Duration of each segment to analyze (in seconds)
+            
+        Returns:
+            List of detected chords with timing information
+        """
+        if self.has_music21:
+            try:
+                return self._analyze_chords_music21(audio, sr, segment_duration)
+            except Exception as e:
+                logging.warning(f"Music21 chord analysis failed: {str(e)}")
+        
+        # Fallback to simple chord detection
+        return self._analyze_chords_simple(audio, sr, segment_duration)
+    
+    def _analyze_chords_music21(self, audio: np.ndarray, sr: int, 
+                              segment_duration: float) -> List[Dict[str, Any]]:
+        """Use Music21 for chord analysis"""
+        import music21
+        
+        # Compute chromagram
+        hop_length = 512
+        chroma = librosa.feature.chroma_cqt(y=audio, sr=sr, hop_length=hop_length)
+        
+        # Get times for each chroma frame
+        chroma_times = librosa.times_like(chroma, sr=sr, hop_length=hop_length)
+        
+        # First detect the overall key
+        key_info = self.detect_key(audio, sr)
+        key_obj = music21.key.Key(key_info['tonic'], key_info['mode'])
+        
+        # Define segment boundaries (in frames)
+        segment_frames = int(segment_duration * sr / hop_length)
+        num_segments = max(1, chroma.shape[1] // segment_frames)
+        
+        chords = []
+        
+        for i in range(num_segments):
+            # Get the segment range
+            start_frame = i * segment_frames
+            end_frame = min(chroma.shape[1], (i + 1) * segment_frames)
+            
+            if end_frame <= start_frame:
+                continue
+            
+            # Get the segment times
+            start_time = chroma_times[start_frame]
+            end_time = chroma_times[min(len(chroma_times) - 1, end_frame - 1)]
+            
+            # Get the average chroma for this segment
+            segment_chroma = np.mean(chroma[:, start_frame:end_frame], axis=1)
+            
+            # Convert to pitch class distribution for Music21
+            pc_distribution = [float(val) for val in segment_chroma]
+            
+            # Use Music21 to identify the chord
+            try:
+                analyzer = music21.analysis.discrete.ChordWeightAnalysis()
+                music21_chord = analyzer.solve(pc_distribution)
+                
+                # Get chord details
+                chord_root = music21_chord.root().name
+                chord_type = music21_chord.commonName
+                chord_name = f"{chord_root} {chord_type}"
+                
+                # Get chord notes
+                notes = [p.nameWithOctave for p in music21_chord.pitches]
+                
+                # Get Roman numeral
+                roman = music21.roman.romanNumeralFromChord(music21_chord, key_obj).figure
+                
+                chords.append({
+                    'name': chord_name,
+                    'time': float(start_time),
+                    'duration': float(end_time - start_time),
+                    'notes': notes,
+                    'roman': roman
+                })
+            except Exception as e:
+                logging.warning(f"Error analyzing chord at {start_time}s: {str(e)}")
+        
+        return chords
+    
+    def _analyze_chords_simple(self, audio: np.ndarray, sr: int, 
+                             segment_duration: float) -> List[Dict[str, Any]]:
+        """Simple chord detection using chromagram templates"""
+        # Define chord templates for major and minor triads
+        chord_templates = {}
+        note_names = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B']
+        
+        # Create templates for major and minor chords
+        for i, root in enumerate(note_names):
+            # Major chord: root, major third, perfect fifth
+            major_template = np.zeros(12)
+            major_template[i] = 1.0  # root
+            major_template[(i + 4) % 12] = 0.8  # major third
+            major_template[(i + 7) % 12] = 0.9  # perfect fifth
+            chord_templates[f"{root}maj"] = major_template
+            
+            # Minor chord: root, minor third, perfect fifth
+            minor_template = np.zeros(12)
+            minor_template[i] = 1.0  # root
+            minor_template[(i + 3) % 12] = 0.8  # minor third
+            minor_template[(i + 7) % 12] = 0.9  # perfect fifth
+            chord_templates[f"{root}min"] = minor_template
+        
+        # Compute chromagram
+        hop_length = 512
+        chroma = librosa.feature.chroma_cqt(y=audio, sr=sr, hop_length=hop_length)
+        
+        # Get times for each chroma frame
+        chroma_times = librosa.times_like(chroma, sr=sr, hop_length=hop_length)
+        
+        # Define segment boundaries (in frames)
+        segment_frames = int(segment_duration * sr / hop_length)
+        num_segments = max(1, chroma.shape[1] // segment_frames)
+        
+        # First detect overall key for context
+        key_info = self._detect_key_chromagram(audio, sr)
+        
+        chords = []
+        
+        for i in range(num_segments):
+            # Get the segment range
+            start_frame = i * segment_frames
+            end_frame = min(chroma.shape[1], (i + 1) * segment_frames)
+            
+            if end_frame <= start_frame:
+                continue
+            
+            # Get the segment times
+            start_time = chroma_times[start_frame]
+            end_time = chroma_times[min(len(chroma_times) - 1, end_frame - 1)]
+            
+            # Get the average chroma for this segment
+            segment_chroma = np.mean(chroma[:, start_frame:end_frame], axis=1)
+            
+            # Normalize
+            if np.sum(segment_chroma) > 0:
+                segment_chroma = segment_chroma / np.sum(segment_chroma)
+            
+            # Compare with chord templates
+            chord_matches = []
+            for chord_name, template in chord_templates.items():
+                # Calculate correlation
+                correlation = np.corrcoef(segment_chroma, template)[0, 1]
+                chord_matches.append((correlation, chord_name))
+            
+            # Sort by correlation
+            chord_matches.sort(reverse=True)
+            
+            # Get the best match
+            if chord_matches and not np.isnan(chord_matches[0][0]):
+                best_corr, chord_name = chord_matches[0]
+                
+                # Only add if correlation is reasonable
+                if best_corr > 0.5:
+                    # Parse chord name to get root and quality
+                    if chord_name.endswith('maj'):
+                        root = chord_name[:-3]
+                        quality = 'maj'
+                    elif chord_name.endswith('min'):
+                        root = chord_name[:-3]
+                        quality = 'min'
+                    else:
+                        root = chord_name
+                        quality = ''
+                    
+                    # Generate notes for this chord
+                    root_idx = note_names.index(root)
+                    if quality == 'maj':
+                        note_indices = [root_idx, (root_idx + 4) % 12, (root_idx + 7) % 12]
+                    else:  # 'min'
+                        note_indices = [root_idx, (root_idx + 3) % 12, (root_idx + 7) % 12]
+                    
+                    notes = [note_names[idx] for idx in note_indices]
+                    
+                    # Determine roman numeral (simplified)
+                    roman = self._get_simple_roman_numeral(root, quality, key_info)
+                    
+                    chords.append({
+                        'name': chord_name,
+                        'time': float(start_time),
+                        'duration': float(end_time - start_time),
+                        'notes': notes,
+                        'roman': roman,
+                        'confidence': float((best_corr + 1) / 2)  # Convert correlation to confidence
+                    })
+        
+        return chords
