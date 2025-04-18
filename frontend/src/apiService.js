@@ -146,6 +146,38 @@ const apiService = {
       throw error;
     }
   },
+  
+  generateAdvancedTablature: async (filename) => {
+    try {
+      const response = await axios.post(`${API_BASE_URL}/api/generate-advanced-tab/${filename}`);
+      return response.data;
+    } catch (error) {
+      console.error('Error generating advanced tablature:', error);
+      throw error;
+    }
+  },
+  
+  getTabJobStatus: async (jobId) => {
+    try {
+      const response = await axios.get(`${API_BASE_URL}/api/tab-job/${jobId}`);
+      return response.data;
+    } catch (error) {
+      console.error('Error getting tab job status:', error);
+      throw error;
+    }
+  },
+  
+  getTabFile: async (jobId, filename) => {
+    try {
+      const response = await axios.get(`${API_BASE_URL}/api/tab-job/${jobId}/file/${filename}`, {
+        responseType: 'blob'
+      });
+      return response.data;
+    } catch (error) {
+      console.error('Error getting tab file:', error);
+      throw error;
+    }
+  },
 
   playAudio: (filename) => {
     return `${API_BASE_URL}/play/${filename}`;

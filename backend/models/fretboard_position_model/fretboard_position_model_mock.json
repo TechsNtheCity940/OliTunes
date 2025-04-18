@@ -1,0 +1,46 @@
+{
+  "model_type": "lstm",
+  "input_dim": 176,
+  "output_dim": 150,
+  "layers": [
+    {
+      "name": "input",
+      "units": 176,
+      "activation": "none"
+    },
+    {
+      "name": "lstm1",
+      "units": 256,
+      "return_sequences": true
+    },
+    {
+      "name": "dropout1",
+      "rate": 0.3
+    },
+    {
+      "name": "lstm2",
+      "units": 128,
+      "return_sequences": false
+    },
+    {
+      "name": "hidden2",
+      "units": 128,
+      "activation": "relu"
+    },
+    {
+      "name": "dropout2",
+      "rate": 0.2
+    },
+    {
+      "name": "output",
+      "units": 150,
+      "activation": "softmax"
+    }
+  ],
+  "optimizer": "adam",
+  "loss": "categorical_crossentropy",
+  "metrics": [
+    "accuracy"
+  ],
+  "mock_created_date": "2025-04-03 13:09:02"
+}

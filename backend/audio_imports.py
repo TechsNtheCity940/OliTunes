@@ -16,7 +16,7 @@ logger = logging.getLogger(__name__)
 # Load ffmpeg configuration before importing audio libraries
 try:
     # Import our custom ffmpeg configuration
-    from .pydub_config import setup_ffmpeg, force_ffmpeg_path
+    from pydub_config import setup_ffmpeg, force_ffmpeg_path
     # First try the normal setup
     if not setup_ffmpeg():
         # If that fails, force the path

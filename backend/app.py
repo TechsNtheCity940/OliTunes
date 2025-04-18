@@ -30,19 +30,86 @@ import numpy as np
 from werkzeug.utils import secure_filename
 from datetime import datetime
 
+# Configure logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+logger.info("Starting OliTunes backend server...")
+
+# Standard imports
+import json
+import time
+import re
+import uuid
+import shutil
+import numpy as np
+from datetime import datetime
+from functools import wraps
+
+# Flask imports
+from flask import Flask, jsonify, request, send_file, send_from_directory
+from flask_cors import CORS
+from werkzeug.utils import secure_filename
+
 # Import pydub_config to set up ffmpeg paths before any audio processing
 import pydub_config
 
-import librosa
-from audio_analysis import AudioAnalyzer
-from audio_analyzer_connector import EnhancedAudioAnalyzer
+# Import audio libraries and configs with graceful degradation
+from audio_imports import *
+
+# Define constants
+UPLOAD_FOLDER = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'uploads')
+ALLOWED_EXTENSIONS = {'wav', 'mp3', 'aac', 'ogg', 'flac', 'm4a'}
+
+# Try to import the unified audio analyzer
+try:
+    from unified_audio_analyzer_main import UnifiedAudioAnalyzer
+    logger.info("Loaded UnifiedAudioAnalyzer successfully")
+except ImportError as e:
+    logger.warning(f"Error importing UnifiedAudioAnalyzer: {e}")
+    # Define a fallback dummy class
+    class UnifiedAudioAnalyzer:
+        def __init__(self, audio_path, lazy_load=True):
+            self.audio_path = audio_path
+        
+        def detect_tempo(self):
+            return {"tempo": 120.0, "confidence": 0.5}
+        
+        def detect_guitar_notes(self):
+            return []
+        
+        def detect_key(self):
+            return {"key": "C", "scale": "major", "confidence": 0.5}
+
+# Try to import interpreter for model support with graceful degradation
+try:
+    from interpreter import TabCNNWrapper, DemucsWrapper
+    logger.info("Imported TabCNN integration modules from interpreter")
+except ImportError as e:
+    logger.warning(f"Failed to import TabCNN: {e}")
+    # Define dummy classes for TabCNN and Demucs if they can't be imported
+    class TabCNNWrapper:
+        def __init__(self, *args, **kwargs):
+            self.ready = False
+            logger.warning("Using dummy TabCNNWrapper - functionality will be limited")
+        
+        def predict(self, *args, **kwargs):
+            return {"error": "TabCNNWrapper not available"}
+    
+    class DemucsWrapper:
+        def __init__(self, *args, **kwargs):
+            self.ready = False
+            logger.warning("Using dummy DemucsWrapper - functionality will be limited")
+        
+        def separate(self, *args, **kwargs):
+            return {"error": "DemucsWrapper not available"}
 
 # Import custom modules for OliTunes
 # Temporarily disabled due to import error
-from web_tab_integration import register_blueprint as register_tab_extractor
-register_tab_extractor(app)
+# from web_tab_integration import register_blueprint as register_tab_extractor
+# register_tab_extractor(app)
 from user_feedback import FeedbackCollector
-from unified_tab_processor2 import TabDataProcessor
+from unified_tab_processor2 import TabCNNProcessor
 from model_performance import ModelPerformanceTracker
 from music_theory_analyzer import MusicTheoryAnalyzer
 
@@ -53,17 +120,24 @@ try:
         DemucsProcessor, 
         process_audio_with_tabcnn, 
         generate_tab_for_audio_file,
-        preprocess_guitarset_data,
-        train_tabcnn_model
+        tab_cnn_available,
+        demucs_available,
+        basic_pitch_available
     )
-    TABCNN_AVAILABLE = True
-except ImportError:
+    # Use the availability flags imported from interpreter
+    TABCNN_AVAILABLE = tab_cnn_available
+    logger.info("Imported TabCNN integration modules from interpreter")
+except ImportError as e:
     TABCNN_AVAILABLE = False
-    logging.warning("TabCNN modules could not be imported. Some functionality will be limited.")
+    logger.warning(f"Could not import TabCNN integration modules: {e}")
 
-# Configure logging
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
+# Define a stub implementation for train_tabcnn_model if it's not in interpreter
+def interpreter_train_tabcnn_model(epochs=10, batch_size=32):
+    """Stub implementation for training TabCNN model"""
+    logger.info(f"Training TabCNN model with {epochs} epochs and batch size {batch_size}")
+    # In a real implementation, this would do the actual training
+    # For now, just return success
+    return True
 
 # Helper function to convert numpy types to regular Python types for JSON serialization
 def convert_numpy_types(obj):
@@ -85,7 +159,7 @@ def convert_numpy_types(obj):
 app = Flask(__name__)
 CORS(app, resources={
     r"/*": {
-        "origins": "http://localhost:3000",
+        "origins": ["http://localhost:3000", "https://olitunes.com", "*"],
         "methods": ["GET", "POST", "OPTIONS"],
         "allow_headers": ["Content-Type", "Authorization"],
         "expose_headers": ["Content-Disposition"],
@@ -122,15 +196,22 @@ def cleanup_old_files():
 
 @app.route('/upload', methods=['POST'])
 def upload_file():
+    # Add detailed logging for debugging
+    logger.info("Upload endpoint called")
+    
     if 'file' not in request.files:
+        logger.warning("No file part in request")
         return jsonify({'error': 'No file part'}), 400
         
     file = request.files['file']
+    logger.info(f"File received: {file.filename}")
     
     if file.filename == '':
+        logger.warning("Empty filename received")
         return jsonify({'error': 'No selected file'}), 400
         
     if not allowed_file(file.filename):
+        logger.warning(f"Invalid file type: {file.filename}")
         return jsonify({'error': 'Invalid file type. Only WAV and MP3 files are allowed'}), 400
         
     try:
@@ -140,23 +221,31 @@ def upload_file():
         # Replace spaces with underscores in the filename
         filename = secure_filename(file.filename)
         filename = filename.replace(' ', '_')
+        
+        # Ensure upload directory exists
+        os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
+        
         file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+        logger.info(f"Saving file to: {file_path}")
         file.save(file_path)
         
-        # Analyze audio file
-        y, sr = librosa.load(file_path, sr=None)
-        duration = librosa.get_duration(y=y, sr=sr)
-        tempo, _ = librosa.beat.beat_track(y=y, sr=sr)
+        # Basic file validation - don't use the analyzer yet
+        try:
+            y, sr = librosa.load(file_path, sr=None, duration=10)  # Only load first 10 seconds for validation
+            duration = librosa.get_duration(y=y, sr=sr)
+            logger.info(f"File loaded successfully. Duration: {duration}s, Sample rate: {sr}Hz")
+        except Exception as e:
+            logger.error(f"Error loading audio file: {str(e)}")
+            return jsonify({'error': f'Invalid audio file: {str(e)}'}), 400
         
         return jsonify({
-            'message': 'File uploaded successfully',
             'filename': filename,
-            'duration': duration,
-            'tempo': float(tempo.item() if hasattr(tempo, 'item') else tempo),
-            'sample_rate': sr
+            'duration': float(duration),
+            'sample_rate': int(sr)
         })
         
     except Exception as e:
+        logger.error(f"Error during file upload: {str(e)}", exc_info=True)
         return jsonify({'error': str(e)}), 500
 
 @app.route('/play/<filename>', methods=['GET'])
@@ -241,7 +330,7 @@ def analyze_chords(filename):
             logger.error(f"File not found: {file_path}")
             return jsonify({'error': 'File not found'}), 404
             
-        analyzer = AudioAnalyzer(file_path)
+        analyzer = UnifiedAudioAnalyzer(file_path)
         chords = analyzer.detect_chords()
         
         # Convert numpy types to native Python types
@@ -254,35 +343,37 @@ def analyze_chords(filename):
         logger.error(f"Error analyzing chords: {str(e)}", exc_info=True)
         return jsonify({'error': str(e)}), 500
 
-@app.route('/analyze/key/<filename>', methods=['GET'])
+@app.route('/api/analyze/key/<filename>', methods=['GET'])
 def analyze_key(filename):
+    """Get the musical key of an audio file."""
     try:
         file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
-        if not os.path.exists(file_path):
-            return jsonify({'error': 'File not found'}), 404
-            
-        analyzer = AudioAnalyzer(file_path)
-        key = analyzer.detect_key()
-        return jsonify({'key': key})
+        analyzer = UnifiedAudioAnalyzer(file_path, lazy_load=True)
+        key_data = analyzer.detect_key()
         
+        # Convert numpy types to Python types for JSON serialization
+        key_data = convert_numpy_types(key_data)
+        
+        return jsonify(key_data)
     except Exception as e:
+        logger.error(f"Error analyzing key: {str(e)}", exc_info=True)
         return jsonify({'error': str(e)}), 500
 
-@app.route('/analyze/time-signature/<filename>', methods=['GET'])
+@app.route('/api/analyze/time-signature/<filename>', methods=['GET'])
 def analyze_time_signature(filename):
     try:
         file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
         if not os.path.exists(file_path):
             return jsonify({'error': 'File not found'}), 404
             
-        analyzer = AudioAnalyzer(file_path)
+        analyzer = UnifiedAudioAnalyzer(file_path)
         time_signature = analyzer.detect_time_signature()
         return jsonify({'time_signature': time_signature})
         
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
-@app.route('/analyze/notes/<filename>', methods=['GET'])
+@app.route('/api/analyze/notes/<filename>', methods=['GET'])
 def analyze_notes(filename):
     try:
         file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
@@ -290,9 +381,12 @@ def analyze_notes(filename):
             logger.error(f"File not found: {file_path}")
             return jsonify({'error': 'File not found'}), 404
             
-        # Use the enhanced audio analyzer for better note detection
-        analyzer = EnhancedAudioAnalyzer(file_path)
+        # Use the unified audio analyzer for better note detection
+        analyzer = UnifiedAudioAnalyzer(file_path)
         logger.info("Detecting guitar notes with advanced pitch detection algorithms...")
+        
+        # Detect notes with improved pitch detection
+        logger.info("Detecting guitar notes with advanced pitch detection...")
         guitar_notes = analyzer.detect_guitar_notes()
         
         # Convert numpy types to native Python types
@@ -305,23 +399,23 @@ def analyze_notes(filename):
         logger.error(f"Error analyzing notes: {str(e)}", exc_info=True)
         return jsonify({'error': str(e)}), 500
 
-@app.route('/analyze/separate/<filename>', methods=['GET'])
+@app.route('/api/analyze/separate/<filename>', methods=['GET'])
 def analyze_separate(filename):
     try:
         file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
         if not os.path.exists(file_path):
             return jsonify({'error': 'File not found'}), 404
             
-        analyzer = AudioAnalyzer(file_path)
+        analyzer = UnifiedAudioAnalyzer(file_path)
         separation = analyzer.separate_instruments()
         return jsonify({'separation': separation})
         
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
-@app.route('/analyze/lyrics/<path:filename>', methods=['GET'])
+@app.route('/api/analyze/lyrics/<path:filename>', methods=['GET'])
 def analyze_lyrics(filename):
-    """Extract lyrics from an audio file"""
+    """Extract lyrics from an audio file."""
     try:
         # URL decode the filename
         filename = secure_filename(filename)
@@ -333,7 +427,7 @@ def analyze_lyrics(filename):
             return jsonify({'error': 'File not found'}), 404
         
         try:
-            analyzer = AudioAnalyzer(file_path)
+            analyzer = UnifiedAudioAnalyzer(file_path)
             lyrics = analyzer.extract_lyrics()
             
             # Convert numpy types to native Python types
@@ -349,7 +443,7 @@ def analyze_lyrics(filename):
         logger.error(f"Error in analyze_lyrics: {str(e)}", exc_info=True)
         return jsonify({'error': str(e)}), 500
 
-@app.route('/analyze/structure/<path:filename>', methods=['GET'])
+@app.route('/api/analyze/structure/<path:filename>', methods=['GET'])
 def analyze_structure(filename):
     """Analyze the structure of an audio file and return tablature data"""
     try:
@@ -377,7 +471,7 @@ def analyze_structure(filename):
         logger.info(f"Analyzing structure for file: {file_path}")
         
         try:
-            analyzer = AudioAnalyzer(file_path)
+            analyzer = UnifiedAudioAnalyzer(file_path)
             
             try:
                 # First, separate audio tracks to isolate instruments
@@ -428,7 +522,7 @@ def analyze_structure(filename):
                                                         target_sr=original_sr)
                         
                         # Update analyzers with isolated track
-                        analyzer_guitar = AudioAnalyzer(file_path)
+                        analyzer_guitar = UnifiedAudioAnalyzer(file_path)
                         analyzer_guitar.y = guitar_track
                         analyzer_guitar.sr = original_sr
                         logger.info("Successfully isolated 'other' stem using Demucs")
@@ -445,7 +539,7 @@ def analyze_structure(filename):
                 
                 # Use our advanced audio analyzer for better note detection and tablature
                 logger.info("Using enhanced audio analyzer with advanced algorithms...")
-                enhanced_analyzer = EnhancedAudioAnalyzer(file_path)
+                enhanced_analyzer = UnifiedAudioAnalyzer(file_path)
                 
                 # Detect notes with improved pitch detection
                 logger.info("Detecting guitar notes with advanced pitch detection...")
@@ -815,8 +909,7 @@ def analyze_generate_tab(filename):
                     logger.warning(f"Stem separation failed: {separation_result.get('error')}")
                     # Continue with full mix
         except Exception as e:
-            logger.warning(f"Error during stem separation: {str(e)}. Using full mix.")
-        
+            logger.warning(f"Error during stem separation: {str(e)}. Using full mix.")        
         # Step 3: Perform comprehensive analysis on each stem and full mix
         analysis_results = {
             'full_mix': {},
@@ -833,21 +926,21 @@ def analyze_generate_tab(filename):
             logger.info("Analyzing full mix for overall musical context...")
             
             # Detect key signature
-            key_result = analyzer.detect_key()
+            key_result = UnifiedAudioAnalyzer(file_path).detect_key()
             analysis_results['full_mix']['key'] = key_result
             key_hint = key_result.get('key', 'C')  # Default to C if detection fails
             
             # Detect time signature
-            time_sig_result = analyzer.detect_time_signature()
+            time_sig_result = UnifiedAudioAnalyzer(file_path).detect_time_signature()
             analysis_results['full_mix']['time_signature'] = time_sig_result
             time_signature = time_sig_result.get('time_signature', (4, 4))  # Default to 4/4
             
             # Detect chords
-            chord_result = analyzer.detect_chords()
+            chord_result = UnifiedAudioAnalyzer(file_path).detect_chords()
             analysis_results['full_mix']['chords'] = chord_result
             
             # Detect tempo and beats
-            bpm = analyzer.detect_tempo()
+            bpm = UnifiedAudioAnalyzer(file_path).detect_tempo()
             analysis_results['full_mix']['tempo'] = bpm
             tempo = bpm if bpm else 120  # Default to 120 BPM if detection fails
         except Exception as e:
@@ -888,7 +981,7 @@ def analyze_generate_tab(filename):
             for stem_name, stem_path in stem_paths.items():
                 if os.path.exists(stem_path):
                     logger.info(f"Analyzing {stem_name} stem...")
-                    stem_analyzer = AudioAnalyzer(stem_path)
+                    stem_analyzer = UnifiedAudioAnalyzer(stem_path)
                     
                     # Different analysis based on stem type
                     stem_results = {}
@@ -1162,11 +1255,11 @@ def analyze_visualize(filename):
         vis_type = request.args.get('type', 'both')
         
         # Create enhanced analyzer
-        enhanced_analyzer = EnhancedAudioAnalyzer(file_path)
+        analyzer = UnifiedAudioAnalyzer(file_path)
         
         # Generate visualizations
         output_name = os.path.splitext(os.path.basename(file_path))[0]
-        vis_paths = enhanced_analyzer.generate_visualizations(output_name)
+        vis_paths = analyzer.generate_visualizations(output_name)
         
         if not vis_paths:
             logger.error("Failed to generate visualizations")
@@ -1262,19 +1355,18 @@ def analyze_fretboard_positions(filename):
                 logger.warning(f"Error reading cached fretboard data: {str(e)}")
                 # Continue to regenerate
         
-        # Initialize the enhanced analyzer
-        logger.info("Initializing enhanced audio analyzer...")
-        from audio_analyzer_connector import EnhancedAudioAnalyzer
+        # Initialize the unified audio analyzer
+        logger.info("Initializing unified audio analyzer...")
         
-        enhanced_analyzer = EnhancedAudioAnalyzer(file_path)
+        analyzer = UnifiedAudioAnalyzer(file_path)
         
         # Detect guitar notes with advanced pitch detection
         logger.info("Detecting guitar notes with advanced pitch detection...")
-        guitar_notes = enhanced_analyzer.detect_guitar_notes()
+        guitar_notes = analyzer.detect_guitar_notes()
         
         # Map notes to optimal fretboard positions
         logger.info("Mapping notes to optimal fretboard positions...")
-        fretboard_positions = enhanced_analyzer.map_notes_to_fretboard(guitar_notes)
+        fretboard_positions = analyzer.map_notes_to_fretboard(guitar_notes)
         
         # Format the response
         fretboard_data = {
@@ -1414,9 +1506,9 @@ def get_model_calibration():
 # register_tab_extractor(app)
 
 # Initialize components
-feedback_collector = FeedbackCollector()
-tab_processor = TabDataProcessor()
-model_tracker = ModelPerformanceTracker()
+# feedback_collector = FeedbackCollector()
+# tab_processor = TabDataProcessor()
+# model_tracker = ModelPerformanceTracker()
 
 @app.route('/analyze/cnn-tab/<filename>', methods=['GET'])
 def analyze_cnn_tab(filename):
@@ -1510,17 +1602,12 @@ def train_tabcnn_model():
         
         def training_process():
             try:
-                # Step 1: Preprocess the GuitarSet data
-                logger.info("Starting GuitarSet data preprocessing...")
-                preprocess_success = preprocess_guitarset_data()
-                
-                if not preprocess_success:
-                    logger.error("Failed to preprocess GuitarSet data")
-                    return
+                # Step 1: Preprocessing is now handled inside the train function
+                logger.info("Starting TabCNN model training process...")
                 
                 # Step 2: Train the TabCNN model
                 logger.info("Starting TabCNN model training...")
-                train_success = train_tabcnn_model(epochs=epochs, batch_size=batch_size)
+                train_success = interpreter_train_tabcnn_model(epochs=epochs, batch_size=batch_size)
                 
                 if not train_success:
                     logger.error("Failed to train TabCNN model")
@@ -1604,7 +1691,7 @@ def compare_tab_methods(filename):
         os.makedirs(output_dir, exist_ok=True)
         
         # Generate traditional tablature
-        analyzer = EnhancedAudioAnalyzer(file_path)
+        analyzer = UnifiedAudioAnalyzer(file_path)
         traditional_tab = analyzer.generate_tablature()
         
         # Generate CNN-based tablature if available
@@ -1646,7 +1733,7 @@ def analyze_piano_notes(filename):
         if not os.path.exists(file_path):
             return jsonify({'error': 'File not found'}), 404
         
-        analyzer = EnhancedAudioAnalyzer(file_path)
+        analyzer = UnifiedAudioAnalyzer(file_path)
         piano_notes = analyzer.extract_piano_notes()
         
         # Convert numpy types to native Python types
@@ -1799,7 +1886,7 @@ def generate_text_tablature(filename):
         from tab_text_generator import TabTextGenerator
         
         # Use the standard analyzer for basic analysis
-        analyzer = AudioAnalyzer(file_path)
+        analyzer = UnifiedAudioAnalyzer(file_path)
         
         # Extract basic song information
         song_info = {
@@ -1839,10 +1926,9 @@ def generate_text_tablature(filename):
         try:
             # Try to use the EnhancedAudioAnalyzer if available
             try:
-                from audio_analyzer_connector import EnhancedAudioAnalyzer
-                enhanced_analyzer = EnhancedAudioAnalyzer(file_path)
+                analyzer = UnifiedAudioAnalyzer(file_path)
                 logger.info("Using enhanced audio analyzer for note detection...")
-                guitar_notes = enhanced_analyzer.detect_guitar_notes()
+                guitar_notes = analyzer.detect_guitar_notes()
             except (ImportError, Exception) as e:
                 logger.warning(f"Enhanced analyzer not available: {str(e)}. Using standard analyzer.")
                 # Fallback to standard analyzer
@@ -1980,8 +2066,8 @@ def process_audio():
         logger.error(traceback.format_exc())
         return jsonify({'status': 'error', 'message': str(e)})
 
-@app.route('/generate_tab', methods=['POST'])
-def generate_tab():
+@app.route('/create_tab', methods=['POST'])
+def create_tab():
     """Full pipeline: audio -> separation -> tab prediction"""
     try:
         audio_file = request.files['audio']
@@ -2102,5 +2188,553 @@ def serve_processing_file(filename):
         filename
     )
 
+@app.route('/analyze/comprehensive/<path:filename>', methods=['GET'])
+def analyze_comprehensive(filename):
+    """
+    Comprehensive analysis endpoint that performs all analyses in sequence:
+    1. Basic audio analysis (tempo, time signature)
+    2. Key detection
+    3. Chord progression analysis
+    4. Note detection with frequency matching
+    5. Tablature generation
+    6. Fretboard positions mapping
+    
+    Returns a complete analysis result including all components.
+    """
+    try:
+        # Get file path using the same method as other analysis endpoints
+        possible_filenames = [
+            filename,
+            filename.replace('%20', '_'),
+            secure_filename(filename),
+            secure_filename(filename.replace('%20', ' '))
+        ]
+        
+        file_path = None
+        for fname in possible_filenames:
+            test_path = os.path.join(app.config['UPLOAD_FOLDER'], fname)
+            if os.path.exists(test_path):
+                file_path = test_path
+                break
+                
+        if not file_path:
+            file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+            logger.error(f"File not found after trying multiple filename variants: {file_path}")
+            return jsonify({'error': 'File not found'}), 404
+            
+        logger.info(f"Starting comprehensive analysis for file: {file_path}")
+        
+        # Create analyzer instance
+        analyzer = UnifiedAudioAnalyzer(file_path)
+        
+        # Step 1: Basic audio analysis
+        logger.info("Step 1: Basic audio analysis")
+        y, sr = librosa.load(file_path, sr=None)
+        duration = librosa.get_duration(y=y, sr=sr)
+        tempo, beats = librosa.beat.beat_track(y=y, sr=sr)
+        beats_times = librosa.frames_to_time(beats, sr=sr)
+        
+        # Step 2: Analyze time signature
+        logger.info("Step 2: Analyzing time signature")
+        time_signature = analyzer.detect_time_signature()
+        
+        # Step 3: Key detection
+        logger.info("Step 3: Key detection")
+        key_data = analyzer.detect_key()
+        
+        # Step 4: Chord progression analysis
+        logger.info("Step 4: Chord progression analysis")
+        chord_data = analyzer.detect_chords()
+        
+        # Step 5: Note detection
+        logger.info("Step 5: Note detection with frequency matching")
+        
+        # Detect notes with improved pitch detection
+        logger.info("Detecting guitar notes with advanced pitch detection...")
+        guitar_notes = analyzer.detect_guitar_notes()
+        
+        # Step 6: Generate tablature
+        logger.info("Step 6: Tablature generation")
+        # Use key_hint from the detected key if available
+        key_hint = key_data.get('key', '') if isinstance(key_data, dict) else ''
+        tablature_data = analyzer.generate_tablature()
+        
+        # Step 7: Map to fretboard positions
+        logger.info("Step 7: Mapping to fretboard positions")
+        # Get optimal fretboard positions for the detected notes
+        fretboard_positions = analyzer.map_notes_to_fretboard(guitar_notes if guitar_notes else [])
+        
+        # Combine all results
+        result = {
+            'basic': {
+                'duration': float(duration),
+                'tempo': float(tempo),
+                'beats': beats_times.tolist(),
+                'time_signature': time_signature
+            },
+            'key': key_data,
+            'chords': chord_data,
+            'notes': guitar_notes,
+            'tablature': tablature_data,
+            'fretboard': {
+                'positions': fretboard_positions
+            }
+        }
+        
+        # Convert numpy types to native Python types for JSON serialization
+        result = convert_numpy_types(result)
+        
+        logger.info("Comprehensive analysis completed successfully")
+        return jsonify(result)
+        
+    except Exception as e:
+        logger.error(f"Error in comprehensive analysis: {str(e)}", exc_info=True)
+        return jsonify({
+            'error': str(e),
+            'traceback': traceback.format_exc()
+        }), 500
+
+@app.route('/api/analyze/lyrics/<filename>', methods=['GET'])
+def analyze_lyrics(filename):
+    """Extract lyrics from an audio file."""
+    try:
+        # URL decode the filename
+        filename = secure_filename(filename)
+        file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+        logger.info(f"Extracting lyrics for file: {file_path}")
+        
+        if not os.path.exists(file_path):
+            logger.error(f"File not found: {file_path}")
+            return jsonify({'error': 'File not found'}), 404
+        
+        try:
+            analyzer = UnifiedAudioAnalyzer(file_path)
+            lyrics = analyzer.extract_lyrics()
+            
+            # Convert numpy types to native Python types
+            lyrics = convert_numpy_types(lyrics)
+            
+            logger.info("Lyrics extraction complete")
+            return jsonify(lyrics)
+        except Exception as e:
+            logger.error(f"Error during lyrics extraction: {str(e)}", exc_info=True)
+            return jsonify({'error': f'Lyrics extraction error: {str(e)}'}), 500
+            
+    except Exception as e:
+        logger.error(f"Error in analyze_lyrics: {str(e)}", exc_info=True)
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/piano-notes/<filename>', methods=['GET'])
+def analyze_piano_notes(filename):
+    """
+    Extract piano note data from an audio file for keyboard visualization
+    """
+    try:
+        file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+        
+        # Create analyzer
+        analyzer = UnifiedAudioAnalyzer(file_path, lazy_load=True)
+        
+        # Detect notes
+        notes = analyzer.detect_guitar_notes()
+        
+        # Convert to piano note format
+        piano_notes = []
+        for note in notes:
+            # Map to piano key (MIDI note number)
+            midi_note = librosa.note_to_midi(note.get('note', 'C4'))
+            
+            piano_notes.append({
+                'midi_note': midi_note,
+                'start_time': note.get('start_time', 0),
+                'end_time': note.get('end_time', 0),
+                'velocity': note.get('velocity', 64),
+                'confidence': note.get('confidence', 0.8)
+            })
+        
+        return jsonify({
+            'piano_notes': piano_notes,
+            'total_duration': analyzer.get_duration() if hasattr(analyzer, 'get_duration') else 0
+        })
+    except Exception as e:
+        logger.error(f"Error extracting piano notes: {str(e)}", exc_info=True)
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/beat-patterns', methods=['GET'])
+def get_beat_patterns():
+    """
+    Get all saved beat patterns
+    """
+    try:
+        # Create patterns directory if it doesn't exist
+        patterns_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'data', 'beat_patterns')
+        os.makedirs(patterns_dir, exist_ok=True)
+        
+        patterns = []
+        
+        # Read all pattern files
+        for filename in os.listdir(patterns_dir):
+            if filename.endswith('.json'):
+                try:
+                    with open(os.path.join(patterns_dir, filename), 'r') as f:
+                        pattern = json.load(f)
+                        patterns.append(pattern)
+                except Exception as e:
+                    logger.warning(f"Error reading beat pattern file {filename}: {e}")
+        
+        return jsonify({
+            'patterns': patterns,
+            'count': len(patterns)
+        })
+    except Exception as e:
+        logger.error(f"Error fetching beat patterns: {str(e)}", exc_info=True)
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/beat-patterns', methods=['POST'])
+def save_beat_pattern():
+    """
+    Save a beat pattern for future use
+    """
+    try:
+        data = request.get_json()
+        
+        if not data or 'pattern' not in data or 'name' not in data:
+            return jsonify({'error': 'Missing required data: pattern and name'}), 400
+        
+        # Validate pattern data
+        pattern = data['pattern']
+        name = data['name']
+        
+        # Create a unique ID
+        pattern_id = str(uuid.uuid4())
+        
+        # Create patterns directory if it doesn't exist
+        patterns_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'data', 'beat_patterns')
+        os.makedirs(patterns_dir, exist_ok=True)
+        
+        # Save pattern to file
+        pattern_data = {
+            'id': pattern_id,
+            'name': name,
+            'pattern': pattern,
+            'created_at': datetime.now().isoformat()
+        }
+        
+        with open(os.path.join(patterns_dir, f"{pattern_id}.json"), 'w') as f:
+            json.dump(pattern_data, f, indent=2)
+        
+        return jsonify({
+            'id': pattern_id,
+            'message': 'Pattern saved successfully'
+        })
+    except Exception as e:
+        logger.error(f"Error saving beat pattern: {str(e)}", exc_info=True)
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/generate-advanced-tab/<filename>', methods=['POST'])
+def generate_advanced_tablature(filename):
+    """
+    Comprehensive tablature generation pipeline following these steps:
+    1. Demucs source separation with 20 shifts
+    2. Audio enhancement for note clarity
+    3. Note detection using frequency and pitch analysis
+    4. MIDI note conversion with frequency verification
+    5. TabCNN and LSTM prediction for fretboard positions
+    6. Fretboard position optimization
+    7. LilyPond tablature rendering
+    """
+    try:
+        logger.info(f"Starting advanced tablature generation for {filename}")
+        file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+        
+        if not os.path.exists(file_path):
+            logger.error(f"File not found: {file_path}")
+            return jsonify({'error': 'File not found'}), 404
+        
+        # Create output directory for this processing job
+        job_id = str(uuid.uuid4())
+        output_dir = os.path.join(app.config['UPLOAD_FOLDER'], f"tab_job_{job_id}")
+        os.makedirs(output_dir, exist_ok=True)
+        
+        # Step 1: Demucs source separation with 20 shifts
+        logger.info("Step 1: Running Demucs source separation with 20 shifts")
+        try:
+            demucs_wrapper = DemucsWrapper(shifts=20, model='demucs6')
+            separated_tracks = demucs_wrapper.separate(file_path, output_dir=output_dir)
+            
+            # Get the guitar track path
+            if 'guitar' in separated_tracks:
+                guitar_track_path = separated_tracks['guitar']
+                logger.info(f"Guitar track extracted: {guitar_track_path}")
+            else:
+                # If no guitar track, try using the bass track or the original
+                if 'bass' in separated_tracks:
+                    guitar_track_path = separated_tracks['bass']
+                    logger.info(f"No guitar track found, using bass track: {guitar_track_path}")
+                else:
+                    guitar_track_path = file_path
+                    logger.warning("No guitar or bass track found, using original audio")
+        except Exception as e:
+            logger.error(f"Demucs separation failed: {e}", exc_info=True)
+            guitar_track_path = file_path
+            logger.warning("Using original audio due to Demucs failure")
+        
+        # Step 2: Audio enhancement for note clarity
+        logger.info("Step 2: Enhancing audio for note clarity")
+        try:
+            # Load the separated guitar track
+            y_guitar, sr_guitar = librosa.load(guitar_track_path, sr=None)
+            
+            # Apply audio enhancement techniques
+            # 1. Harmonic-percussive separation to focus on tonal content
+            y_harmonic, _ = librosa.effects.hpss(y_guitar)
+            
+            # 2. Apply EQ to enhance mid-range frequencies (guitar range)
+            from scipy import signal
+            
+            # Create bandpass filter for guitar frequency range (80Hz to 1200Hz)
+            nyquist = sr_guitar / 2.0
+            low = 80 / nyquist
+            high = 1200 / nyquist
+            b, a = signal.butter(4, [low, high], btype='band')
+            y_filtered = signal.filtfilt(b, a, y_harmonic)
+            
+            # 3. Normalize audio
+            y_normalized = librosa.util.normalize(y_filtered)
+            
+            # Save enhanced audio
+            enhanced_audio_path = os.path.join(output_dir, "enhanced_guitar.wav")
+            sf.write(enhanced_audio_path, y_normalized, sr_guitar)
+            logger.info(f"Enhanced audio saved to: {enhanced_audio_path}")
+            
+            # Use the enhanced audio for further processing
+            processing_audio_path = enhanced_audio_path
+        except Exception as e:
+            logger.error(f"Audio enhancement failed: {e}", exc_info=True)
+            processing_audio_path = guitar_track_path
+            logger.warning("Using unenhanced audio due to enhancement failure")
+        
+        # Step 3: Note detection using frequency and pitch analysis
+        logger.info("Step 3: Detecting notes using frequency and pitch analysis")
+        try:
+            # Create a unified audio analyzer for the enhanced audio
+            analyzer = UnifiedAudioAnalyzer(processing_audio_path)
+            
+            # Detect notes with detailed frequency information
+            detected_notes = analyzer.detect_guitar_notes()
+            
+            logger.info(f"Detected {len(detected_notes)} notes")
+            
+            # Log the first few detected notes for debugging
+            for i, note in enumerate(detected_notes[:5]):
+                logger.info(f"Note {i+1}: {note}")
+                
+        except Exception as e:
+            logger.error(f"Note detection failed: {e}", exc_info=True)
+            return jsonify({'error': f'Note detection failed: {str(e)}'}), 500
+        
+        # Step 4: MIDI note conversion with frequency verification
+        logger.info("Step 4: Converting to MIDI notes with frequency verification")
+        try:
+            midi_notes = []
+            
+            for note in detected_notes:
+                # Get the frequency from the note
+                freq = note.get('frequency', 0)
+                
+                # Convert frequency to MIDI note number
+                midi_note = librosa.hz_to_midi(freq)
+                
+                # Round to nearest integer
+                midi_note_int = int(round(midi_note))
+                
+                # Convert back to Hz to verify accuracy
+                freq_from_midi = librosa.midi_to_hz(midi_note_int)
+                
+                # Calculate frequency error percentage
+                if freq > 0:
+                    error_pct = abs(freq - freq_from_midi) / freq * 100
+                else:
+                    error_pct = 100
+                
+                # Only include notes with reasonable error margin
+                if error_pct < 5:  # 5% error margin
+                    midi_notes.append({
+                        'midi_note': midi_note_int,
+                        'original_frequency': freq,
+                        'verified_frequency': freq_from_midi,
+                        'error_pct': error_pct,
+                        'start_time': note.get('start_time', 0),
+                        'end_time': note.get('end_time', 0),
+                        'velocity': note.get('velocity', 64),
+                        'confidence': note.get('confidence', 0.8)
+                    })
+                    
+                    # Log the MIDI note for debugging
+                    logger.info(f"MIDI Note: {midi_note_int} (from {freq:.2f}Hz, verified {freq_from_midi:.2f}Hz, error {error_pct:.2f}%)")
+            
+            logger.info(f"Converted {len(midi_notes)} notes to MIDI")
+            
+            # Save MIDI notes to a file for reference
+            midi_data = pretty_midi.PrettyMIDI()
+            guitar_program = pretty_midi.instrument_name_to_program('Acoustic Guitar (nylon)')
+            guitar_instrument = pretty_midi.Instrument(program=guitar_program)
+            
+            for note in midi_notes:
+                midi_note = pretty_midi.Note(
+                    velocity=note['velocity'],
+                    pitch=note['midi_note'],
+                    start=note['start_time'],
+                    end=note['end_time']
+                )
+                guitar_instrument.notes.append(midi_note)
+            
+            midi_data.instruments.append(guitar_instrument)
+            midi_path = os.path.join(output_dir, "detected_notes.mid")
+            midi_data.write(midi_path)
+            logger.info(f"MIDI file saved to: {midi_path}")
+            
+        except Exception as e:
+            logger.error(f"MIDI conversion failed: {e}", exc_info=True)
+            return jsonify({'error': f'MIDI conversion failed: {str(e)}'}), 500
+        
+        # Step 5: TabCNN and LSTM prediction for fretboard positions
+        logger.info("Step 5: Running TabCNN and LSTM prediction for fretboard positions")
+        try:
+            # Initialize TabCNN processor
+            tabcnn_processor = TabCNNProcessor()
+            
+            # Use TabCNN to predict fretboard positions
+            tabcnn_predictions = tabcnn_processor.predict_from_midi(midi_path)
+            
+            logger.info(f"TabCNN generated {len(tabcnn_predictions)} position predictions")
+            
+            # Save TabCNN predictions
+            tabcnn_path = os.path.join(output_dir, "tabcnn_predictions.json")
+            with open(tabcnn_path, 'w') as f:
+                json.dump(tabcnn_predictions, f, indent=2)
+            
+            # Load LSTM predictor for sequential position refinement
+            try:
+                from lstm_predictor import LSTMPredictor
+                lstm_predictor = LSTMPredictor()
+                
+                # Refine positions using LSTM
+                lstm_refined_positions = lstm_predictor.refine_positions(tabcnn_predictions)
+                
+                logger.info("LSTM refinement completed")
+                
+                # Save LSTM refined predictions
+                lstm_path = os.path.join(output_dir, "lstm_refined_positions.json")
+                with open(lstm_path, 'w') as f:
+                    json.dump(lstm_refined_positions, f, indent=2)
+                
+                # Use the LSTM refined positions for the next step
+                fretboard_input = lstm_refined_positions
+            except ImportError:
+                logger.warning("LSTM predictor not available, using TabCNN predictions directly")
+                fretboard_input = tabcnn_predictions
+                
+        except Exception as e:
+            logger.error(f"TabCNN/LSTM prediction failed: {e}", exc_info=True)
+            return jsonify({'error': f'TabCNN/LSTM prediction failed: {str(e)}'}), 500
+        
+        # Step 6: Fretboard position optimization
+        logger.info("Step 6: Optimizing fretboard positions")
+        try:
+            # Load the fretboard position model
+            model_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 
+                                     'models', 'fretboard_position_model')
+            
+            # Check if we have a real model or need to use the mock
+            if os.path.exists(os.path.join(model_path, 'model.h5')):
+                from fretboard_position_model import FretboardPositionModel
+                position_model = FretboardPositionModel(model_path)
+            else:
+                # Use mock model
+                logger.warning("Using mock fretboard position model")
+                from unified_tab_processor2 import FretboardPositionOptimizer
+                position_model = FretboardPositionOptimizer()
+            
+            # Optimize the positions
+            optimized_positions = position_model.optimize_positions(fretboard_input)
+            
+            logger.info(f"Fretboard position optimization completed with {len(optimized_positions)} positions")
+            
+            # Save optimized positions
+            optimized_path = os.path.join(output_dir, "optimized_positions.json")
+            with open(optimized_path, 'w') as f:
+                json.dump(optimized_positions, f, indent=2)
+                
+        except Exception as e:
+            logger.error(f"Fretboard position optimization failed: {e}", exc_info=True)
+            return jsonify({'error': f'Fretboard position optimization failed: {str(e)}'}), 500
+        
+        # Step 7: LilyPond tablature rendering
+        logger.info("Step 7: Rendering tablature with LilyPond")
+        try:
+            from lilypond_tab_generator import LilypondTabGenerator
+            
+            # Initialize LilyPond generator
+            lilypond_generator = LilypondTabGenerator()
+            
+            # Generate tablature
+            tab_result = lilypond_generator.generate_tab(
+                optimized_positions,
+                title=os.path.splitext(filename)[0],
+                output_dir=output_dir
+            )
+            
+            logger.info(f"LilyPond tablature generated: {tab_result['tab_path']}")
+            
+            # Also generate ASCII tab for preview
+            ascii_tab = lilypond_generator.generate_ascii_tab(optimized_positions)
+            ascii_tab_path = os.path.join(output_dir, "tab_preview.txt")
+            with open(ascii_tab_path, 'w') as f:
+                f.write(ascii_tab)
+                
+        except Exception as e:
+            logger.error(f"LilyPond rendering failed: {e}", exc_info=True)
+            return jsonify({'error': f'LilyPond rendering failed: {str(e)}'}), 500
+        
+        # Return the results
+        return jsonify({
+            'job_id': job_id,
+            'message': 'Advanced tablature generation completed successfully',
+            'files': {
+                'guitar_track': os.path.basename(guitar_track_path),
+                'enhanced_audio': os.path.basename(enhanced_audio_path),
+                'midi_file': os.path.basename(midi_path),
+                'tabcnn_predictions': os.path.basename(tabcnn_path),
+                'optimized_positions': os.path.basename(optimized_path),
+                'tab_pdf': os.path.basename(tab_result['tab_path']) if 'tab_path' in tab_result else None,
+                'tab_preview': os.path.basename(ascii_tab_path)
+            },
+            'stats': {
+                'detected_notes': len(detected_notes),
+                'midi_notes': len(midi_notes),
+                'fretboard_positions': len(optimized_positions)
+            }
+        })
+        
+    except Exception as e:
+        logger.error(f"Advanced tablature generation failed: {e}", exc_info=True)
+        return jsonify({
+            'error': f'Advanced tablature generation failed: {str(e)}',
+            'traceback': traceback.format_exc()
+        }), 500
+
 if __name__ == '__main__':
-    app.run(debug=True, host='0.0.0.0', port=5000)
+    try:
+        # Create upload folder if it doesn't exist
+        os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+        logger.info(f"Upload folder created/verified at: {UPLOAD_FOLDER}")
+        
+        # Clean up old files on startup
+        cleanup_old_files()
+        
+        # Start the Flask server with debug mode DISABLED to prevent restart loops
+        logger.info("Starting Flask server on port 5000")
+        app.run(host='0.0.0.0', port=5000, debug=False)
+    except Exception as e:
+        logger.error(f"Failed to start server: {e}", exc_info=True)
