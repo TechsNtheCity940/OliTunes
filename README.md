@@ -10,3 +10,4 @@ This project aims to build an application that converts audio files into visible
 - Playback controls
 - Saveable tablature files
 
+[text](https://github.com/alex-snezhko/GuitarTabber/tree/master#)
