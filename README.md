@@ -1,113 +1,83 @@
-# Phaser + Socket.IO Arena Brawler Prototype
+# Arena Brawler Online Prototype (Phaser 3 + Socket.IO)
 
-A playable online 2D top-down arena brawler prototype using **Phaser 3** on the client and **Node.js + Socket.IO** on the server.
+A playable online top-down arena brawler built with **Phaser 3** (client) and **Node.js + Socket.IO** (server).
 
 ## Features
-- Top-down 2D arena with placeholder shapes/sprites
-- Online room system (host/create + join by room code)
-- 2 to 4 player matches
-- Per-player actions:
-  - movement (WASD)
-  - dash (Space)
-  - melee attack (left click)
-  - cooldown-based special cone attack (right click)
-  - health bar
-- Arena gameplay objects:
-  - hazard zone (damage-over-time circle)
-  - power-up pickup (temporary movement + special bonus)
-- Match loop:
-  - 90-second rounds
-  - elimination-based scoring
-  - winner is highest score when timer ends
-- Screens:
-  - title screen
-  - room create/join menu
-  - lobby
-  - in-match HUD
-  - results screen
+- 2D arena with placeholder visuals
+- Room code multiplayer with host/create and join
+- Supports 1-4 human players; empty slots auto-filled with bots at match start
+- Host-selectable bot difficulty (`easy`, `normal`, `hard`)
+- Character creation before joining:
+  - name
+  - class: `Earth`, `Fire`, `Wind`, `Water`
+  - basic cosmetic variant: `stripe`, `spikes`, `halo`
+- Class combat kit (balanced damage across classes):
+  - melee direct attack
+  - elemental AoE secondary attack (5s cooldown)
+    - Earth: Earthquake
+    - Fire: Flaming Meteor
+    - Wind: Tornado
+    - Water: Ice Spike
+- Per-player dash, health, rank, and win cosmetics
+- Hazard and power-up in arena
+- 90-second rounds with elimination scoring
+- End-of-round winner = highest kills
+- Kill rewards:
+  - small health restore on elimination
+  - rank progress (levels 1 to 99)
+- Winner reward:
+  - cosmetic aura upgrade per win
+- Screen flow:
+  - title -> menu -> lobby -> arena HUD -> results
 
----
-
-## Project Structure
-
+## Folder Structure
 ```text
 OliTunes/
 ├── client/
-│   ├── index.html          # Phaser bootstrapping + script loading
+│   ├── index.html
 │   └── src/
-│       └── main.js         # Scenes, HUD rendering, input + network client events
+│       └── main.js
 ├── server/
-│   ├── package.json        # Server dependencies and start script
+│   ├── package.json
+│   ├── package-lock.json
 │   └── src/
-│       └── index.js        # Room lifecycle, game simulation, Socket.IO events
+│       └── index.js
 └── README.md
 ```
 
-### Why this structure is easy to expand
-- **Client and server are fully separated** so you can iterate gameplay visuals independently of backend authority.
-- Server simulation is centralized in one tick loop, making it straightforward to add new weapons, hazards, and status effects.
-- Phaser scene flow (Title → Menu → Lobby → Match → Results) keeps UI state transitions explicit.
-
----
-
 ## Setup
-
-### 1) Install server dependencies
 ```bash
 cd server
 npm install
-```
-
-### 2) Start the server
-```bash
 npm start
 ```
 
-Server runs at `http://localhost:3000` and serves both Socket.IO and the Phaser client.
-
-### 3) Open the game
-Visit:
-
-`http://localhost:3000`
-
-Open multiple browser tabs/windows (or separate devices on the same network tunneling setup) to test multiplayer.
-
----
+Open `http://localhost:3000`.
 
 ## Controls
-- `W A S D`: Move
-- `Space`: Dash (cooldown)
-- `Left Click`: Melee attack
-- `Right Click`: Special cone attack (cooldown)
+- `W A S D` move
+- `Space` dash
+- `Left Click` melee attack
+- `Right Click` elemental AoE placement
 
-Menu:
-- `Enter`: Title -> Menu
-- `C`: Create room
-- `J`: Join room
-- `S`: Start match (host only, lobby only, requires at least 2 players)
+Lobby:
+- `S` start match (host)
+- `D` set bot difficulty (host)
 
-Results:
-- `Enter`: Return to lobby
+## Networking Approach
+Server-authoritative multiplayer:
+1. Client sends control intent only.
+2. Server simulates movement, bot AI, combat, hazard, power-up, rank/score/win progression.
+3. Server broadcasts room snapshots (`state`) every tick.
+4. Clients render the latest authoritative state.
 
----
-
-## Networking Approach (brief)
-
-The prototype uses a **server-authoritative simulation**:
-1. Clients send only **input intent** (`up/down/left/right`, attack/dash/special triggers, aim angle).
-2. Server runs movement, dash, attacks, hazard damage, respawn, score, timer, and power-up logic.
-3. Server broadcasts frequent room snapshots (`state`) to all players.
-4. Client renders the latest authoritative snapshot and HUD.
-
-This keeps multiplayer functional and fair while still being responsive enough for prototype combat.
-
----
-
-## Notes
-- Graphics are intentionally placeholder geometry (circles/rectangles).
-- No interpolation/prediction is added yet; this is kept simple for expandability.
-- Next expansion suggestions:
-  - client-side interpolation/prediction
-  - multiple maps/hazard patterns
-  - additional special abilities and status effects
-  - reconnect handling and persistent profiles
+## Starting a new GitHub repo for this project
+If you want this prototype in its own repository:
+```bash
+git init
+git add .
+git commit -m "Initial commit: arena brawler prototype"
+git branch -M main
+git remote add origin <your-new-repo-url>
+git push -u origin main
+```
